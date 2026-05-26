@@ -19,7 +19,7 @@ export default function Login() {
       else setMessage('注册成功！现在可以登录了。')
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setMessage('邮箱或密码错误')
+      if (error) setMessage(error.message)
     }
     setLoading(false)
   }
