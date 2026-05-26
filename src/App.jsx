@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -29,12 +29,12 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/new" element={<ProtectedRoute><NewRecord /></ProtectedRoute>} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
