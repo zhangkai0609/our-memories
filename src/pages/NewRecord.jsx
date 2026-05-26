@@ -28,7 +28,9 @@ export default function NewRecord() {
           .from('photos')
           .upload(fileName, file)
 
-        if (!error && data) {
+        if (error) {
+          alert('照片上传失败: ' + error.message)
+        } else if (data) {
           const { data: urlData } = supabase.storage
             .from('photos')
             .getPublicUrl(data.path)
