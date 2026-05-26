@@ -21,23 +21,29 @@ export default function NewRecord() {
     setUploading(true)
 
     const imageUrls = []
+    console.log('files:', files.length)
     if (files.length > 0) {
       for (const file of files) {
         const fileName = `${Date.now()}_${file.name}`
+        console.log('uploading:', fileName, file.size)
         const { data, error } = await supabase.storage
           .from('photos')
           .upload(fileName, file)
 
+        console.log('upload result:', { data, error })
         if (error) {
           alert('照片上传失败: ' + error.message)
-        } else if (data) {
+        } else if (data?.path) {
           const { data: urlData } = supabase.storage
             .from('photos')
             .getPublicUrl(data.path)
           imageUrls.push(urlData.publicUrl)
+        } else {
+          alert('上传结果异常: ' + JSON.stringify({ data, error }))
         }
       }
     }
+    console.log('final imageUrls:', imageUrls)
 
     const { error } = await supabase.from('memories').insert({
       title: title.trim(),
