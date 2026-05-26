@@ -21,16 +21,14 @@ export default function NewRecord() {
     setUploading(true)
 
     const imageUrls = []
-    console.log('files:', files.length)
     if (files.length > 0) {
       for (const file of files) {
-        const fileName = `${Date.now()}_${file.name}`
-        console.log('uploading:', fileName, file.size)
+        // 清理文件名，只保留扩展名
+        const ext = file.name.split('.').pop().toLowerCase()
+        const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
         const { data, error } = await supabase.storage
           .from('photos')
-          .upload(fileName, file)
-
-        console.log('upload result:', { data, error })
+          .upload(safeName, file, { upsert: true })
         if (error) {
           alert('照片上传失败: ' + error.message)
         } else if (data?.path) {
@@ -38,12 +36,9 @@ export default function NewRecord() {
             .from('photos')
             .getPublicUrl(data.path)
           imageUrls.push(urlData.publicUrl)
-        } else {
-          alert('上传结果异常: ' + JSON.stringify({ data, error }))
         }
       }
     }
-    console.log('final imageUrls:', imageUrls)
 
     const { error } = await supabase.from('memories').insert({
       title: title.trim(),
