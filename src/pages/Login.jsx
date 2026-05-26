@@ -14,12 +14,15 @@ export default function Login() {
     setMessage('')
 
     if (isRegister) {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      console.log('signUp result:', { data, error })
       if (error) setMessage(error.message)
       else setMessage('注册成功！现在可以登录了。')
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log('signIn result:', { data, error })
       if (error) setMessage(error.message)
+      else if (!data?.session) setMessage('登录失败：无session返回')
     }
     setLoading(false)
   }
