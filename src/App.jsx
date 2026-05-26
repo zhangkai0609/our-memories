@@ -4,6 +4,8 @@ import { supabase } from './lib/supabase'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import NewRecord from './pages/NewRecord'
+import Map from './pages/Map'
+import Gallery from './pages/Gallery'
 
 // 错误边界：捕获任何渲染错误
 class ErrorBoundary extends Component {
@@ -59,6 +61,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/new" element={<ProtectedRoute><NewRecord /></ProtectedRoute>} />
+          <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
+          <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
         </Routes>
       </HashRouter>
     </ErrorBoundary>

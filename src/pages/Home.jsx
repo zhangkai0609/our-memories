@@ -152,10 +152,10 @@ export default function Home() {
       }}
       className="mobile-nav"
       >
-        <NavItem icon="📖" label="Timeline" active />
-        <NavItem icon="🗺️" label="Map" />
+        <NavItem icon="📖" label="Timeline" active onClick={() => navigate('/')} />
+        <NavItem icon="🗺️" label="Map" onClick={() => navigate('/map')} />
         <NavItem icon="＋" label="New Moment" primary onClick={() => navigate('/new')} />
-        <NavItem icon="🖼️" label="Gallery" />
+        <NavItem icon="🖼️" label="Gallery" onClick={() => navigate('/gallery')} />
       </nav>
 
       {/* Footer */}
