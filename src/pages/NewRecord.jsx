@@ -38,8 +38,10 @@ export default function NewRecord() {
       }
     }
 
+    const { data: { user } } = await supabase.auth.getUser()
     const { error } = await supabase.from('memories').insert({
       title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls,
+      user_id: user?.id,
     })
 
     if (error) alert('发布失败：' + error.message)
