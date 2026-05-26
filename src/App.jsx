@@ -46,7 +46,7 @@ function ProtectedRoute({ children }) {
     return () => { mounted = false; subscription.unsubscribe() }
   }, [])
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', color: '#888', fontSize: 16 }}>加载中...</div>
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#fff0f3', color: '#89726e', fontSize: 15, fontFamily: 'EB Garamond, serif', fontStyle: 'italic' }}>翻开我们的故事...</div>
   if (!session) return <Navigate to="/login" />
   return children
 }
