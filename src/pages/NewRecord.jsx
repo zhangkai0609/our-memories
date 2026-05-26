@@ -2,6 +2,17 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const C = {
+  bg: '#fef9f0',
+  card: '#ffffff',
+  accent: '#d4787c',
+  brown: '#4a3728',
+  text: '#6b5544',
+  light: '#b8a99a',
+  border: '#f0e6d8',
+  inputBg: '#fdf6f0',
+}
+
 export default function NewRecord() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -11,9 +22,7 @@ export default function NewRecord() {
   const fileRef = useRef(null)
   const navigate = useNavigate()
 
-  function handleFileChange(e) {
-    setFiles(Array.from(e.target.files))
-  }
+  function handleFileChange(e) { setFiles(Array.from(e.target.files)) }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -23,94 +32,77 @@ export default function NewRecord() {
     const imageUrls = []
     if (files.length > 0) {
       for (const file of files) {
-        // 清理文件名，只保留扩展名
         const ext = file.name.split('.').pop().toLowerCase()
         const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
-        const { data, error } = await supabase.storage
-          .from('photos')
-          .upload(safeName, file, { upsert: true })
+        const { data, error } = await supabase.storage.from('photos').upload(safeName, file, { upsert: true })
         if (error) {
           alert('照片上传失败: ' + error.message)
         } else if (data?.path) {
-          const { data: urlData } = supabase.storage
-            .from('photos')
-            .getPublicUrl(data.path)
+          const { data: urlData } = supabase.storage.from('photos').getPublicUrl(data.path)
           imageUrls.push(urlData.publicUrl)
         }
       }
     }
 
     const { error } = await supabase.from('memories').insert({
-      title: title.trim(),
-      content,
-      location: location.trim() || null,
-      image_urls: imageUrls,
+      title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls,
     })
 
-    if (error) {
-      alert('发布失败：' + error.message)
-    } else {
-      navigate('/')
-    }
+    if (error) alert('发布失败：' + error.message)
+    else navigate('/')
     setUploading(false)
   }
 
+  const inputStyle = {
+    padding: '14px 18px', borderRadius: 14, border: `1.5px solid ${C.border}`,
+    fontSize: 15, background: C.inputBg, outline: 'none', color: C.brown, width: '100%', boxSizing: 'border-box',
+  }
+
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <button onClick={() => navigate(-1)} style={styles.backBtn}>← 返回</button>
-        <span style={styles.headerTitle}>新的回忆</span>
-        <div style={{ width: 60 }} />
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      {/* Header */}
+      <header style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '14px 20px', background: 'rgba(254,249,240,0.92)', backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${C.border}`
+      }}>
+        <button onClick={() => navigate(-1)}
+          style={{ background: 'none', border: 'none', color: C.accent, fontSize: 15, cursor: 'pointer' }}>← 返回</button>
+        <span style={{ fontSize: 16, fontWeight: 600, color: C.brown }}>写一页新的</span>
+        <div style={{ width: 48 }} />
       </header>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          type="text"
-          placeholder="标题（必填）"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          required
-          style={styles.titleInput}
-        />
+      <form onSubmit={handleSubmit} style={{ maxWidth: 560, margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Title */}
+        <input type="text" placeholder="今天发生了什么？" value={title} onChange={e => setTitle(e.target.value)} required
+          style={{ ...inputStyle, fontSize: 20, fontWeight: 600, padding: '16px 18px' }} />
 
-        <input
-          type="text"
-          placeholder="📍 地点（选填）"
-          value={location}
-          onChange={e => setLocation(e.target.value)}
-          style={styles.input}
-        />
+        {/* Location */}
+        <input type="text" placeholder="📍  在哪里？（选填）" value={location} onChange={e => setLocation(e.target.value)}
+          style={inputStyle} />
 
-        <textarea
-          placeholder="写下你的想法..."
-          value={content}
-          onChange={e => setContent(e.target.value)}
-          rows={8}
-          style={styles.textarea}
-        />
+        {/* Content */}
+        <textarea placeholder="写下你想记住的一切..." value={content} onChange={e => setContent(e.target.value)} rows={6}
+          style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.8, minHeight: 120 }} />
 
-        <div style={styles.photosSection}>
-          <button type="button" onClick={() => fileRef.current.click()} style={styles.photoBtn}>
-            📷 选择照片
+        {/* Photos */}
+        <div>
+          <button type="button" onClick={() => fileRef.current.click()}
+            style={{
+              padding: '12px 24px', borderRadius: 14, background: C.card, border: `1.5px dashed ${C.border}`,
+              cursor: 'pointer', fontSize: 15, color: C.text, width: '100%'
+            }}>
+            {files.length > 0 ? `已选择 ${files.length} 张照片` : '📷  添加照片'}
           </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
+          <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFileChange} style={{ display: 'none' }} />
+
           {files.length > 0 && (
-            <div style={styles.previewGrid}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 6, marginTop: 12 }}>
               {files.map((f, i) => (
-                <div key={i} style={styles.previewItem}>
-                  <img src={URL.createObjectURL(f)} alt="" style={styles.previewImg} />
-                  <button
-                    type="button"
-                    onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                    style={styles.removeBtn}
-                  >
+                <div key={i} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden' }}>
+                  <img src={URL.createObjectURL(f)} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
+                  <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
+                    style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', fontSize: 12, cursor: 'pointer', lineHeight: '22px', textAlign: 'center' }}>
                     ✕
                   </button>
                 </div>
@@ -119,54 +111,15 @@ export default function NewRecord() {
           )}
         </div>
 
-        <button type="submit" disabled={uploading} style={styles.submitBtn}>
-          {uploading ? '上传中...' : '发布'}
+        {/* Submit */}
+        <button type="submit" disabled={uploading}
+          style={{
+            marginTop: 8, padding: '15px', background: C.accent, color: '#fff', border: 'none',
+            borderRadius: 14, fontSize: 16, fontWeight: 600, cursor: 'pointer', letterSpacing: 3
+          }}>
+          {uploading ? '保存中...' : '写 下 来'}
         </button>
       </form>
     </div>
   )
-}
-
-const styles = {
-  container: { minHeight: '100vh', background: '#fafafa' },
-  header: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '16px 20px', background: 'white', borderBottom: '1px solid #eee',
-  },
-  backBtn: { background: 'none', border: 'none', color: '#d81b60', fontSize: '15px', cursor: 'pointer' },
-  headerTitle: { fontSize: '16px', fontWeight: '600' },
-  form: { maxWidth: '600px', margin: '0 auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '14px' },
-  titleInput: {
-    padding: '14px 16px', borderRadius: '12px', border: '1px solid #e0e0e0',
-    fontSize: '18px', fontWeight: '600', outline: 'none',
-  },
-  input: {
-    padding: '12px 16px', borderRadius: '12px', border: '1px solid #e0e0e0',
-    fontSize: '15px', outline: 'none',
-  },
-  textarea: {
-    padding: '14px 16px', borderRadius: '12px', border: '1px solid #e0e0e0',
-    fontSize: '15px', outline: 'none', resize: 'vertical', fontFamily: 'inherit',
-    lineHeight: '1.6',
-  },
-  photosSection: { marginTop: '4px' },
-  photoBtn: {
-    padding: '10px 20px', borderRadius: '10px', background: '#f5f5f5',
-    border: '1px dashed #ccc', cursor: 'pointer', fontSize: '15px',
-  },
-  previewGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px', marginTop: '12px' },
-  previewItem: { position: 'relative' },
-  previewImg: { width: '100%', borderRadius: '10px', objectFit: 'cover', aspectRatio: '1' },
-  removeBtn: {
-    position: 'absolute', top: '-6px', right: '-6px',
-    width: '22px', height: '22px', borderRadius: '50%',
-    background: '#333', color: 'white', border: 'none',
-    fontSize: '12px', cursor: 'pointer', display: 'flex',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  submitBtn: {
-    marginTop: '12px', padding: '14px', background: '#d81b60',
-    color: 'white', border: 'none', borderRadius: '12px',
-    fontSize: '16px', fontWeight: '600', cursor: 'pointer',
-  },
 }

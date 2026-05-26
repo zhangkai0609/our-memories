@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+const colors = {
+  bg: '#fef9f0',
+  card: '#ffffff',
+  accent: '#d4787c',
+  brown: '#4a3728',
+  text: '#8b7355',
+  border: '#f0e6d8',
+  inputBg: '#fdf6f0',
+}
+
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -12,7 +22,6 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setMessage('')
-
     if (isRegister) {
       const { data, error } = await supabase.auth.signUp({ email, password })
       console.log('signUp result:', { data, error })
@@ -28,92 +37,40 @@ export default function Login() {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>我们的回忆</h1>
-        <p style={styles.subtitle}>{isRegister ? '创建你们的专属空间' : '记录属于我们的每一刻'}</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.bg, padding: 20 }}>
+      <div style={{
+        background: colors.card, borderRadius: 28, padding: '44px 32px 36px',
+        maxWidth: 400, width: '100%', boxShadow: '0 4px 24px rgba(180,140,120,0.10)',
+        textAlign: 'center', border: `1px solid ${colors.border}`
+      }}>
+        <div style={{ fontSize: 40, marginBottom: 8 }}>📖</div>
+        <h1 style={{ fontSize: 26, color: colors.brown, fontWeight: 700, margin: '0 0 4px' }}>我们的回忆</h1>
+        <p style={{ color: colors.text, fontSize: 14, marginBottom: 32 }}>
+          {isRegister ? '创建属于我们的手账本' : '翻开属于我们的一页'}
+        </p>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <input
-            type="email"
-            placeholder="邮箱"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            style={styles.input}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input type="email" placeholder="邮箱" value={email}
+            onChange={e => setEmail(e.target.value)} required
+            style={{ padding: '14px 18px', borderRadius: 14, border: `1.5px solid ${colors.border}`, fontSize: 15, background: colors.inputBg, outline: 'none', color: colors.brown }}
           />
-          <input
-            type="password"
-            placeholder="密码"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            minLength={6}
-            style={styles.input}
+          <input type="password" placeholder="密码" value={password}
+            onChange={e => setPassword(e.target.value)} required minLength={6}
+            style={{ padding: '14px 18px', borderRadius: 14, border: `1.5px solid ${colors.border}`, fontSize: 15, background: colors.inputBg, outline: 'none', color: colors.brown }}
           />
-          <button type="submit" disabled={loading} style={styles.button}>
+          <button type="submit" disabled={loading}
+            style={{ padding: '14px', background: colors.accent, color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 600, cursor: 'pointer', marginTop: 6, letterSpacing: 2 }}>
             {loading ? '请稍候...' : isRegister ? '注册' : '登录'}
           </button>
         </form>
 
-        {message && <p style={message.includes('成功') ? styles.success : styles.error}>{message}</p>}
+        {message ? <p style={{ marginTop: 16, fontSize: 13, color: message.includes('成功') ? '#5b8c5a' : '#d4787c' }}>{message}</p> : null}
 
-        <button onClick={() => { setIsRegister(!isRegister); setMessage('') }} style={styles.switch}>
+        <button onClick={() => { setIsRegister(!isRegister); setMessage('') }}
+          style={{ marginTop: 24, background: 'none', border: 'none', color: colors.accent, cursor: 'pointer', fontSize: 14 }}>
           {isRegister ? '已有账号？去登录 →' : '没有账号？去注册 →'}
         </button>
       </div>
     </div>
   )
-}
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 50%, #e1bee7 100%)',
-    padding: '20px',
-  },
-  card: {
-    background: 'white',
-    borderRadius: '20px',
-    padding: '40px',
-    maxWidth: '400px',
-    width: '100%',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-    textAlign: 'center',
-  },
-  title: { fontSize: '28px', color: '#d81b60', marginBottom: '8px', fontWeight: 'bold' },
-  subtitle: { color: '#888', fontSize: '14px', marginBottom: '32px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '14px' },
-  input: {
-    padding: '14px 16px',
-    borderRadius: '12px',
-    border: '1px solid #e0e0e0',
-    fontSize: '15px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-  },
-  button: {
-    padding: '14px',
-    background: '#d81b60',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '8px',
-  },
-  switch: {
-    marginTop: '20px',
-    background: 'none',
-    border: 'none',
-    color: '#d81b60',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  error: { marginTop: '16px', color: '#e53935', fontSize: '14px' },
-  success: { marginTop: '16px', color: '#43a047', fontSize: '14px' },
 }
