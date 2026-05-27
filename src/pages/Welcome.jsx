@@ -6,7 +6,7 @@ import couplePets from '../assets/onboarding/modes/icons/couple-pets.webp'
 import friendsCamera from '../assets/onboarding/modes/icons/friends-camera.webp'
 import bestiesBow from '../assets/onboarding/modes/icons/besties-bow.webp'
 import familyHouse from '../assets/onboarding/modes/icons/family-house.webp'
-import customPencil from '../assets/onboarding/modes/icons/custom-pencil.webp'
+
 import topLeftPolaroid from '../assets/onboarding/modes/decorations/top-left-polaroid.webp'
 import topRightLaceHeart from '../assets/onboarding/modes/decorations/top-right-lace-heart.webp'
 import leftFlowerBranch from '../assets/onboarding/modes/decorations/left-flower-branch.webp'
@@ -32,7 +32,6 @@ const relationshipModes = [
   { id: 'friends', title: '好友', subtitle: 'Friends', description: '记录友情的点滴与快乐', image: friendsCamera },
   { id: 'besties', title: '闺蜜', subtitle: 'Besties', description: '我们的小秘密，专属珍藏', image: bestiesBow },
   { id: 'family', title: '家人', subtitle: 'Family', description: '记录家的温暖与爱', image: familyHouse },
-  { id: 'custom', title: '自定义', subtitle: 'Custom', description: '打造属于你的独特回忆空间', image: customPencil },
 ]
 
 const DECOR = [
@@ -215,52 +214,55 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
     onConfirm(selected)
   }
 
-  const gridModes = relationshipModes.slice(0, 4)
-  const customMode = relationshipModes[4]
-
   return (
     <div style={{
-      flex: 1, display: 'flex', flexDirection: 'column',
-      paddingTop: 4, paddingBottom: 24,
+      height: '100svh', display: 'flex', flexDirection: 'column',
+      padding: '36px 0 16px',
       opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
       transition: 'opacity 0.55s ease, transform 0.55s ease',
     }}>
+      {/* 背景装饰 */}
       <img src={topLeftPolaroid} alt="" style={decorStyle('topLeft')} />
       <img src={topRightLaceHeart} alt="" style={decorStyle('topRight')} />
       <img src={leftFlowerBranch} alt="" style={decorStyle('left')} />
       <img src={rightFlowerBranch} alt="" style={decorStyle('right')} />
       <img src={bottomRightDaisy} alt="" style={decorStyle('bottom')} />
 
+      {/* 返回按钮 */}
       <button onClick={onBack} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: C.light, cursor: 'pointer', fontSize: 14, fontFamily: 'Plus Jakarta Sans, sans-serif', padding: '4px 0', marginBottom: 0, position: 'relative', zIndex: 1 }}>← 返回</button>
 
-      <div style={{ textAlign: 'center', marginBottom: 2, position: 'relative', zIndex: 1 }}>
-        <p style={{ fontFamily: 'EB Garamond, serif', fontSize: 30, color: C.primary, fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>Our Memories</p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 8 }}>
+      {/* 标题区域 */}
+      <div style={{ textAlign: 'center', marginTop: 6, marginBottom: 18, position: 'relative', zIndex: 1 }}>
+        <p style={{ fontFamily: 'EB Garamond, serif', fontSize: 28, color: C.primary, fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>Our Memories</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 6 }}>
           <span style={{ width: 28, height: 1, background: C.border }} />
           <span style={{ fontSize: 10, color: C.pLight, lineHeight: 1 }}>♥</span>
           <span style={{ width: 28, height: 1, background: C.border }} />
         </div>
-        <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 'clamp(28px, 8vw, 34px)', color: C.brown, fontWeight: 600, margin: '6px 0 0', letterSpacing: '-0.01em' }}>选择关系模式</h2>
-        <p style={{ fontSize: 13, color: '#8b7770', margin: '4px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '0.02em' }}>每一种关系，都值得被认真收藏。</p>
+        <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 'clamp(30px, 9vw, 36px)', color: C.brown, fontWeight: 600, margin: '4px 0 0', letterSpacing: '-0.01em' }}>选择关系模式</h2>
+        <p style={{ fontSize: 14, color: '#8b7770', margin: '3px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '0.02em' }}>每一种关系，都值得被认真收藏。</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12, position: 'relative', zIndex: 1 }}>
-        {gridModes.map((mode, i) => (
+      {/* 卡片网格 — 2×2 */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14,
+        flex: 1, alignContent: 'start',
+        position: 'relative', zIndex: 1,
+      }}>
+        {relationshipModes.map((mode, i) => (
           <ModeCard key={mode.id} mode={mode} selected={selected === mode.id} onSelect={() => setSelected(mode.id)} delay={i} />
         ))}
       </div>
-      <div style={{ marginTop: 10, position: 'relative', zIndex: 1 }}>
-        <ModeCard mode={customMode} selected={selected === customMode.id} onSelect={() => setSelected(customMode.id)} delay={4} wide />
-      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 18, gap: 0, position: 'relative', zIndex: 1 }}>
-        <p style={{ fontSize: 12, color: '#b0a09b', fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 12px' }}>之后也可以在小窝中修改</p>
-        <button onClick={handleContinue} style={pillBtnStyle}
+      {/* 底部按钮 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20, gap: 0, position: 'relative', zIndex: 1 }}>
+        <p style={{ fontSize: 12, color: '#b0a09b', fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 10px' }}>之后也可以在小窝中修改</p>
+        <button onClick={handleContinue} style={{ ...pillBtnStyle, width: '84%', height: 54 }}
           onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(156,66,51,0.18)'; }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
         >继 续</button>
-        <button onClick={onSkip} style={textLinkStyle}
+        <button onClick={onSkip} style={{ ...textLinkStyle, padding: '12px 20px' }}
           onMouseEnter={e => e.currentTarget.style.color = C.primary}
           onMouseLeave={e => e.currentTarget.style.color = '#8b7770'}
         >跳过，稍后设置</button>
@@ -271,18 +273,17 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
 }
 
 // ====================== MODE CARD ======================
-function ModeCard({ mode, selected, onSelect, delay, wide }) {
+function ModeCard({ mode, selected, onSelect, delay }) {
   return (
     <button onClick={onSelect} style={{
-      display: 'flex', flexDirection: wide ? 'row' : 'column',
-      alignItems: wide ? 'center' : 'center', gap: 0,
-      minHeight: wide ? 120 : 168, padding: wide ? '16px 18px' : '20px 14px 16px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+      minHeight: 220, padding: '16px 12px',
       borderRadius: 26,
       border: selected ? `2px solid ${C.primary}` : '1px solid rgba(156,66,51,0.12)',
       background: selected
         ? 'linear-gradient(180deg, rgba(255,245,243,0.98) 0%, rgba(252,249,242,0.96) 100%)'
         : 'linear-gradient(180deg, rgba(252,249,242,0.96) 0%, rgba(250,244,232,0.92) 100%)',
-      cursor: 'pointer', textAlign: wide ? 'left' : 'center',
+      cursor: 'pointer', textAlign: 'center',
       boxShadow: selected ? '0 18px 36px rgba(156,66,51,0.22)' : '0 12px 28px rgba(90,55,45,0.08)',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative',
       fontFamily: 'Plus Jakarta Sans, sans-serif', opacity: 0,
@@ -297,18 +298,26 @@ function ModeCard({ mode, selected, onSelect, delay, wide }) {
         <span style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: '50%', background: C.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, animation: 'checkPop 0.35s ease-out', zIndex: 2, boxShadow: '0 2px 6px rgba(156,66,51,0.25)' }}>✓</span>
       )}
       <div style={{ position: 'absolute', inset: 5, borderRadius: 22, border: '1px dashed rgba(220,192,188,0.22)', pointerEvents: 'none' }} />
-      <div style={{ width: wide ? 72 : '100%', height: wide ? 72 : 82, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: wide ? 0 : 12, flexShrink: 0, animation: selected && !wide ? 'iconFloat 3s ease-in-out infinite' : 'none' }}>
-        <img src={mode.image} alt={mode.title} style={{ maxWidth: wide ? 72 : 145, maxHeight: wide ? 72 : 82, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none' }} />
+
+      {/* 插图 */}
+      <div style={{
+        width: '100%', height: 74, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 8, flexShrink: 0,
+        animation: selected ? 'iconFloat 3s ease-in-out infinite' : 'none',
+      }}>
+        <img src={mode.image} alt={mode.title} style={{ maxWidth: 140, maxHeight: 74, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none' }} />
       </div>
-      <div style={{ flex: wide ? 1 : undefined, display: 'flex', flexDirection: 'column', alignItems: wide ? 'flex-start' : 'center', marginLeft: wide ? 14 : 0 }}>
-        <div style={{ fontSize: wide ? 17 : 24, fontWeight: 700, color: C.brown, fontFamily: 'EB Garamond, serif', lineHeight: 1.2 }}>{mode.title}</div>
+
+      {/* 文字区域 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: C.brown, fontFamily: 'EB Garamond, serif', lineHeight: 1.2 }}>{mode.title}</div>
         <div style={{ fontSize: 11, color: C.light, marginTop: 2, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 400 }}>{mode.subtitle}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, marginBottom: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, marginBottom: 3 }}>
           <span style={{ width: 14, height: 1, background: 'rgba(220,192,188,0.4)' }} />
           <span style={{ fontSize: 7, color: C.pLight, lineHeight: 1 }}>♥</span>
           <span style={{ width: 14, height: 1, background: 'rgba(220,192,188,0.4)' }} />
         </div>
-        <div style={{ fontSize: 12, color: '#6f5c55', marginTop: 4, lineHeight: 1.5 }}>{mode.description}</div>
+        <div style={{ fontSize: 12, color: '#6f5c55', marginTop: 2, lineHeight: 1.5 }}>{mode.description}</div>
       </div>
     </button>
   )
@@ -567,7 +576,6 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
         </p>
       </div>
 
-      <style>{authCSS}</style>
     </div>
   )
 }
@@ -680,12 +688,5 @@ const modeCardCSS = `
 @keyframes iconFloat {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
-}
-`
-
-const authCSS = `
-@keyframes cardFloatIn {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
 }
 `
