@@ -45,7 +45,12 @@ const navItems = [
 
 export default function Home() {
   const [memories, setMemories] = useState([])
+  const [allMemories, setAllMemories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [calYear, setCalYear] = useState(new Date().getFullYear())
+  const [calMonth, setCalMonth] = useState(new Date().getMonth() + 1)
+  const [selectedDate, setSelectedDate] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => { fetchMemories() }, [])
@@ -53,6 +58,8 @@ export default function Home() {
   async function fetchMemories() {
     const { data } = await supabase.from('memories').select('*').order('created_at', { ascending: false }).limit(6)
     setMemories(data || [])
+    const { data: all } = await supabase.from('memories').select('id,title,created_at').order('created_at', { ascending: false })
+    setAllMemories(all || [])
     setLoading(false)
   }
 
@@ -79,7 +86,7 @@ export default function Home() {
         <GreetingSection />
 
         {/* ===== Stats Card ===== */}
-        <StatsCard />
+        <StatsCard onCalendarClick={() => setCalendarOpen(true)} />
 
         {/* ===== Quick Actions ===== */}
         <QuickActions navigate={navigate} />
@@ -96,6 +103,18 @@ export default function Home() {
 
       {/* ===== Bottom Nav ===== */}
       <BottomNav navigate={navigate} />
+
+      {/* ===== Calendar Modal ===== */}
+      {calendarOpen && (
+        <CalendarModal
+          allMemories={allMemories}
+          year={calYear} month={calMonth}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m); }}
+          onClose={() => { setCalendarOpen(false); setSelectedDate(null); }}
+        />
+      )}
 
       <style>{homeCSS}</style>
     </div>
@@ -196,7 +215,7 @@ function GreetingSection() {
 }
 
 // ====================== STATS CARD ======================
-function StatsCard() {
+function StatsCard({ onCalendarClick }) {
   return (
     <div style={{
       margin: '0 20px 16px', background: C.card, borderRadius: 28,
@@ -225,21 +244,22 @@ function StatsCard() {
         </p>
       </div>
 
-      {/* 右侧迷你日历 */}
-      <div style={{
+      {/* 右侧迷你日历 — 点击打开大日历 */}
+      <button onClick={onCalendarClick} style={{
         width: 90, background: 'rgba(255,240,243,0.5)', borderRadius: 16,
-        padding: '10px', textAlign: 'center',
-        border: '1px solid rgba(220,192,188,0.2)',
-      }}>
+        padding: '10px', textAlign: 'center', cursor: 'pointer',
+        border: '1px solid rgba(220,192,188,0.2)', transition: 'transform 0.2s, box-shadow 0.2s',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(156,66,51,0.10)'; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
+      >
         <p style={{ fontSize: 11, color: C.brown, fontWeight: 600, fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 8px' }}>
           2024年5月
         </p>
-        {/* 简化日历网格 - 只显示一周 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, fontSize: 10, fontFamily: 'Plus Jakarta Sans, sans-serif', color: C.light }}>
           {['一','二','三','四','五','六','日'].map(d => (
             <span key={d} style={{ fontSize: 8 }}>{d}</span>
           ))}
-          {/* 空格 */}
           {[0,0,0].map((_, i) => <span key={`e${i}`} />)}
           {Array.from({ length: 15 }, (_, i) => {
             const day = i + 1
@@ -260,7 +280,8 @@ function StatsCard() {
             )
           })}
         </div>
-      </div>
+        <p style={{ fontSize: 8, color: C.light, margin: '6px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>点击查看日历</p>
+      </button>
     </div>
   )
 }
@@ -491,6 +512,218 @@ function BottomNav({ navigate }) {
   )
 }
 
+// ====================== CALENDAR MODAL ======================
+function CalendarModal({ allMemories, year, month, selectedDate, onSelectDate, onMonthChange, onClose }) {
+  // 按日期分组记忆
+  const memoryMap = {}
+  allMemories.forEach(m => {
+    const d = new Date(m.created_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    if (!memoryMap[key]) memoryMap[key] = []
+    memoryMap[key].push(m)
+  })
+
+  const today = new Date()
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay()
+  const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
+
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+
+  function prevMonth() {
+    if (month === 1) onMonthChange(year - 1, 12)
+    else onMonthChange(year, month - 1)
+    onSelectDate(null)
+  }
+  function nextMonth() {
+    if (month === 12) onMonthChange(year + 1, 1)
+    else onMonthChange(year, month + 1)
+    onSelectDate(null)
+  }
+
+  const selectedMemories = selectedDate ? (memoryMap[selectedDate] || []) : []
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+    }}>
+      {/* 遮罩 */}
+      <div onClick={onClose} style={{
+        position: 'absolute', inset: 0,
+        background: 'rgba(30,10,8,0.45)', backdropFilter: 'blur(6px)',
+      }} />
+
+      {/* 日历卡片 */}
+      <div style={{
+        position: 'relative', zIndex: 1, width: '100%', maxWidth: 380, maxHeight: '90vh',
+        background: 'linear-gradient(180deg, rgba(252,249,242,0.99) 0%, rgba(250,245,238,0.97) 100%)',
+        borderRadius: 28, overflow: 'hidden',
+        boxShadow: '0 20px 60px rgba(60,20,15,0.25)',
+        border: '1px solid rgba(220,192,188,0.35)',
+        display: 'flex', flexDirection: 'column',
+        animation: 'modalIn 0.3s ease-out',
+      }}>
+        {/* 关闭按钮 */}
+        <button onClick={onClose} style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 2,
+          width: 32, height: 32, borderRadius: '50%',
+          background: 'rgba(0,0,0,0.04)', border: 'none',
+          cursor: 'pointer', fontSize: 18, color: C.light,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>✕</button>
+
+        {/* 月份导航 */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 20px 10px',
+        }}>
+          <button onClick={prevMonth} style={calNavBtnStyle}>←</button>
+          <h2 style={{
+            fontFamily: 'EB Garamond, serif', fontSize: 22, fontWeight: 600,
+            color: C.brown, margin: 0, letterSpacing: '0.02em',
+          }}>
+            {year}年{monthNames[month - 1]}
+          </h2>
+          <button onClick={nextMonth} style={calNavBtnStyle}>→</button>
+        </div>
+
+        {/* 周标题 */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+          padding: '6px 14px', gap: 2,
+        }}>
+          {['一','二','三','四','五','六','日'].map(d => (
+            <span key={d} style={{
+              textAlign: 'center', fontSize: 11, fontWeight: 500,
+              color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif',
+              padding: '4px 0',
+            }}>{d}</span>
+          ))}
+        </div>
+
+        {/* 日期网格 */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+          padding: '4px 14px', gap: 3, flexShrink: 0,
+        }}>
+          {/* 空白填充 */}
+          {Array.from({ length: startOffset }, (_, i) => (
+            <div key={`blank-${i}`} />
+          ))}
+          {/* 日期 */}
+          {Array.from({ length: daysInMonth }, (_, i) => {
+            const day = i + 1
+            const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+            const hasMemory = memoryMap[dateKey]
+            const isToday = dateKey === todayKey
+            const isSelected = dateKey === selectedDate
+
+            return (
+              <button key={day} onClick={() => onSelectDate(dateKey)} style={{
+                aspectRatio: '1', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: 2,
+                border: 'none',
+                borderRadius: 14,
+                background: isSelected ? C.primary
+                  : isToday ? 'rgba(156,66,51,0.08)'
+                  : 'transparent',
+                color: isSelected ? '#fff'
+                  : isToday ? C.primary
+                  : C.brown,
+                fontWeight: isSelected || isToday ? 700 : 400,
+                fontSize: 14, fontFamily: 'Plus Jakarta Sans, sans-serif',
+                cursor: 'pointer', position: 'relative',
+                transition: 'background 0.2s',
+              }}
+                onMouseEnter={e => {
+                  if (!isSelected) e.currentTarget.style.background = 'rgba(156,66,51,0.06)'
+                }}
+                onMouseLeave={e => {
+                  if (!isSelected) e.currentTarget.style.background = isToday ? 'rgba(156,66,51,0.08)' : 'transparent'
+                }}
+              >
+                {day}
+                {/* 记忆标记点 */}
+                {hasMemory && !isSelected && (
+                  <div style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: C.pLight,
+                  }} />
+                )}
+                {hasMemory && isSelected && (
+                  <div style={{
+                    width: 5, height: 5, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.7)',
+                  }} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* 选中日期的记忆列表 */}
+        <div style={{
+          borderTop: '1px solid rgba(220,192,188,0.25)',
+          margin: '10px 14px 0', padding: '12px 6px 16px',
+          flex: 1, overflowY: 'auto', minHeight: 60, maxHeight: 180,
+        }}>
+          {selectedDate ? (
+            selectedMemories.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{
+                  fontSize: 12, color: C.light, margin: 0,
+                  fontFamily: 'Plus Jakarta Sans, sans-serif',
+                }}>
+                  {selectedDate.replace(/-/g, '/')} 的记录：
+                </p>
+                {selectedMemories.map((m, i) => (
+                  <div key={m.id || i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '8px 12px', borderRadius: 12,
+                    background: 'rgba(255,240,243,0.5)',
+                    border: '1px solid rgba(220,192,188,0.18)',
+                  }}>
+                    <span style={{ fontSize: 14 }}>📝</span>
+                    <span style={{
+                      fontSize: 13, color: C.brown, fontWeight: 500,
+                      fontFamily: 'Plus Jakarta Sans, sans-serif',
+                      flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>{m.title || '无标题'}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{
+                textAlign: 'center', padding: '16px 0',
+                color: C.light, fontSize: 13,
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+              }}>
+                <span style={{ fontSize: 28, display: 'block', marginBottom: 6 }}>📭</span>
+                这一天还没有记录
+              </div>
+            )
+          ) : (
+            <div style={{
+              textAlign: 'center', padding: '16px 0',
+              color: C.light, fontSize: 13,
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+            }}>
+              <span style={{ fontSize: 24, display: 'block', marginBottom: 4 }}>👆</span>
+              点击日期查看记录
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style>{calModalCSS}</style>
+    </div>
+  )
+}
+
 // ====================== HELPERS ======================
 const iconBtnStyle = {
   background: 'none', border: 'none', cursor: 'pointer', padding: 4,
@@ -511,6 +744,22 @@ function decorAbs(top, right, w, opacity, transform, bottom, left) {
     maskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
   }
 }
+
+const calNavBtnStyle = {
+  width: 36, height: 36, borderRadius: '50%',
+  background: 'rgba(220,192,188,0.15)', border: 'none',
+  cursor: 'pointer', fontSize: 16, color: C.brown,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontFamily: 'Plus Jakarta Sans, sans-serif',
+  transition: 'background 0.2s',
+}
+
+const calModalCSS = `
+@keyframes modalIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+`
 
 const homeCSS = `
 input:focus { outline: none; }
