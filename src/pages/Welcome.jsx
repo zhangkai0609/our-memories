@@ -19,7 +19,7 @@ const C = {
   pLight: '#e87c69',
   pFixed: '#ffdad4',
   secondary: '#536346',
-  brown: '#1c1c18',
+  brown: '#3f302b',
   text: '#56423f',
   light: '#89726e',
   border: '#dcc0bc',
@@ -101,7 +101,7 @@ export default function Welcome() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: C.bg,
+      minHeight: '100svh', background: C.bg,
       display: 'flex', justifyContent: 'center', alignItems: 'center',
       padding: '20px 16px', overflow: 'hidden',
       position: 'relative',
@@ -128,14 +128,14 @@ export default function Welcome() {
           left: `${el.x}%`, top: `${el.y}%`,
           fontSize: el.size,
           pointerEvents: 'none', zIndex: 0,
-          opacity: 0.55,
+          opacity: 0.50,
           animation: `floatEl ${el.dur}s ease-in-out ${el.delay}s infinite`,
         }}>
           {el.emoji}
         </span>
       ))}
 
-      <div style={{ width: '100%', maxWidth: 430, minHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
+      <div style={{ width: '100%', maxWidth: 430, minHeight: '90svh', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
         {step === 'welcome' && (
           <WelcomeSplash
             onStart={() => setStep('mode')}
@@ -183,7 +183,6 @@ function WelcomeSplash({ onStart, onLogin }) {
       alignItems: 'center', justifyContent: 'center',
       gap: 0,
     }}>
-      {/* ===== 标题区域 ===== */}
       <div style={{ textAlign: 'center', marginBottom: 10 }}>
         <h1 style={{
           fontFamily: 'EB Garamond, serif',
@@ -222,7 +221,6 @@ function WelcomeSplash({ onStart, onLogin }) {
         </p>
       </div>
 
-      {/* ===== Hero 图片区域 ===== */}
       <div style={{
         position: 'relative', width: '100%',
         display: 'flex', justifyContent: 'center',
@@ -256,7 +254,6 @@ function WelcomeSplash({ onStart, onLogin }) {
         <span style={{ position: 'absolute', bottom: 6, right: 'calc(50% - 148px)', width: 38, height: 16, background: 'rgba(252,249,242,0.50)', borderRadius: 2, transform: 'rotate(8deg)', zIndex: 3, pointerEvents: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }} />
       </div>
 
-      {/* ===== 按钮区域 ===== */}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: 8 }}>
         <button onClick={onStart} style={{
           width: '84%', height: 58,
@@ -266,13 +263,13 @@ function WelcomeSplash({ onStart, onLogin }) {
           cursor: 'pointer',
           fontFamily: 'Plus Jakarta Sans, sans-serif',
           letterSpacing: '0.08em',
-          boxShadow: `0 6px 28px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.18)`,
+          boxShadow: `0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)`,
           transition: 'transform 0.1s, box-shadow 0.1s',
           position: 'relative',
         }}
-          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)'; e.currentTarget.style.boxShadow = '0 3px 12px rgba(156,66,51,0.18)'; }}
-          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
+          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(156,66,51,0.18)'; }}
+          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
         >
           开 始 记 录
         </button>
@@ -313,52 +310,91 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
   return (
     <div style={{
       flex: 1, display: 'flex', flexDirection: 'column',
-      paddingTop: 8, paddingBottom: 24,
+      paddingTop: 4, paddingBottom: 24,
       opacity: visible ? 1 : 0,
-      transform: visible ? 'translateY(0)' : 'translateY(12px)',
-      transition: 'opacity 0.5s ease, transform 0.5s ease',
+      transform: visible ? 'translateY(0)' : 'translateY(16px)',
+      transition: 'opacity 0.55s ease, transform 0.55s ease',
     }}>
-      {/* 背景装饰 */}
-      <img src={topLeftPolaroid} alt="" style={{ position: 'fixed', top: 24, left: 12, width: 72, opacity: 0.55, pointerEvents: 'none', zIndex: 0, transform: 'rotate(-8deg)' }} />
-      <img src={topRightLaceHeart} alt="" style={{ position: 'fixed', top: 28, right: 10, width: 58, opacity: 0.50, pointerEvents: 'none', zIndex: 0 }} />
-      <img src={leftFlowerBranch} alt="" style={{ position: 'fixed', left: 0, top: '28%', width: 60, opacity: 0.40, pointerEvents: 'none', zIndex: 0 }} />
-      <img src={rightFlowerBranch} alt="" style={{ position: 'fixed', right: 0, top: '30%', width: 56, opacity: 0.40, pointerEvents: 'none', zIndex: 0 }} />
-      <img src={bottomRightDaisy} alt="" style={{ position: 'fixed', bottom: 20, right: 16, width: 50, opacity: 0.50, pointerEvents: 'none', zIndex: 0 }} />
+      {/* ===== 背景装饰 ===== */}
+      <img src={topLeftPolaroid} alt=""
+        style={{
+          position: 'fixed', top: 20, left: 8, width: 68,
+          opacity: 0.50, pointerEvents: 'none', zIndex: 0,
+          transform: 'rotate(-8deg)',
+          mixBlendMode: 'multiply',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
+        }} />
+      <img src={topRightLaceHeart} alt=""
+        style={{
+          position: 'fixed', top: 24, right: 6, width: 54,
+          opacity: 0.48, pointerEvents: 'none', zIndex: 0,
+          mixBlendMode: 'multiply',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+        }} />
+      <img src={leftFlowerBranch} alt=""
+        style={{
+          position: 'fixed', left: -4, top: '26%', width: 54,
+          opacity: 0.42, pointerEvents: 'none', zIndex: 0,
+          mixBlendMode: 'multiply',
+          WebkitMaskImage: 'linear-gradient(to right, black 50%, transparent 100%)',
+          maskImage: 'linear-gradient(to right, black 50%, transparent 100%)',
+        }} />
+      <img src={rightFlowerBranch} alt=""
+        style={{
+          position: 'fixed', right: -4, top: '28%', width: 50,
+          opacity: 0.42, pointerEvents: 'none', zIndex: 0,
+          mixBlendMode: 'multiply',
+          WebkitMaskImage: 'linear-gradient(to left, black 50%, transparent 100%)',
+          maskImage: 'linear-gradient(to left, black 50%, transparent 100%)',
+        }} />
+      <img src={bottomRightDaisy} alt=""
+        style={{
+          position: 'fixed', bottom: 16, right: 12, width: 46,
+          opacity: 0.48, pointerEvents: 'none', zIndex: 0,
+          mixBlendMode: 'multiply',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
+        }} />
 
-      {/* 返回按钮 */}
+      {/* ===== 返回按钮 ===== */}
       <button onClick={onBack} style={{
         alignSelf: 'flex-start', background: 'none', border: 'none',
         color: C.light, cursor: 'pointer', fontSize: 14,
         fontFamily: 'Plus Jakarta Sans, sans-serif',
-        padding: '4px 0', marginBottom: 4, position: 'relative', zIndex: 1,
+        padding: '4px 0', marginBottom: 0, position: 'relative', zIndex: 1,
       }}>← 返回</button>
 
-      {/* 标题区域 */}
-      <div style={{ textAlign: 'center', marginBottom: 4, position: 'relative', zIndex: 1 }}>
+      {/* ===== 标题区域 ===== */}
+      <div style={{ textAlign: 'center', marginBottom: 2, position: 'relative', zIndex: 1 }}>
         <p style={{
-          fontFamily: 'EB Garamond, serif', fontSize: 15,
-          color: C.primary, fontWeight: 500, margin: 0,
-          letterSpacing: '0.04em',
+          fontFamily: 'EB Garamond, serif', fontSize: 30,
+          color: C.primary, fontWeight: 600, margin: 0,
+          letterSpacing: '-0.01em',
         }}>
           Our Memories
         </p>
-        <h2 style={{
-          fontFamily: 'EB Garamond, serif', fontSize: 26,
-          color: C.brown, fontWeight: 600, margin: '4px 0 0',
-          letterSpacing: '-0.01em',
-        }}>
-          选择关系模式
-        </h2>
+
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 10, marginTop: 8,
         }}>
-          <span style={{ width: 30, height: 1, background: C.border }} />
+          <span style={{ width: 28, height: 1, background: C.border }} />
           <span style={{ fontSize: 10, color: C.pLight, lineHeight: 1 }}>♥</span>
-          <span style={{ width: 30, height: 1, background: C.border }} />
+          <span style={{ width: 28, height: 1, background: C.border }} />
         </div>
+
+        <h2 style={{
+          fontFamily: 'EB Garamond, serif', fontSize: 'clamp(28px, 8vw, 34px)',
+          color: C.brown, fontWeight: 600, margin: '6px 0 0',
+          letterSpacing: '-0.01em',
+        }}>
+          选择关系模式
+        </h2>
+
         <p style={{
-          fontSize: 13, color: '#8b7770', margin: '6px 0 0',
+          fontSize: 13, color: '#8b7770', margin: '4px 0 0',
           fontFamily: 'Plus Jakarta Sans, sans-serif',
           letterSpacing: '0.02em',
         }}>
@@ -366,12 +402,12 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
         </p>
       </div>
 
-      {/* 卡片网格 */}
+      {/* ===== 卡片网格 ===== */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: 10,
-        marginTop: 10,
+        marginTop: 12,
         position: 'relative', zIndex: 1,
       }}>
         {gridModes.map((mode, i) => (
@@ -385,7 +421,7 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
         ))}
       </div>
 
-      {/* 自定义卡片 — 独占一行 */}
+      {/* ===== 自定义卡片 ===== */}
       <div style={{ marginTop: 10, position: 'relative', zIndex: 1 }}>
         <ModeCard
           mode={customMode}
@@ -396,33 +432,33 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
         />
       </div>
 
-      {/* 底部操作 */}
+      {/* ===== 底部按钮 ===== */}
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        marginTop: 16, gap: 0, position: 'relative', zIndex: 1,
+        marginTop: 18, gap: 0, position: 'relative', zIndex: 1,
       }}>
         <p style={{
           fontSize: 12, color: '#b0a09b',
           fontFamily: 'Plus Jakarta Sans, sans-serif',
-          margin: '0 0 10px',
+          margin: '0 0 12px',
         }}>
           之后也可以在小窝中修改
         </p>
 
         <button onClick={handleContinue} style={{
-          width: '84%', height: 54,
+          width: '86%', height: 58,
           background: C.primary, color: '#fff',
           border: 'none', borderRadius: 999,
           fontSize: 16, fontWeight: 600,
           cursor: 'pointer',
           fontFamily: 'Plus Jakarta Sans, sans-serif',
           letterSpacing: '0.08em',
-          boxShadow: `0 6px 28px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.18)`,
+          boxShadow: `0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)`,
           transition: 'transform 0.1s, box-shadow 0.1s',
         }}
-          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)'; e.currentTarget.style.boxShadow = '0 3px 12px rgba(156,66,51,0.18)'; }}
-          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
+          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(156,66,51,0.18)'; }}
+          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
         >
           继 续
         </button>
@@ -455,74 +491,113 @@ function ModeCard({ mode, selected, onSelect, delay, wide }) {
       style={{
         display: 'flex', flexDirection: wide ? 'row' : 'column',
         alignItems: wide ? 'center' : 'center',
-        gap: wide ? 16 : 8,
-        padding: wide ? '16px 20px' : '16px 12px 14px',
+        gap: 0,
+        minHeight: wide ? 120 : 168,
+        padding: wide ? '16px 18px' : '20px 14px 16px',
         borderRadius: 26,
-        border: selected ? `2px solid ${C.primary}` : `1.5px solid rgba(220,192,188,0.5)`,
-        background: selected ? 'linear-gradient(135deg, #fff5f3 0%, #fcf9f2 100%)' : C.card,
+        border: selected ? `2px solid ${C.primary}` : '1px solid rgba(156,66,51,0.12)',
+        background: selected
+          ? 'linear-gradient(180deg, rgba(255,245,243,0.98) 0%, rgba(252,249,242,0.96) 100%)'
+          : 'linear-gradient(180deg, rgba(252,249,242,0.96) 0%, rgba(250,244,232,0.92) 100%)',
         cursor: 'pointer',
-        textAlign: 'center',
+        textAlign: wide ? 'left' : 'center',
         boxShadow: selected
-          ? '0 6px 24px rgba(156,66,51,0.10), 0 2px 8px rgba(156,66,51,0.06)'
-          : '0 2px 8px rgba(0,0,0,0.03)',
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          ? '0 18px 36px rgba(156,66,51,0.22)'
+          : '0 12px 28px rgba(90,55,45,0.08)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         position: 'relative',
         fontFamily: 'Plus Jakarta Sans, sans-serif',
         opacity: 0,
         animation: `cardIn 0.5s ease-out ${0.08 + delay * 0.07}s forwards`,
-        transform: 'scale(1)',
       }}
-      onMouseEnter={e => { if (!selected) e.currentTarget.style.borderColor = C.border; e.currentTarget.style.transform = 'scale(1.02)'; }}
-      onMouseLeave={e => { if (!selected) e.currentTarget.style.borderColor = 'rgba(220,192,188,0.5)'; e.currentTarget.style.transform = 'scale(1)'; }}
-      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
-      onMouseUp={e => { e.currentTarget.style.transform = selected ? 'scale(1)' : 'scale(1.02)'; }}
+      onMouseEnter={e => {
+        if (!selected) {
+          e.currentTarget.style.borderColor = 'rgba(156,66,51,0.25)'
+          e.currentTarget.style.transform = 'scale(1.02)'
+        }
+      }}
+      onMouseLeave={e => {
+        if (!selected) {
+          e.currentTarget.style.borderColor = 'rgba(156,66,51,0.12)'
+          e.currentTarget.style.transform = 'scale(1)'
+        }
+      }}
+      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)' }}
+      onMouseUp={e => { e.currentTarget.style.transform = selected ? 'scale(1)' : 'scale(1.02)' }}
     >
       {/* 选中标记 */}
       {selected && (
         <span style={{
-          position: 'absolute', top: 10, right: 10,
-          width: 24, height: 24, borderRadius: '50%',
+          position: 'absolute', top: 8, right: 8,
+          width: 22, height: 22, borderRadius: '50%',
           background: C.primary, color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 700,
-          animation: 'checkPop 0.3s ease-out',
+          fontSize: 12, fontWeight: 700,
+          animation: 'checkPop 0.35s ease-out',
           zIndex: 2,
+          boxShadow: '0 2px 6px rgba(156,66,51,0.25)',
         }}>✓</span>
       )}
 
       {/* 虚线内边框 */}
       <div style={{
         position: 'absolute', inset: 5, borderRadius: 22,
-        border: `1px dashed rgba(220,192,188,0.35)`,
+        border: `1px dashed rgba(220,192,188,0.22)`,
         pointerEvents: 'none',
       }} />
 
       {/* 插图 */}
       <div style={{
-        width: wide ? 56 : 56,
-        height: wide ? 56 : 56,
+        width: wide ? 72 : '100%',
+        height: wide ? 72 : 82,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        animation: selected ? 'iconFloat 3s ease-in-out infinite' : 'none',
+        marginBottom: wide ? 0 : 12,
         flexShrink: 0,
+        animation: selected && !wide ? 'iconFloat 3s ease-in-out infinite' : 'none',
       }}>
         <img src={mode.image} alt={mode.title}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', userSelect: 'none', pointerEvents: 'none' }} />
+          style={{
+            maxWidth: wide ? 72 : 145,
+            maxHeight: wide ? 72 : 82,
+            objectFit: 'contain',
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }} />
       </div>
 
-      {/* 文字 */}
-      <div style={{ flex: wide ? 1 : undefined }}>
+      {/* 文字区域 */}
+      <div style={{
+        flex: wide ? 1 : undefined,
+        display: 'flex', flexDirection: 'column',
+        alignItems: wide ? 'flex-start' : 'center',
+        marginLeft: wide ? 14 : 0,
+      }}>
         <div style={{
-          fontSize: wide ? 16 : 15,
+          fontSize: wide ? 17 : 24,
           fontWeight: 700, color: C.brown,
           fontFamily: 'EB Garamond, serif',
+          lineHeight: 1.2,
         }}>{mode.title}</div>
+
         <div style={{
-          fontSize: 10, color: C.light, marginTop: 1,
-          letterSpacing: '0.04em', textTransform: 'uppercase',
+          fontSize: 11, color: C.light, marginTop: 2,
+          letterSpacing: '0.18em', textTransform: 'uppercase',
+          fontWeight: 400,
         }}>{mode.subtitle}</div>
+
+        {/* 小爱心分割线 */}
         <div style={{
-          fontSize: 11, color: '#8b7770', marginTop: 3,
-          lineHeight: 1.4,
+          display: 'flex', alignItems: 'center', gap: 5,
+          marginTop: 6, marginBottom: 4,
+        }}>
+          <span style={{ width: 14, height: 1, background: 'rgba(220,192,188,0.4)' }} />
+          <span style={{ fontSize: 7, color: C.pLight, lineHeight: 1 }}>♥</span>
+          <span style={{ width: 14, height: 1, background: 'rgba(220,192,188,0.4)' }} />
+        </div>
+
+        <div style={{
+          fontSize: 12, color: '#6f5c55', marginTop: 4,
+          lineHeight: 1.5,
         }}>{mode.description}</div>
       </div>
     </button>
@@ -596,15 +671,15 @@ const animCSS = `
   50% { transform: translateY(-6px); }
 }
 @keyframes floatEl {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.55; }
-  50% { transform: translateY(-10px) scale(1.12); opacity: 0.3; }
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.50; }
+  50% { transform: translateY(-10px) scale(1.12); opacity: 0.28; }
 }
 button:active { transform: scale(0.95) !important; }
 `
 
 const modeCardCSS = `
 @keyframes cardIn {
-  0% { opacity: 0; transform: translateY(12px); }
+  0% { opacity: 0; transform: translateY(14px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 @keyframes checkPop {

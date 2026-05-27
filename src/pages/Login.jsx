@@ -45,7 +45,7 @@ export default function Login() {
       }}>
         <div style={{ fontSize: 44, marginBottom: 8 }}>📖</div>
         <h1 style={{ fontFamily: 'EB Garamond, serif', fontSize: 32, color: C.primary, fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.01em' }}>
-          Our Moments
+          Our Memories
         </h1>
         <p style={{ color: C.text, fontSize: 14, marginBottom: 36, fontWeight: 400 }}>
           {isRegister ? '创建你们的专属时光册' : '翻开属于我们的一页'}

@@ -43,7 +43,7 @@ export default function Home() {
         borderBottom: `1px solid ${C.border}`
       }}>
         <h1 style={{ fontFamily: 'EB Garamond, serif', fontSize: 22, color: C.primary, fontWeight: 600, margin: 0 }}>
-          Our Moments
+          Our Memories
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <button onClick={handleLogout}
@@ -61,7 +61,7 @@ export default function Home() {
       {/* Hero */}
       <section style={{ maxWidth: 600, margin: '0 auto', padding: '48px 24px 40px', textAlign: 'center' }}>
         <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 'clamp(32px, 6vw, 48px)', color: C.brown, fontWeight: 600, marginBottom: 12, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-          Hi, Our Moments Together
+          Hi, Our Memories Together
         </h2>
         <p style={{ fontSize: 'clamp(16px, 2.5vw, 18px)', color: C.text, lineHeight: 1.6, maxWidth: 460, margin: '0 auto' }}>
           Every day is a new page in our shared story. Let's revisit the beautiful memories.
@@ -160,7 +160,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer style={{ textAlign: 'center', padding: '40px 20px 60px', color: C.light, fontSize: 13 }}>
-        <p style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, color: C.primary, marginBottom: 4 }}>Our Moments</p>
+        <p style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, color: C.primary, marginBottom: 4 }}>Our Memories</p>
         <p>Crafted with love</p>
       </footer>
 
