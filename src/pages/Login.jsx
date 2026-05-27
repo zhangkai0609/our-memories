@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const C = {
@@ -17,21 +18,33 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [isRegister, setIsRegister] = useState(false)
+  const navigate = useNavigate()
 
   async function handleSubmit(e) {
     e.preventDefault()
     setLoading(true)
     setMessage('')
-    if (isRegister) {
-      const { data, error } = await supabase.auth.signUp({ email, password })
-      if (error) setMessage(error.message)
-      else setMessage('注册成功！现在可以登录了。')
-    } else {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setMessage(error.message)
-      else if (!data?.session) setMessage('登录失败，请重试')
+    try {
+      if (isRegister) {
+        const { data, error } = await supabase.auth.signUp({ email, password })
+        if (error) { setMessage(error.message); return }
+        if (data?.session) {
+          navigate('/')
+        } else {
+          setMessage('注册成功！请检查邮箱并确认后登录。')
+          setIsRegister(false)
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) { setMessage(error.message); return }
+        if (!data?.session) { setMessage('登录失败，请重试'); return }
+        navigate('/')
+      }
+    } catch (err) {
+      setMessage('网络连接失败，请检查网络后重试')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (

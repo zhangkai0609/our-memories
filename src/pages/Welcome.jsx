@@ -359,10 +359,16 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
     if (!email.trim() || !password) { setMessage('请填写邮箱和密码'); return }
     setLoading(true)
     setMessage('')
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-    if (error) { setMessage(error.message); setLoading(false); return }
-    if (!data?.session) { setMessage('登录失败，请重试'); setLoading(false); return }
-    onLoginSuccess()
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      if (error) { setMessage(error.message); return }
+      if (!data?.session) { setMessage('登录失败，请重试'); return }
+      onLoginSuccess()
+    } catch (err) {
+      setMessage('网络连接失败，请检查网络后重试')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleRegister(e) {
@@ -372,14 +378,24 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
     if (password.length < 6) { setMessage('密码至少需要6位'); return }
     setLoading(true)
     setMessage('')
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: { data: { display_name: nickname.trim() || undefined } },
-    })
-    if (error) { setMessage(error.message); setLoading(false); return }
-    setMessage('注册成功！')
-    setTimeout(() => onRegisterSuccess(), 800)
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { display_name: nickname.trim() || undefined } },
+      })
+      if (error) { setMessage(error.message); return }
+      if (data?.session) {
+        onLoginSuccess()
+      } else {
+        setMessage('注册成功！请检查邮箱确认。')
+        setTimeout(() => onRegisterSuccess(), 800)
+      }
+    } catch (err) {
+      setMessage('网络连接失败，请检查网络后重试')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const isLogin = authMode === 'login'
