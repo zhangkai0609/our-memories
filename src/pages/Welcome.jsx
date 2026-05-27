@@ -216,37 +216,43 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
 
   return (
     <div style={{
-      height: '100svh', display: 'flex', flexDirection: 'column',
-      padding: '36px 0 16px',
-      opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(16px)',
-      transition: 'opacity 0.55s ease, transform 0.55s ease',
+      position: 'relative', width: '100%', maxWidth: 430,
+      height: '100dvh', padding: '22px 18px max(18px, env(safe-area-inset-bottom))',
+      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(12px)',
+      transition: 'opacity 0.5s ease, transform 0.5s ease',
     }}>
-      {/* 背景装饰 */}
-      <img src={topLeftPolaroid} alt="" style={decorStyle('topLeft')} />
-      <img src={topRightLaceHeart} alt="" style={decorStyle('topRight')} />
-      <img src={leftFlowerBranch} alt="" style={decorStyle('left')} />
-      <img src={rightFlowerBranch} alt="" style={decorStyle('right')} />
-      <img src={bottomRightDaisy} alt="" style={decorStyle('bottom')} />
+      {/* 背景装饰 — 低透明度，仅氛围 */}
+      <img src={topLeftPolaroid} alt="" style={{ ...decorStyle('topLeft'), opacity: 0.40, position: 'absolute' }} />
+      <img src={topRightLaceHeart} alt="" style={{ ...decorStyle('topRight'), opacity: 0.38, position: 'absolute' }} />
+      <img src={leftFlowerBranch} alt="" style={{ ...decorStyle('left'), opacity: 0.35, position: 'absolute' }} />
+      <img src={rightFlowerBranch} alt="" style={{ ...decorStyle('right'), opacity: 0.35, position: 'absolute' }} />
+      <img src={bottomRightDaisy} alt="" style={{ ...decorStyle('bottom'), opacity: 0.38, position: 'absolute' }} />
 
       {/* 返回按钮 */}
-      <button onClick={onBack} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: C.light, cursor: 'pointer', fontSize: 14, fontFamily: 'Plus Jakarta Sans, sans-serif', padding: '4px 0', marginBottom: 0, position: 'relative', zIndex: 1 }}>← 返回</button>
+      <button onClick={onBack} style={{
+        alignSelf: 'flex-start', background: 'none', border: 'none',
+        color: C.light, cursor: 'pointer', fontSize: 13,
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+        padding: '2px 0', flexShrink: 0, position: 'relative', zIndex: 1,
+      }}>← 返回</button>
 
       {/* 标题区域 */}
-      <div style={{ textAlign: 'center', marginTop: 6, marginBottom: 18, position: 'relative', zIndex: 1 }}>
-        <p style={{ fontFamily: 'EB Garamond, serif', fontSize: 28, color: C.primary, fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>Our Memories</p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 6 }}>
-          <span style={{ width: 28, height: 1, background: C.border }} />
-          <span style={{ fontSize: 10, color: C.pLight, lineHeight: 1 }}>♥</span>
-          <span style={{ width: 28, height: 1, background: C.border }} />
+      <div style={{ textAlign: 'center', flexShrink: 0, marginBottom: 14, position: 'relative', zIndex: 1 }}>
+        <p style={{ fontFamily: 'EB Garamond, serif', fontSize: 26, color: C.primary, fontWeight: 600, margin: 0, letterSpacing: '-0.01em' }}>Our Memories</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 4 }}>
+          <span style={{ width: 24, height: 1, background: C.border }} />
+          <span style={{ fontSize: 9, color: C.pLight, lineHeight: 1 }}>♥</span>
+          <span style={{ width: 24, height: 1, background: C.border }} />
         </div>
-        <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 'clamp(30px, 9vw, 36px)', color: C.brown, fontWeight: 600, margin: '4px 0 0', letterSpacing: '-0.01em' }}>选择关系模式</h2>
-        <p style={{ fontSize: 14, color: '#8b7770', margin: '3px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '0.02em' }}>每一种关系，都值得被认真收藏。</p>
+        <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 'clamp(28px, 8vw, 34px)', color: C.brown, fontWeight: 600, margin: '3px 0 0', letterSpacing: '-0.01em' }}>选择关系模式</h2>
+        <p style={{ fontSize: 13, color: '#8b7770', margin: '2px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '0.02em' }}>每一种关系，都值得被认真收藏。</p>
       </div>
 
       {/* 卡片网格 — 2×2 */}
       <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14,
-        flex: 1, alignContent: 'start',
+        flexShrink: 0,
+        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
         position: 'relative', zIndex: 1,
       }}>
         {relationshipModes.map((mode, i) => (
@@ -254,15 +260,19 @@ function ModeStep({ onConfirm, onSkip, onBack }) {
         ))}
       </div>
 
-      {/* 底部按钮 */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20, gap: 0, position: 'relative', zIndex: 1 }}>
+      {/* 底部按钮区 — 推到底部 */}
+      <div style={{
+        marginTop: 'auto', flexShrink: 0,
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        position: 'relative', zIndex: 1,
+      }}>
         <p style={{ fontSize: 12, color: '#b0a09b', fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 10px' }}>之后也可以在小窝中修改</p>
-        <button onClick={handleContinue} style={{ ...pillBtnStyle, width: '84%', height: 54 }}
+        <button onClick={handleContinue} style={{ ...pillBtnStyle, width: '84%', height: 52 }}
           onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(156,66,51,0.18)'; }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 16px 32px rgba(156,66,51,0.24), inset 0 1px 0 rgba(255,255,255,0.18)'; }}
         >继 续</button>
-        <button onClick={onSkip} style={{ ...textLinkStyle, padding: '12px 20px' }}
+        <button onClick={onSkip} style={{ ...textLinkStyle, padding: '10px 20px' }}
           onMouseEnter={e => e.currentTarget.style.color = C.primary}
           onMouseLeave={e => e.currentTarget.style.color = '#8b7770'}
         >跳过，稍后设置</button>
@@ -277,14 +287,14 @@ function ModeCard({ mode, selected, onSelect, delay }) {
   return (
     <button onClick={onSelect} style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
-      minHeight: 220, padding: '16px 12px',
-      borderRadius: 26,
+      height: 186, padding: '12px 10px',
+      borderRadius: 24,
       border: selected ? `2px solid ${C.primary}` : '1px solid rgba(156,66,51,0.12)',
       background: selected
         ? 'linear-gradient(180deg, rgba(255,245,243,0.98) 0%, rgba(252,249,242,0.96) 100%)'
         : 'linear-gradient(180deg, rgba(252,249,242,0.96) 0%, rgba(250,244,232,0.92) 100%)',
       cursor: 'pointer', textAlign: 'center',
-      boxShadow: selected ? '0 18px 36px rgba(156,66,51,0.22)' : '0 12px 28px rgba(90,55,45,0.08)',
+      boxShadow: selected ? '0 14px 30px rgba(156,66,51,0.20)' : '0 8px 22px rgba(90,55,45,0.06)',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative',
       fontFamily: 'Plus Jakarta Sans, sans-serif', opacity: 0,
       animation: `cardIn 0.5s ease-out ${0.08 + delay * 0.07}s forwards`,
@@ -295,29 +305,29 @@ function ModeCard({ mode, selected, onSelect, delay }) {
       onMouseUp={e => { e.currentTarget.style.transform = selected ? 'scale(1)' : 'scale(1.02)'; }}
     >
       {selected && (
-        <span style={{ position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: '50%', background: C.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, animation: 'checkPop 0.35s ease-out', zIndex: 2, boxShadow: '0 2px 6px rgba(156,66,51,0.25)' }}>✓</span>
+        <span style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: C.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, animation: 'checkPop 0.35s ease-out', zIndex: 2, boxShadow: '0 2px 6px rgba(156,66,51,0.25)' }}>✓</span>
       )}
-      <div style={{ position: 'absolute', inset: 5, borderRadius: 22, border: '1px dashed rgba(220,192,188,0.22)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 4, borderRadius: 21, border: '1px dashed rgba(220,192,188,0.20)', pointerEvents: 'none' }} />
 
       {/* 插图 */}
       <div style={{
-        width: '100%', height: 74, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 8, flexShrink: 0,
+        width: '100%', height: 62, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 6, flexShrink: 0,
         animation: selected ? 'iconFloat 3s ease-in-out infinite' : 'none',
       }}>
-        <img src={mode.image} alt={mode.title} style={{ maxWidth: 140, maxHeight: 74, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none' }} />
+        <img src={mode.image} alt={mode.title} style={{ maxWidth: 125, maxHeight: 62, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none' }} />
       </div>
 
       {/* 文字区域 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: C.brown, fontFamily: 'EB Garamond, serif', lineHeight: 1.2 }}>{mode.title}</div>
-        <div style={{ fontSize: 11, color: C.light, marginTop: 2, letterSpacing: '0.18em', textTransform: 'uppercase', fontWeight: 400 }}>{mode.subtitle}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, marginBottom: 3 }}>
-          <span style={{ width: 14, height: 1, background: 'rgba(220,192,188,0.4)' }} />
-          <span style={{ fontSize: 7, color: C.pLight, lineHeight: 1 }}>♥</span>
-          <span style={{ width: 14, height: 1, background: 'rgba(220,192,188,0.4)' }} />
+        <div style={{ fontSize: 20, fontWeight: 700, color: C.brown, fontFamily: 'EB Garamond, serif', lineHeight: 1.15 }}>{mode.title}</div>
+        <div style={{ fontSize: 10, color: C.light, marginTop: 1, letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 400 }}>{mode.subtitle}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, marginBottom: 2 }}>
+          <span style={{ width: 12, height: 1, background: 'rgba(220,192,188,0.35)' }} />
+          <span style={{ fontSize: 6, color: C.pLight, lineHeight: 1 }}>♥</span>
+          <span style={{ width: 12, height: 1, background: 'rgba(220,192,188,0.35)' }} />
         </div>
-        <div style={{ fontSize: 12, color: '#6f5c55', marginTop: 2, lineHeight: 1.5 }}>{mode.description}</div>
+        <div style={{ fontSize: 11, color: '#6f5c55', marginTop: 1, lineHeight: 1.35 }}>{mode.description}</div>
       </div>
     </button>
   )
