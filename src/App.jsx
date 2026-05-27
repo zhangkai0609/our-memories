@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import NewRecord from './pages/NewRecord'
 import Map from './pages/Map'
 import Gallery from './pages/Gallery'
+import Welcome from './pages/Welcome'
 
 // 错误边界：捕获任何渲染错误
 class ErrorBoundary extends Component {
@@ -49,7 +50,7 @@ function ProtectedRoute({ children }) {
   }, [])
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#fff0f3', color: '#89726e', fontSize: 15, fontFamily: 'EB Garamond, serif', fontStyle: 'italic' }}>翻开我们的故事...</div>
-  if (!session) return <Navigate to="/login" />
+  if (!session) return <Navigate to="/welcome" />
   return children
 }
 
@@ -58,6 +59,7 @@ export default function App() {
     <ErrorBoundary>
       <HashRouter>
         <Routes>
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/new" element={<ProtectedRoute><NewRecord /></ProtectedRoute>} />
