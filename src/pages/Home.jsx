@@ -41,7 +41,7 @@ const navItems = [
   { id: 'diary', icon: '📔', label: '日记', to: '/gallery' },
   { id: 'new', icon: '＋', label: '', to: '/new', primary: true },
   { id: 'map', icon: '🗺', label: '地图', to: '/map' },
-  { id: 'profile', icon: '👤', label: '我的', to: null },
+  { id: 'profile', icon: '👤', label: '我的', to: '/my' },
 ]
 
 export default function Home() {
@@ -468,7 +468,6 @@ function BottomNav({ navigate }) {
     if (item.primary) { navigate(item.to); return }
     if (item.to === '/') { setActive(item.id); return }
     if (item.to) { navigate(item.to); return }
-    alert('即将开放')
   }
 
   return (

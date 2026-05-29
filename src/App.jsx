@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import NewRecord from './pages/NewRecord'
 import Map from './pages/Map'
 import Gallery from './pages/Gallery'
+import My from './pages/My'
 import Welcome from './pages/Welcome'
 
 // 错误边界：捕获任何渲染错误
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/new" element={<ProtectedRoute><NewRecord /></ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
           <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
+          <Route path="/my" element={<ProtectedRoute><My /></ProtectedRoute>} />
         </Routes>
       </HashRouter>
     </ErrorBoundary>
