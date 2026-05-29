@@ -46,6 +46,7 @@ const navItems = [
 export default function Home() {
   const [memories, setMemories] = useState([])
   const [allMemories, setAllMemories] = useState([])
+  const [memoryDays, setMemoryDays] = useState(0)
   const [loading, setLoading] = useState(true)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [calYear, setCalYear] = useState(new Date().getFullYear())
@@ -62,10 +63,20 @@ export default function Home() {
     else return setLoading(false)
     const { data } = await query
     setMemories(data || [])
+
+    // 查全部 + 最早记录来算天数
     let allQuery = supabase.from('memories').select('id,title,created_at').order('created_at', { ascending: false })
     if (roomCode) allQuery = allQuery.eq('room_code', roomCode)
     const { data: all } = await allQuery
     setAllMemories(all || [])
+
+    // 取最早一条记录的时间
+    if (all && all.length > 0) {
+      const first = new Date(all[all.length - 1].created_at)
+      const days = Math.floor((Date.now() - first.getTime()) / 86400000) + 1
+      setMemoryDays(days)
+    }
+
     setLoading(false)
   }
 
@@ -92,7 +103,7 @@ export default function Home() {
         <GreetingSection />
 
         {/* ===== Stats Card ===== */}
-        <StatsCard onCalendarClick={() => setCalendarOpen(true)} />
+        <StatsCard onCalendarClick={() => setCalendarOpen(true)} memoryDays={memoryDays} allMemories={allMemories} />
 
         {/* ===== Quick Actions ===== */}
         <QuickActions navigate={navigate} />
@@ -221,24 +232,43 @@ function GreetingSection() {
 }
 
 // ====================== STATS CARD ======================
-function StatsCard({ onCalendarClick }) {
+function StatsCard({ onCalendarClick, memoryDays, allMemories }) {
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}年${now.getMonth() + 1}月`
+  const today = now.getDate()
+  // 计算当月日历
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const firstDayOfWeek = new Date(now.getFullYear(), now.getMonth(), 1).getDay()
+  const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
+
+  // 哪些日期有记忆
+  const dateSet = new Set()
+  if (allMemories) {
+    allMemories.forEach(m => {
+      const d = new Date(m.created_at)
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+        dateSet.add(d.getDate())
+      }
+    })
+  }
+
   return (
     <div style={{
       margin: '0 20px 16px', background: C.card, borderRadius: 28,
-      padding: '20px 18px', position: 'relative', zIndex: 1,
+      padding: '18px 14px', position: 'relative', zIndex: 1,
       boxShadow: '0 8px 32px rgba(156,66,51,0.06), 0 2px 8px rgba(90,55,45,0.03)',
       border: '1px solid rgba(220,192,188,0.25)',
-      background: 'linear-gradient(135deg, rgba(252,249,242,0.98), rgba(250,245,238,0.94))',
+      backgroundImage: 'linear-gradient(135deg, rgba(252,249,242,0.98), rgba(250,245,238,0.94))',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       {/* 左侧数据 */}
-      <div>
+      <div style={{ flexShrink: 0 }}>
         <p style={{ fontSize: 12, color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 4px' }}>
-          我们在一起
+          我们的记忆
         </p>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-          <span style={{ fontSize: 48, fontWeight: 700, color: C.primary, fontFamily: 'EB Garamond, serif', lineHeight: 1 }}>
-            520
+          <span style={{ fontSize: 44, fontWeight: 700, color: C.primary, fontFamily: 'EB Garamond, serif', lineHeight: 1 }}>
+            {memoryDays || '--'}
           </span>
           <span style={{
             padding: '2px 8px', borderRadius: 8, background: 'rgba(156,66,51,0.08)',
@@ -246,47 +276,51 @@ function StatsCard({ onCalendarClick }) {
           }}>天</span>
         </div>
         <p style={{ fontSize: 11, color: C.light, margin: '6px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif', fontStyle: 'italic' }}>
-          "每一天，都是我们的独家记忆。"
+          从第一条记录到今天
         </p>
       </div>
 
-      {/* 右侧迷你日历 — 点击打开大日历 */}
+      {/* 右侧迷你日历 — 拉宽 */}
       <button onClick={onCalendarClick} style={{
-        width: 90, background: 'rgba(255,240,243,0.5)', borderRadius: 16,
-        padding: '10px', textAlign: 'center', cursor: 'pointer',
+        width: 140, background: 'rgba(255,240,243,0.5)', borderRadius: 18,
+        padding: '12px 12px 10px', textAlign: 'center', cursor: 'pointer',
         border: '1px solid rgba(220,192,188,0.2)', transition: 'transform 0.2s, box-shadow 0.2s',
+        flexShrink: 0, marginLeft: 12,
       }}
         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(156,66,51,0.10)'; }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = 'none'; }}
       >
-        <p style={{ fontSize: 11, color: C.brown, fontWeight: 600, fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 8px' }}>
-          2024年5月
+        <p style={{ fontSize: 12, color: C.brown, fontWeight: 600, fontFamily: 'Plus Jakarta Sans, sans-serif', margin: '0 0 8px' }}>
+          {currentMonth}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, fontSize: 10, fontFamily: 'Plus Jakarta Sans, sans-serif', color: C.light }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, fontSize: 11, fontFamily: 'Plus Jakarta Sans, sans-serif', color: C.light }}>
           {['一','二','三','四','五','六','日'].map(d => (
-            <span key={d} style={{ fontSize: 8 }}>{d}</span>
+            <span key={d} style={{ fontSize: 9, fontWeight: 500 }}>{d}</span>
           ))}
-          {[0,0,0].map((_, i) => <span key={`e${i}`} />)}
-          {Array.from({ length: 15 }, (_, i) => {
+          {Array.from({ length: startOffset }, (_, i) => <span key={`e${i}`} />)}
+          {Array.from({ length: daysInMonth }, (_, i) => {
             const day = i + 1
-            const is20 = day === 20
+            const hasMemory = dateSet.has(day)
+            const isToday = day === today
             return (
               <span key={day} style={{
-                color: is20 ? C.primary : C.text,
-                fontWeight: is20 ? 700 : 400,
-                position: 'relative',
+                color: isToday ? C.primary : C.brown,
+                fontWeight: isToday ? 700 : 400,
+                fontSize: isToday ? 12 : 11,
+                position: 'relative', cursor: 'default',
+                padding: '2px 0',
               }}>
-                {is20 ? (
+                {hasMemory ? (
                   <span style={{ position: 'relative', display: 'inline-block' }}>
                     {day}
-                    <span style={{ position: 'absolute', top: -6, left: '50%', transform: 'translateX(-50%)', fontSize: 6 }}>♥</span>
+                    <span style={{ position: 'absolute', bottom: -5, left: '50%', transform: 'translateX(-50%)', width: 4, height: 4, borderRadius: '50%', background: C.pLight }} />
                   </span>
                 ) : day}
               </span>
             )
           })}
         </div>
-        <p style={{ fontSize: 8, color: C.light, margin: '6px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>点击查看日历</p>
+        <p style={{ fontSize: 9, color: C.light, margin: '8px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>点击查看全部日历</p>
       </button>
     </div>
   )
@@ -339,8 +373,8 @@ function RecentMemories({ memories, navigate }) {
 
   return (
     <div style={{ margin: '0 0 18px', position: 'relative', zIndex: 1 }}>
-      {/* 标题行 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px', marginBottom: 12 }}>
+      {/* 标题行 — 与 StatsCard / QuickActions 左右对齐 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 20px', marginBottom: 12 }}>
         <h3 style={{ fontFamily: 'EB Garamond, serif', fontSize: 20, color: C.brown, fontWeight: 600, margin: 0 }}>
           最近回忆
         </h3>
@@ -350,10 +384,10 @@ function RecentMemories({ memories, navigate }) {
         }}>查看全部 &gt;</button>
       </div>
 
-      {/* 横向滚动 */}
+      {/* 横向滚动 — 左右留20px与上方对齐 */}
       <div style={{
         display: 'flex', gap: 12, overflowX: 'auto',
-        padding: '0 20px', scrollSnapType: 'x mandatory',
+        margin: '0 20px', padding: 0, scrollSnapType: 'x mandatory',
         WebkitOverflowScrolling: 'touch',
       }}>
         {displayMemories.map((m, i) => (
