@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { getSpaceId } from '../lib/space'
 
 const C = {
   bg: '#fff0f3', primary: '#9c4233', pLight: '#e87c69', pFixed: '#ffdad4',
@@ -118,10 +117,8 @@ export default function NewRecord() {
       title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls,
     }
     if (coords) recordData.coordinates = coords
-    try {
-      const spaceId = await getSpaceId()
-      if (spaceId) recordData.space_id = spaceId
-    } catch {}
+    const roomCode = localStorage.getItem('room_code')
+    if (roomCode) recordData.room_code = roomCode
 
     let { error } = await supabase.from('memories').insert(recordData)
 

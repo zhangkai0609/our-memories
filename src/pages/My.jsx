@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { getSpaceId, getSpaceInfo, linkPartner, unlinkPartner } from '../lib/space'
+import { getSpaceInfo, linkPartner, unlinkPartner } from '../lib/space'
 
 import avatarPets from '../assets/profile/profile-avatar-pets.webp'
 import heroPolaroid from '../assets/profile/profile-hero-polaroid.webp'
@@ -68,14 +68,10 @@ export default function MyPage() {
 
   async function fetchStats() {
     try {
-      const spaceId = await getSpaceId()
-      if (spaceId) {
-        let query = supabase.from('memories').select('id', { count: 'exact' }).eq('space_id', spaceId)
-        const { count: diaryCount } = await query
+      const roomCode = localStorage.getItem('room_code')
+      if (roomCode) {
+        const { count: diaryCount } = await supabase.from('memories').select('id', { count: 'exact' }).eq('room_code', roomCode)
         if (diaryCount != null) setStats(s => ({ ...s, diary: diaryCount }))
-      } else {
-        const { count } = await supabase.from('memories').select('id', { count: 'exact' })
-        if (count != null) setStats(s => ({ ...s, diary: count }))
       }
       const info = await getSpaceInfo()
       setSpaceInfo(info)

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { getSpaceId } from '../lib/space'
 import { useNavigate } from 'react-router-dom'
 import petAvatar from '../assets/home/home-pet-avatar.webp'
 import heroPolaroid from '../assets/home/home-hero-polaroid.webp'
@@ -57,13 +56,14 @@ export default function Home() {
   useEffect(() => { fetchMemories() }, [])
 
   async function fetchMemories() {
-    const spaceId = await getSpaceId()
+    const roomCode = localStorage.getItem('room_code')
     let query = supabase.from('memories').select('*').order('created_at', { ascending: false }).limit(6)
-    if (spaceId) query = query.eq('space_id', spaceId)
+    if (roomCode) query = query.eq('room_code', roomCode)
+    else return setLoading(false)
     const { data } = await query
     setMemories(data || [])
     let allQuery = supabase.from('memories').select('id,title,created_at').order('created_at', { ascending: false })
-    if (spaceId) allQuery = allQuery.eq('space_id', spaceId)
+    if (roomCode) allQuery = allQuery.eq('room_code', roomCode)
     const { data: all } = await allQuery
     setAllMemories(all || [])
     setLoading(false)

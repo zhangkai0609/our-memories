@@ -1,6 +1,5 @@
-import { useState, useEffect, Component } from 'react'
+import { Component } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { supabase } from './lib/supabase'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import NewRecord from './pages/NewRecord'
@@ -9,15 +8,9 @@ import Gallery from './pages/Gallery'
 import My from './pages/My'
 import Welcome from './pages/Welcome'
 
-// 错误边界：捕获任何渲染错误
 class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props)
-    this.state = { error: null }
-  }
-  static getDerivedStateFromError(error) {
-    return { error }
-  }
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(error) { return { error } }
   render() {
     if (this.state.error) {
       return (
@@ -31,27 +24,10 @@ class ErrorBoundary extends Component {
   }
 }
 
-function ProtectedRoute({ children }) {
-  const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true
-    supabase.auth.getSession()
-      .then(({ data }) => {
-        if (mounted) { setSession(data.session); setLoading(false) }
-      })
-      .catch(() => {
-        if (mounted) { setSession(null); setLoading(false) }
-      })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
-    return () => { mounted = false; subscription.unsubscribe() }
-  }, [])
-
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#fff0f3', color: '#89726e', fontSize: 15, fontFamily: 'EB Garamond, serif', fontStyle: 'italic' }}>翻开我们的故事...</div>
-  if (!session) return <Navigate to="/welcome" />
+// 简单路由守卫：有 room_code 才能进内部页面
+function RoomGuard({ children }) {
+  const code = localStorage.getItem('room_code')
+  if (!code) return <Navigate to="/welcome" />
   return children
 }
 
@@ -62,11 +38,11 @@ export default function App() {
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/new" element={<NewRecord />} />
-          <Route path="/map" element={<Map />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/my" element={<My />} />
+          <Route path="/" element={<RoomGuard><Home /></RoomGuard>} />
+          <Route path="/new" element={<RoomGuard><NewRecord /></RoomGuard>} />
+          <Route path="/map" element={<RoomGuard><Map /></RoomGuard>} />
+          <Route path="/gallery" element={<RoomGuard><Gallery /></RoomGuard>} />
+          <Route path="/my" element={<RoomGuard><My /></RoomGuard>} />
         </Routes>
       </HashRouter>
     </ErrorBoundary>
