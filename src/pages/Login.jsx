@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, phoneToEmail } from '../lib/supabase'
+import { getOrCreateSpace } from '../lib/space'
 
 const C = {
   bg: '#fff0f3',
@@ -13,7 +14,7 @@ const C = {
 }
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -22,22 +23,30 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (!/^1[3-9]\d{9}$/.test(phone.replace(/[\s\-]/g, ''))) {
+      setMessage('请输入正确的手机号'); return
+    }
     setLoading(true)
     setMessage('')
     try {
+      const email = phoneToEmail(phone)
       if (isRegister) {
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) { setMessage(error.message); return }
         if (data?.session) {
+          await getOrCreateSpace(phone)
           navigate('/')
         } else {
-          setMessage('注册成功！请检查邮箱并确认后登录。')
+          setMessage('注册成功！现在可以登录了。')
           setIsRegister(false)
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) { setMessage(error.message); return }
         if (!data?.session) { setMessage('登录失败，请重试'); return }
+        // 确保用户有 space_id
+        const spaceId = await getOrCreateSpace(phone)
+        if (!spaceId) { setMessage('空间初始化失败，请重试'); return }
         navigate('/')
       }
     } catch (err) {
@@ -65,8 +74,8 @@ export default function Login() {
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input type="email" placeholder="邮箱地址" value={email}
-            onChange={e => setEmail(e.target.value)} required
+          <input type="tel" placeholder="手机号码" value={phone}
+            onChange={e => setPhone(e.target.value)} required maxLength={13}
             style={{
               padding: '15px 20px', borderRadius: 16, border: `1.5px solid ${C.border}`,
               fontSize: 15, background: '#fdfaf7', color: C.brown, fontFamily: 'inherit'
@@ -97,7 +106,7 @@ export default function Login() {
             marginTop: 28, background: 'none', border: 'none',
             color: C.pLight, cursor: 'pointer', fontSize: 14, fontFamily: 'inherit'
           }}>
-          {isRegister ? '已有账号？去登录 →' : '没有账号？去注册 →'}
+          {isRegister ? '已有账号？去登录 →' : '没有账号？注册一个 →'}
         </button>
       </div>
     </div>

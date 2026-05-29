@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import { getSpaceId } from '../lib/space'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 
@@ -40,7 +41,10 @@ export default function MapPage() {
   }, [])
 
   async function fetchMemories() {
-    const { data } = await supabase.from('memories').select('*').order('created_at', { ascending: false })
+    const spaceId = await getSpaceId()
+    let query = supabase.from('memories').select('*').order('created_at', { ascending: false })
+    if (spaceId) query = query.eq('space_id', spaceId)
+    const { data } = await query
     setMemories(data || [])
 
     const locMap = new Map()

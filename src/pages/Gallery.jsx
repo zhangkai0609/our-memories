@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { getSpaceId } from '../lib/space'
 
 // ===== 素材 =====
 import diaryPhotoGirlFood from '../assets/diary/diary-photo-girl-food.webp'
@@ -97,7 +98,10 @@ export default function Gallery() {
 
   async function fetchData() {
     try {
-      const { data } = await supabase.from('memories').select('*').order('created_at', { ascending: false })
+      const spaceId = await getSpaceId()
+      let query = supabase.from('memories').select('*').order('created_at', { ascending: false })
+      if (spaceId) query = query.eq('space_id', spaceId)
+      const { data } = await query
       if (data && data.length > 0) {
         const mapped = data.map(m => ({
           id: m.id,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, phoneToEmail } from '../lib/supabase'
+import { getOrCreateSpace, linkPartner } from '../lib/space'
 import welcomeHero from '../assets/onboarding/welcome-hero.webp'
 import couplePets from '../assets/onboarding/modes/icons/couple-pets.webp'
 import friendsCamera from '../assets/onboarding/modes/icons/friends-camera.webp'
@@ -336,13 +337,13 @@ function ModeCard({ mode, selected, onSelect, delay }) {
 // ====================== AUTH STEP ======================
 function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
   const [authMode, setAuthMode] = useState('login')
-  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
+  const [partnerPhone, setPartnerPhone] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [visible, setVisible] = useState(false)
@@ -354,15 +355,22 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
     setMessage('')
   }
 
+  function isValidPhone(p) {
+    return /^1[3-9]\d{9}$/.test(p.replace(/[\s\-]/g, ''))
+  }
+
   async function handleLogin(e) {
     e.preventDefault()
-    if (!email.trim() || !password) { setMessage('请填写邮箱和密码'); return }
+    if (!isValidPhone(phone)) { setMessage('请输入正确的手机号'); return }
+    if (!password) { setMessage('请输入密码'); return }
     setLoading(true)
     setMessage('')
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      const email = phoneToEmail(phone)
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setMessage(error.message); return }
       if (!data?.session) { setMessage('登录失败，请重试'); return }
+      await getOrCreateSpace(phone)
       onLoginSuccess()
     } catch (err) {
       setMessage('网络连接失败，请检查网络后重试')
@@ -373,23 +381,29 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
 
   async function handleRegister(e) {
     e.preventDefault()
-    if (!email.trim() || !password) { setMessage('请填写邮箱和密码'); return }
+    if (!isValidPhone(phone)) { setMessage('请输入正确的手机号'); return }
+    if (!password) { setMessage('请输入密码'); return }
     if (password !== confirmPassword) { setMessage('两次密码不一致'); return }
     if (password.length < 6) { setMessage('密码至少需要6位'); return }
     setLoading(true)
     setMessage('')
     try {
+      const email = phoneToEmail(phone)
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
+        email, password,
         options: { data: { display_name: nickname.trim() || undefined } },
       })
       if (error) { setMessage(error.message); return }
       if (data?.session) {
+        await getOrCreateSpace(phone)
+        // 如果填了伴侣手机号，自动关联
+        if (partnerPhone.trim() && isValidPhone(partnerPhone)) {
+          await linkPartner(partnerPhone)
+        }
         onLoginSuccess()
       } else {
-        setMessage('注册成功！请检查邮箱确认。')
-        setTimeout(() => onRegisterSuccess(), 800)
+        setMessage('注册成功！现在可以登录了。')
+        setTimeout(() => switchMode('login'), 800)
       }
     } catch (err) {
       setMessage('网络连接失败，请检查网络后重试')
@@ -476,12 +490,22 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
             </div>
           )}
 
-          {/* 邮箱 */}
+          {/* 手机号 */}
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 16, top: 14, fontSize: 15, pointerEvents: 'none', zIndex: 1 }}>✉</span>
-            <input type="email" placeholder="邮箱地址" value={email} onChange={e => setEmail(e.target.value)} required
+            <span style={{ position: 'absolute', left: 16, top: 14, fontSize: 15, pointerEvents: 'none', zIndex: 1 }}>📱</span>
+            <input type="tel" placeholder="手机号码" value={phone} onChange={e => setPhone(e.target.value)} required maxLength={13}
               style={{ ...inputStyle, paddingLeft: 42 }} />
           </div>
+
+          {/* 伴侣手机号 (仅注册) */}
+          {!isLogin && (
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 16, top: 14, fontSize: 15, pointerEvents: 'none', zIndex: 1 }}>💑</span>
+              <input type="tel" placeholder="伴侣的手机号（选填，用于共享回忆）" value={partnerPhone}
+                onChange={e => setPartnerPhone(e.target.value)} maxLength={13}
+                style={{ ...inputStyle, paddingLeft: 42, fontSize: 13 }} />
+            </div>
+          )}
 
           {/* 密码 */}
           <div style={{ position: 'relative' }}>
