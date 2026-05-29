@@ -162,60 +162,58 @@ function Header({ navigate }) {
 // ====================== GREETING SECTION ======================
 function GreetingSection() {
   return (
-    <section style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 16px', gap: 16, position: 'relative', zIndex: 1 }}>
-      {/* 宠物头像 + 问候 */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <section style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 16px', gap: 14, position: 'relative', zIndex: 1 }}>
+      {/* 左侧头像：小周同学 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <div style={{
-          width: 52, height: 52, borderRadius: '50%', overflow: 'hidden',
-          border: '2px solid rgba(156,66,51,0.20)', flexShrink: 0,
-          boxShadow: '0 2px 10px rgba(156,66,51,0.08)',
+          width: 64, height: 64, borderRadius: '50%', overflow: 'hidden',
+          border: '3px solid rgba(156,66,51,0.25)', flexShrink: 0,
+          boxShadow: '0 3px 14px rgba(156,66,51,0.10)',
         }}>
-          <img src={petAvatar} alt="pet" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={petAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              Hi，小周同学
-            </span>
-            <span style={{ fontSize: 16 }}>👋</span>
-          </div>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 4,
-            marginTop: 4, padding: '3px 10px', borderRadius: 12,
-            background: 'rgba(156,66,51,0.08)', color: C.primary,
-            fontSize: 11, fontWeight: 500, fontFamily: 'Plus Jakarta Sans, sans-serif',
-          }}>
-            <span style={{ fontSize: 10 }}>♥</span> 情侣模式
-          </span>
-        </div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          小周同学
+        </span>
       </div>
 
-      {/* 拍立得照片 */}
+      {/* 中间爱心连接 */}
       <div style={{
-        position: 'relative', flexShrink: 0, width: 72, height: 88,
-        transform: 'rotate(3deg)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative',
       }}>
-        {/* 拍立得外壳 */}
-        <div style={{
-          position: 'absolute', inset: 0, background: '#faf7f2',
-          borderRadius: 4, boxShadow: '0 4px 16px rgba(156,66,51,0.12), 0 2px 4px rgba(0,0,0,0.06)',
-          padding: '5px 5px 20px',
-        }}>
-          <div style={{
-            width: '100%', height: '100%', borderRadius: 1, overflow: 'hidden',
-            background: '#e8e0d8',
-          }}>
-            <img src={heroPolaroidPhoto} alt="us" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-        </div>
-        {/* 胶带装饰 */}
-        <div style={{
-          position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%) rotate(-6deg)',
-          width: 30, height: 14, background: 'rgba(252,249,242,0.65)', borderRadius: 2, zIndex: 2,
-        }} />
-        {/* 小心形 */}
-        <span style={{ position: 'absolute', bottom: -8, right: -6, fontSize: 14, zIndex: 2 }}>♥</span>
+        <span style={{
+          fontSize: 20, animation: 'heartBeat 1.5s ease-in-out infinite',
+        }}>♥</span>
       </div>
+
+      {/* 右侧头像：伴侣 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%', overflow: 'hidden',
+          border: '3px solid rgba(156,66,51,0.25)', flexShrink: 0,
+          boxShadow: '0 3px 14px rgba(156,66,51,0.10)',
+          background: 'linear-gradient(135deg, #fce4e0, #fdf0ed)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 28,
+        }}>
+          🐾
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          另一半
+        </span>
+      </div>
+
+      {/* 情侣模式标签 */}
+      <span style={{
+        position: 'absolute', right: 0, bottom: 4,
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        padding: '3px 10px', borderRadius: 12,
+        background: 'rgba(156,66,51,0.07)', color: C.primary,
+        fontSize: 11, fontWeight: 500, fontFamily: 'Plus Jakarta Sans, sans-serif',
+      }}>
+        <span style={{ fontSize: 10 }}>♥</span> 情侣模式
+      </span>
     </section>
   )
 }
