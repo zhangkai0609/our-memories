@@ -62,6 +62,7 @@ export default function MyPage() {
   const [partnerPhone, setPartnerPhone] = useState('')
   const [linkMsg, setLinkMsg] = useState('')
   const [showSpaceModal, setShowSpaceModal] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => { fetchStats() }, [])
@@ -126,7 +127,7 @@ export default function MyPage() {
         <MyHeader navigate={navigate} onSettings={() => setShowSettings(true)} />
 
         {/* ===== USER INFO ===== */}
-        <UserInfoCard spaceInfo={spaceInfo} onManageSpace={() => setShowSpaceModal(true)} />
+        <UserInfoCard spaceInfo={spaceInfo} onManageSpace={() => setShowSpaceModal(true)} onEditProfile={() => setShowEditProfile(true)} />
 
         {/* ===== STATS ===== */}
         <StatsCard items={statItems} />
@@ -159,6 +160,11 @@ export default function MyPage() {
           onToggleInput={() => { setShowPartnerInput(!showPartnerInput); setLinkMsg(''); }}
           onClose={() => { setShowSpaceModal(false); setShowPartnerInput(false); setLinkMsg(''); }}
         />
+      )}
+
+      {/* ===== EDIT PROFILE MODAL ===== */}
+      {showEditProfile && (
+        <EditProfileModal onClose={() => setShowEditProfile(false)} />
       )}
 
       <style>{myCSS}</style>
@@ -209,16 +215,19 @@ function MyHeader({ navigate, onSettings }) {
 }
 
 // ====================== USER INFO CARD ======================
-function UserInfoCard({ spaceInfo, onManageSpace }) {
+function UserInfoCard({ spaceInfo, onManageSpace, onEditProfile }) {
   return (
-    <div style={{
+    <div onClick={onEditProfile} style={{
       display: 'flex', alignItems: 'center', gap: 14,
       margin: '4px 18px 14px', padding: '16px',
       background: 'linear-gradient(135deg, rgba(252,249,242,0.96), rgba(250,245,238,0.92))',
       borderRadius: 24, border: '1px solid rgba(220,192,188,0.25)',
       boxShadow: '0 6px 24px rgba(156,66,51,0.06)',
-      position: 'relative',
-    }}>
+      position: 'relative', cursor: 'pointer', transition: 'box-shadow 0.2s',
+    }}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 8px 30px rgba(156,66,51,0.10)'}
+      onMouseLeave={e => e.currentTarget.style.boxShadow = '0 6px 24px rgba(156,66,51,0.06)'}
+    >
       {/* 蕾丝装饰 */}
       <img src={laceHeart} alt="" style={{
         position: 'absolute', top: -6, right: 10, width: 36, opacity: 0.5,
@@ -672,6 +681,80 @@ function SpaceModal({ spaceInfo, showPartnerInput, partnerPhone, setPartnerPhone
             </button>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ====================== EDIT PROFILE MODAL ======================
+function EditProfileModal({ onClose }) {
+  const [myName, setMyName] = useState(localStorage.getItem('my_name') || '')
+  const [partnerName, setPartnerName] = useState(localStorage.getItem('partner_name') || '')
+  const [myAvatar, setMyAvatar] = useState(localStorage.getItem('my_avatar') || null)
+  const [partnerAvatar, setPartnerAvatar] = useState(localStorage.getItem('partner_avatar') || null)
+
+  function handleMyFile(e) {
+    const f = e.target.files[0]
+    if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => setMyAvatar(reader.result)
+    reader.readAsDataURL(f)
+  }
+
+  function handlePartnerFile(e) {
+    const f = e.target.files[0]
+    if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => setPartnerAvatar(reader.result)
+    reader.readAsDataURL(f)
+  }
+
+  function handleSave() {
+    if (myName) localStorage.setItem('my_name', myName)
+    if (partnerName) localStorage.setItem('partner_name', partnerName)
+    if (myAvatar) localStorage.setItem('my_avatar', myAvatar)
+    if (partnerAvatar) localStorage.setItem('partner_avatar', partnerAvatar)
+    onClose()
+    window.location.reload()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(30,10,8,0.40)', backdropFilter: 'blur(4px)' }} />
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 340, background: C.card, borderRadius: 24, padding: '24px 20px', boxShadow: '0 16px 48px rgba(60,20,15,0.22)', border: '1px solid rgba(220,192,188,0.30)', animation: 'modalIn 0.25s ease-out' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.04)', border: 'none', cursor: 'pointer', fontSize: 16, color: C.light }}>✕</button>
+        <h3 style={{ fontFamily: 'EB Garamond, serif', fontSize: 20, color: C.brown, fontWeight: 600, margin: '0 0 20px', textAlign: 'center' }}>编辑资料</h3>
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginBottom: 20 }}>
+          {/* 我的头像 */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <label style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(156,66,51,0.25)', boxShadow: '0 3px 14px rgba(156,66,51,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 32, position: 'relative' }}>
+              {myAvatar ? <img src={myAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <img src={avatarPets} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>✎</div>
+              <input type="file" accept="image/*" onChange={handleMyFile} style={{ display: 'none' }} />
+            </label>
+            <input type="text" placeholder="你的名字" value={myName} onChange={e => setMyName(e.target.value)} maxLength={10}
+              style={{ width: 90, padding: '6px 10px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, background: C.card, color: C.brown, textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif', outline: 'none' }} />
+          </div>
+
+          <span style={{ fontSize: 20, color: C.primary }}>♥</span>
+
+          {/* 伴侣头像 */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <label style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(156,66,51,0.25)', boxShadow: '0 3px 14px rgba(156,66,51,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 32 }}>
+              {partnerAvatar ? <img src={partnerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐾'}
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>✎</div>
+              <input type="file" accept="image/*" onChange={handlePartnerFile} style={{ display: 'none' }} />
+            </label>
+            <input type="text" placeholder="ta 的名字" value={partnerName} onChange={e => setPartnerName(e.target.value)} maxLength={10}
+              style={{ width: 90, padding: '6px 10px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, background: C.card, color: C.brown, textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif', outline: 'none' }} />
+          </div>
+        </div>
+
+        <button onClick={handleSave}
+          style={{ width: '100%', padding: '14px', borderRadius: 18, background: C.primary, color: '#fff', border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif', boxShadow: '0 4px 14px rgba(156,66,51,0.22)' }}>
+          保存
+        </button>
       </div>
     </div>
   )

@@ -48,9 +48,12 @@ export default function Welcome() {
     if (!code || code.length < 2) return
     localStorage.setItem('room_code', code)
 
-    // 检查是否已有数据（老用户直接进）
+    // 检查是否已有数据（老用户直接进，补上默认 profile）
     const { data } = await supabase.from('memories').select('id').eq('room_code', code).limit(1)
     if (data && data.length > 0) {
+      if (!localStorage.getItem('my_name')) localStorage.setItem('my_name', '小周同学')
+      if (!localStorage.getItem('partner_name')) localStorage.setItem('partner_name', '另一半')
+      if (!localStorage.getItem('room_mode')) localStorage.setItem('room_mode', 'couple')
       navigate('/')
     } else {
       setStep('mode')
