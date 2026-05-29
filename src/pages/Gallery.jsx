@@ -79,7 +79,7 @@ const titleOptions = ['全部标题', '晚霞', '散步', '下午茶', '早餐']
 
 export default function Gallery() {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [records, setRecords] = useState([])
 
   // 筛选 & 视图状态
@@ -172,12 +172,6 @@ export default function Gallery() {
     setShowFilter(null)
     setCurrentPage(1)
   }
-
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: C.bg, color: C.light, fontFamily: 'EB Garamond, serif', fontStyle: 'italic', fontSize: 16 }}>
-      翻开我们的故事...
-    </div>
-  )
 
   return (
     <div style={{ minHeight: '100svh', background: C.bg, paddingBottom: 100, position: 'relative' }}>

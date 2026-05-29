@@ -48,7 +48,7 @@ function MapMarkers({ markers, activeLoc, setActiveLoc }) {
 export default function MapPage() {
   const [geoData, setGeoData] = useState([])
   const [memories, setMemories] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [activeLoc, setActiveLoc] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [geocoding, setGeocoding] = useState(0) // 正在 geocode 的数量
@@ -152,12 +152,6 @@ export default function MapPage() {
   const markers = geoData.filter(g => g.lat !== null)
   const unknownLocs = geoData.filter(g => g.lat === null)
   const center = markers[0] ? [markers[0].lat, markers[0].lng] : [35, 105]
-
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: C.bg, color: C.light, fontFamily: 'EB Garamond, serif', fontStyle: 'italic', fontSize: 16 }}>
-      在地图上寻找我们的足迹...
-    </div>
-  )
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: C.bg }}>

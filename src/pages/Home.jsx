@@ -47,7 +47,7 @@ export default function Home() {
   const [memories, setMemories] = useState([])
   const [allMemories, setAllMemories] = useState([])
   const [memoryDays, setMemoryDays] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [calYear, setCalYear] = useState(new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(new Date().getMonth() + 1)
@@ -80,11 +80,7 @@ export default function Home() {
     setLoading(false)
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: C.bg, color: C.light, fontSize: 15, fontFamily: 'EB Garamond, serif', fontStyle: 'italic' }}>
-      翻开我们的故事...
-    </div>
-  )
+  if (loading) return null // 页面秒开，数据后台加载
 
   return (
     <div style={{ minHeight: '100svh', background: C.bg, position: 'relative', paddingBottom: 100 }}>
