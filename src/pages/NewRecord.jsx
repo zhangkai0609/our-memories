@@ -114,14 +114,14 @@ export default function NewRecord() {
       }
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    const spaceId = await getSpaceId()
     const recordData = {
       title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls,
-      user_id: user?.id,
     }
     if (coords) recordData.coordinates = coords
-    if (spaceId) recordData.space_id = spaceId
+    try {
+      const spaceId = await getSpaceId()
+      if (spaceId) recordData.space_id = spaceId
+    } catch {}
 
     let { error } = await supabase.from('memories').insert(recordData)
 
