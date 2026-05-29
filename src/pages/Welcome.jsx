@@ -344,6 +344,7 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
   const [partnerPhone, setPartnerPhone] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [remember, setRemember] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [visible, setVisible] = useState(false)
