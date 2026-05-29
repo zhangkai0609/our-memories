@@ -712,11 +712,10 @@ function SettingsView({ onBack }) {
     setLogoutError('')
     try {
       const { error } = await supabase.auth.signOut()
-      if (error) { setLogoutError(error.message); return }
-      navigate('/login')
+      if (error) { setLogoutError(error.message); setLoggingOut(false); return }
+      // 不手动导航 — App.jsx 的 onAuthStateChange 会自动跳转到 /welcome
     } catch {
       setLogoutError('退出失败，请重试')
-    } finally {
       setLoggingOut(false)
     }
   }

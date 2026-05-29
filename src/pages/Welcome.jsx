@@ -395,10 +395,10 @@ function AuthStep({ onBack, onLoginSuccess, onRegisterSuccess }) {
       })
       if (error) { setMessage(error.message); return }
       if (data?.session) {
-        await getOrCreateSpace(phone)
+        await getOrCreateSpace(phone).catch(() => {})
         // 如果填了伴侣手机号，自动关联
         if (partnerPhone.trim() && isValidPhone(partnerPhone)) {
-          await linkPartner(partnerPhone)
+          await linkPartner(partnerPhone).catch(() => {})
         }
         onLoginSuccess()
       } else {

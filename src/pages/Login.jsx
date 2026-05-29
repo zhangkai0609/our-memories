@@ -34,7 +34,7 @@ export default function Login() {
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) { setMessage(error.message); return }
         if (data?.session) {
-          await getOrCreateSpace(phone)
+          await getOrCreateSpace(phone) // 不阻塞：成功/失败都继续
           navigate('/')
         } else {
           setMessage('注册成功！现在可以登录了。')

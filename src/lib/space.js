@@ -19,35 +19,45 @@ export async function findPartnerSpace(phone) {
 }
 
 /** 为新用户创建 Space，返回 space_id。
- *  登录时调用：如果用户还没有 space_id，则为 ta 创建（或查找伴侣邀请） */
+ *  登录时调用：如果用户还没有 space_id，则为 ta 创建（或查找伴侣邀请）
+ *  如果 spaces 表不存在，则使用 user_id 作为 fallback space_id */
 export async function getOrCreateSpace(phone) {
   const cleaned = phone.replace(/[\s\-\(\)\+＋]/g, '')
 
   // 1. 先检查是否有伴侣已经邀请了这个手机号
-  const partnerSpace = await findPartnerSpace(cleaned)
-  if (partnerSpace) {
-    // 加入已有 space：更新 user_metadata
-    await supabase.auth.updateUser({ data: { space_id: partnerSpace, phone: cleaned } })
-    return partnerSpace
-  }
+  try {
+    const partnerSpace = await findPartnerSpace(cleaned)
+    if (partnerSpace) {
+      await supabase.auth.updateUser({ data: { space_id: partnerSpace, phone: cleaned } })
+      return partnerSpace
+    }
+  } catch { /* spaces 表可能不存在，忽略 */ }
 
   // 2. 检查用户是否已有 space_id
   const existing = await getSpaceId()
   if (existing) return existing
 
-  // 3. 创建新 Space
-  const { data: space, error } = await supabase.from('spaces').insert({
-    creator_phone: cleaned,
-  }).select('id').single()
+  // 3. 尝试创建新 Space，失败则用 user_id 兜底
+  try {
+    const { data: space, error } = await supabase.from('spaces').insert({
+      creator_phone: cleaned,
+    }).select('id').single()
 
-  if (error) {
-    console.error('创建空间失败:', error)
-    return null
+    if (!error && space) {
+      await supabase.auth.updateUser({ data: { space_id: space.id, phone: cleaned } })
+      return space.id
+    }
+  } catch { /* 表不存在，走 fallback */ }
+
+  // 4. Fallback：使用 Supabase user_id 作为 space_id
+  const { data: { user } } = await supabase.auth.getUser()
+  const fallbackId = user?.id
+  if (fallbackId) {
+    await supabase.auth.updateUser({ data: { space_id: fallbackId, phone: cleaned } })
+    return fallbackId
   }
 
-  // 4. 写入 user_metadata
-  await supabase.auth.updateUser({ data: { space_id: space.id, phone: cleaned } })
-  return space.id
+  return null
 }
 
 /** 关联伴侣手机号：将伴侣手机号写入当前用户的 Space */
