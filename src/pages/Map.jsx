@@ -200,40 +200,39 @@ export default function MapPage() {
           <MapMarkers markers={markers} activeLoc={activeLoc} setActiveLoc={setActiveLoc} />
         </MapContainer>
 
-        {/* 底部浮动足迹面板 */}
+        {/* 顶部浮动足迹面板 */}
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-          maxHeight: panelOpen ? '55%' : '0',
+          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+          maxHeight: panelOpen ? '50%' : '0',
           overflow: 'hidden',
           transition: 'max-height 0.35s ease',
         }}>
           <div style={{
-            background: 'rgba(252,249,242,0.94)', backdropFilter: 'blur(12px)',
-            borderTop: `1px solid ${C.border}`,
-            borderTopLeftRadius: 24, borderTopRightRadius: 24,
-            boxShadow: '0 -4px 24px rgba(156,66,51,0.10)',
-            maxHeight: '55vh', display: 'flex', flexDirection: 'column',
+            background: 'rgba(252,249,242,0.95)', backdropFilter: 'blur(12px)',
+            borderBottom: `1px solid ${C.border}`,
+            borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
+            boxShadow: '0 4px 24px rgba(156,66,51,0.12)',
+            maxHeight: '50vh', display: 'flex', flexDirection: 'column',
           }}>
-            {/* 面板把手 */}
-            <div style={{
-              display: 'flex', justifyContent: 'center', padding: '10px 0 4px',
-              cursor: 'pointer',
-            }} onClick={() => setPanelOpen(false)}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(220,192,188,0.5)' }} />
-            </div>
-
             {/* 面板标题 */}
-            <div style={{ padding: '0 18px 10px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-              <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, color: C.brown, margin: 0 }}>
-                足迹列表
-              </h2>
-              <p style={{ fontSize: 12, color: C.light, margin: '2px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                {markers.length} 个有坐标 · {unknownLocs.length} 个待定位
-              </p>
+            <div style={{ padding: '12px 18px 8px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, color: C.brown, margin: 0 }}>
+                  足迹列表
+                </h2>
+                <p style={{ fontSize: 11, color: C.light, margin: '2px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                  {markers.length} 个有坐标 · {unknownLocs.length} 个待定位
+                </p>
+              </div>
+              <button onClick={() => setPanelOpen(false)} style={{
+                background: 'rgba(220,192,188,0.2)', border: 'none', borderRadius: 12,
+                padding: '4px 12px', cursor: 'pointer', fontSize: 11, color: C.light,
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+              }}>收起</button>
             </div>
 
             {/* 面板内容 */}
-            <div style={{ flex: 1, overflow: 'auto', padding: '10px 14px 16px' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: '4px 14px 14px' }}>
               {markers.length === 0 && unknownLocs.length === 0 ? (
                 <p style={{ textAlign: 'center', color: C.light, fontSize: 14, padding: 40, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                   还没有带地点的回忆，去添加第一条吧
