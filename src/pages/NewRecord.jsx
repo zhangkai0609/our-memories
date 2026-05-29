@@ -99,18 +99,18 @@ export default function NewRecord() {
     if (!title.trim()) return
     setUploading(true)
 
+    // 照片转 base64 存数据库（无需 Supabase Storage）
     const imageUrls = []
-    if (files.length > 0) {
-      for (const file of files) {
-        const ext = file.name.split('.').pop().toLowerCase()
-        const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
-        const { data, error } = await supabase.storage.from('photos').upload(safeName, file, { upsert: true })
-        if (error) { alert('照片上传失败: ' + error.message) }
-        else if (data?.path) {
-          const { data: urlData } = supabase.storage.from('photos').getPublicUrl(data.path)
-          imageUrls.push(urlData.publicUrl)
-        }
-      }
+    for (const file of files) {
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        imageUrls.push(dataUrl)
+      } catch { alert('照片读取失败: ' + file.name) }
     }
 
     const recordData = {
