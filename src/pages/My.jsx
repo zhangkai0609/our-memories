@@ -706,13 +706,9 @@ function SettingsView({ onBack }) {
   async function handleLogout() {
     setLoggingOut(true)
     setLogoutError('')
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) { setLogoutError(error.message); setLoggingOut(false); return }
-      // 不手动导航 — App.jsx 的 onAuthStateChange 会自动跳转到 /welcome
-    } catch {
-      setLogoutError('退出失败，请重试')
-      setLoggingOut(false)
+    localStorage.removeItem('room_code')
+    window.location.reload()
+    // navigate 会被 RoomGuard 拦截到 /welcome
     }
   }
 
@@ -864,7 +860,7 @@ function SettingsView({ onBack }) {
           {/* 文字 + 按钮 */}
           <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
             <h3 style={{ fontSize: 15, fontWeight: 600, color: '#b24a3c', margin: 0, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              退出登录
+              退出小屋
             </h3>
             <p style={{ fontSize: 12, color: C.light, margin: '2px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               退出当前账号
@@ -908,7 +904,7 @@ function SettingsView({ onBack }) {
             <h3 style={{
               fontFamily: 'EB Garamond, serif', fontSize: 20, color: C.brown,
               fontWeight: 600, margin: '0 0 6px',
-            }}>确定要退出登录吗？</h3>
+            }}>确定要退出小屋吗？</h3>
             <p style={{
               fontSize: 13, color: C.light, margin: '0 0 20px',
               fontFamily: 'Plus Jakarta Sans, sans-serif', lineHeight: 1.6,
@@ -941,7 +937,7 @@ function SettingsView({ onBack }) {
                   opacity: loggingOut ? 0.7 : 1,
                   boxShadow: '0 3px 10px rgba(178,74,60,0.20)',
                 }}>
-                {loggingOut ? '退出中...' : '退出登录'}
+                {loggingOut ? '退出中...' : '退出小屋'}
               </button>
             </div>
           </div>
