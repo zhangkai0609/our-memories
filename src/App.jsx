@@ -62,11 +62,11 @@ export default function App() {
         <Routes>
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/new" element={<ProtectedRoute><NewRecord /></ProtectedRoute>} />
-          <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
-          <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
-          <Route path="/my" element={<ProtectedRoute><My /></ProtectedRoute>} />
+          <Route path="/" element={<Home />} />
+          <Route path="/new" element={<NewRecord />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/my" element={<My />} />
         </Routes>
       </HashRouter>
     </ErrorBoundary>
