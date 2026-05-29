@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -8,14 +8,89 @@ const C = {
   border: '#dcc0bc', card: '#fcf9f2', inputBg: '#fdfaf7',
 }
 
+// Nominatim 反地理编码: 坐标 → 地址
+async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&accept-language=zh`
+    )
+    const data = await res.json()
+    if (data && data.display_name) {
+      // 精简地址：去掉过长的层级
+      const parts = data.display_name.split(',').map(s => s.trim())
+      return parts.slice(0, 5).join(' · ')
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 export default function NewRecord() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [location, setLocation] = useState('')
+  const [coords, setCoords] = useState(null) // { lat, lng }
+  const [gpsLoading, setGpsLoading] = useState(false)
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
+  const [pastLocations, setPastLocations] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const fileRef = useRef(null)
+  const locationRef = useRef(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    fetchPastLocations()
+  }, [])
+
+  async function fetchPastLocations() {
+    try {
+      const { data } = await supabase.from('memories').select('location').not('location', 'is', null).order('created_at', { ascending: false }).limit(20)
+      const seen = new Set()
+      const unique = []
+      for (const m of data || []) {
+        const trimmed = m.location.trim()
+        if (trimmed && !seen.has(trimmed)) {
+          seen.add(trimmed)
+          unique.push(trimmed)
+        }
+      }
+      setPastLocations(unique.slice(0, 8))
+    } catch { /* silent */ }
+  }
+
+  // GPS 定位
+  async function handleGpsLocate() {
+    if (!navigator.geolocation) {
+      alert('你的设备不支持定位功能')
+      return
+    }
+    setGpsLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        setCoords({ lat: latitude, lng: longitude })
+        const addr = await reverseGeocode(latitude, longitude)
+        if (addr) setLocation(addr)
+        setGpsLoading(false)
+      },
+      (err) => {
+        setGpsLoading(false)
+        if (err.code === 1) alert('定位被拒绝，请在浏览器设置中允许位置权限')
+        else if (err.code === 2) alert('暂时无法获取位置，请稍后重试')
+        else alert('定位超时，请手动输入位置')
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+    )
+  }
+
+  // 选择建议位置
+  function selectSuggestion(addr) {
+    setLocation(addr)
+    setCoords(null) // 历史位置没有坐标
+    setShowSuggestions(false)
+  }
 
   function handleFileChange(e) { setFiles(Array.from(e.target.files)) }
 
@@ -39,10 +114,20 @@ export default function NewRecord() {
     }
 
     const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('memories').insert({
+    const recordData = {
       title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls,
       user_id: user?.id,
-    })
+    }
+    if (coords) recordData.coordinates = coords
+
+    let { error } = await supabase.from('memories').insert(recordData)
+
+    // 如果 coordinates 列不存在，回退重试
+    if (error && coords) {
+      delete recordData.coordinates
+      const retry = await supabase.from('memories').insert(recordData)
+      error = retry.error
+    }
 
     if (error) alert('发布失败：' + error.message)
     else navigate('/')
@@ -82,8 +167,83 @@ export default function NewRecord() {
           style={{ ...inputStyle, fontSize: 22, fontWeight: 600, fontFamily: 'EB Garamond, serif', padding: '18px 20px' }} />
 
         {/* Location */}
-        <input type="text" placeholder="📍  在哪里？（选填）" value={location}
-          onChange={e => setLocation(e.target.value)} style={inputStyle} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input ref={locationRef} type="text" placeholder="📍  在哪里？（选填）" value={location}
+                onChange={e => { setLocation(e.target.value); setCoords(null); }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                style={{
+                  ...inputStyle, width: '100%',
+                  paddingRight: location ? 36 : 12,
+                }} />
+              {location && (
+                <button type="button" onClick={() => { setLocation(''); setCoords(null); }}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: C.light, cursor: 'pointer',
+                    fontSize: 16, padding: 4,
+                  }}>✕</button>
+              )}
+            </div>
+            <button type="button" onClick={handleGpsLocate} disabled={gpsLoading}
+              title="使用当前位置"
+              style={{
+                width: 46, height: 46, borderRadius: 16,
+                background: coords ? 'rgba(83,99,70,0.10)' : C.card,
+                border: coords ? `1.5px solid ${C.secondary}` : `1.5px solid ${C.border}`,
+                cursor: 'pointer', fontSize: 18,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, transition: 'all 0.2s',
+                opacity: gpsLoading ? 0.6 : 1,
+              }}>
+              {gpsLoading ? '⏳' : coords ? '📍' : '🎯'}
+            </button>
+          </div>
+
+          {/* GPS 状态提示 */}
+          {coords && (
+            <p style={{
+              margin: '4px 0 0 4px', fontSize: 11, color: C.secondary,
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <span>✓</span> 已获取精确位置 ({coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
+            </p>
+          )}
+
+          {/* 历史位置建议 */}
+          {showSuggestions && pastLocations.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, right: 60, zIndex: 20,
+              marginTop: 4, background: C.card, borderRadius: 16,
+              boxShadow: '0 8px 30px rgba(156,66,51,0.12)',
+              border: '1px solid rgba(220,192,188,0.3)',
+              padding: '6px', maxHeight: 200, overflowY: 'auto',
+            }}>
+              <p style={{
+                fontSize: 11, color: C.light, padding: '4px 10px 6px', margin: 0,
+                fontFamily: 'Plus Jakarta Sans, sans-serif',
+              }}>📍 历史位置</p>
+              {pastLocations.map((addr, i) => (
+                <button key={i} type="button"
+                  onMouseDown={e => { e.preventDefault(); selectSuggestion(addr); }}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '10px 12px', border: 'none', borderRadius: 12,
+                    background: addr === location ? 'rgba(156,66,51,0.05)' : 'transparent',
+                    cursor: 'pointer', fontSize: 13, color: C.brown,
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(156,66,51,0.05)'}
+                  onMouseLeave={e => { if (addr !== location) e.currentTarget.style.background = 'transparent'; }}
+                >{addr}</button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Content */}
         <textarea placeholder="写下你想记住的一切..." value={content}

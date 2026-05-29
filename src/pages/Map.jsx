@@ -43,7 +43,6 @@ export default function MapPage() {
     const { data } = await supabase.from('memories').select('*').order('created_at', { ascending: false })
     setMemories(data || [])
 
-    // 提取有 location 的记录并去重
     const locMap = new Map()
     for (const m of data || []) {
       if (m.location && !locMap.has(m.location)) {
@@ -52,20 +51,27 @@ export default function MapPage() {
       if (m.location) locMap.get(m.location).push(m)
     }
 
-    // Geocode 每个位置
     const geoResults = []
     for (const [loc, mems] of locMap) {
+      // 1. 优先使用数据库中存储的坐标
+      const memWithCoord = mems.find(m => m.coordinates && m.coordinates.lat)
+      if (memWithCoord && memWithCoord.coordinates) {
+        const c = memWithCoord.coordinates
+        geoResults.push({ location: loc, lat: c.lat, lng: c.lng, memories: mems, fromStored: true })
+        continue
+      }
+
+      // 2. 回退到 Nominatim geocode（仅对没有坐标的地址）
       try {
         const coords = await geocode(loc)
         if (coords) {
-          geoResults.push({ location: loc, lat: coords.lat, lng: coords.lng, memories: mems })
+          geoResults.push({ location: loc, lat: coords.lat, lng: coords.lng, memories: mems, fromStored: false })
         } else {
           geoResults.push({ location: loc, lat: null, lng: null, memories: mems })
         }
       } catch {
         geoResults.push({ location: loc, lat: null, lng: null, memories: mems })
       }
-      // Nominatim 限速 1 req/s
       await new Promise(r => setTimeout(r, 1100))
     }
 
