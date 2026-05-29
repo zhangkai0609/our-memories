@@ -250,7 +250,7 @@ function UserInfoCard({ spaceInfo, onManageSpace }) {
       {/* 信息 */}
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 16, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          小周同学
+          {localStorage.getItem('my_name') || '小周同学'}
         </div>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 4,

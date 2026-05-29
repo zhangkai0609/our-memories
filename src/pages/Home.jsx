@@ -161,30 +161,32 @@ function Header({ navigate }) {
 
 // ====================== GREETING SECTION ======================
 function GreetingSection() {
+  const myName = localStorage.getItem('my_name') || '小周同学'
+  const partnerName = localStorage.getItem('partner_name') || '另一半'
+  const myAvatar = localStorage.getItem('my_avatar') || petAvatar
+  const partnerAvatar = localStorage.getItem('partner_avatar') || null
+  const mode = localStorage.getItem('room_mode') || 'couple'
+  const modeLabels = { couple: '情侣模式', friends: '好友模式', besties: '闺蜜模式', family: '家人模式' }
+
   return (
     <section style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 16px', gap: 14, position: 'relative', zIndex: 1 }}>
-      {/* 左侧头像：小周同学 */}
+      {/* 左侧头像：我 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <div style={{
           width: 64, height: 64, borderRadius: '50%', overflow: 'hidden',
           border: '3px solid rgba(156,66,51,0.25)', flexShrink: 0,
           boxShadow: '0 3px 14px rgba(156,66,51,0.10)',
         }}>
-          <img src={petAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={myAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          小周同学
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {myName}
         </span>
       </div>
 
-      {/* 中间爱心连接 */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative',
-      }}>
-        <span style={{
-          fontSize: 20, animation: 'heartBeat 1.5s ease-in-out infinite',
-        }}>♥</span>
+      {/* 中间爱心 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 20 }}>♥</span>
       </div>
 
       {/* 右侧头像：伴侣 */}
@@ -197,14 +199,14 @@ function GreetingSection() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 28,
         }}>
-          🐾
+          {partnerAvatar ? <img src={partnerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐾'}
         </div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          另一半
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {partnerName}
         </span>
       </div>
 
-      {/* 情侣模式标签 */}
+      {/* 模式标签 */}
       <span style={{
         position: 'absolute', right: 0, bottom: 4,
         display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -212,7 +214,7 @@ function GreetingSection() {
         background: 'rgba(156,66,51,0.07)', color: C.primary,
         fontSize: 11, fontWeight: 500, fontFamily: 'Plus Jakarta Sans, sans-serif',
       }}>
-        <span style={{ fontSize: 10 }}>♥</span> 情侣模式
+        <span style={{ fontSize: 10 }}>♥</span> {modeLabels[mode] || '情侣模式'}
       </span>
     </section>
   )
