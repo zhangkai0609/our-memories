@@ -36,9 +36,7 @@ export default function MapPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    fetchMemories()
-  }, [])
+  useEffect(() => { fetchMemories() }, [])
 
   async function fetchMemories() {
     const spaceId = await getSpaceId()
@@ -49,38 +47,42 @@ export default function MapPage() {
 
     const locMap = new Map()
     for (const m of data || []) {
-      if (m.location && !locMap.has(m.location)) {
-        locMap.set(m.location, [])
-      }
+      if (m.location && !locMap.has(m.location)) locMap.set(m.location, [])
       if (m.location) locMap.get(m.location).push(m)
     }
 
-    const geoResults = []
+    // 第1步：立即显示有存储坐标的位置
+    const storedResults = []
+    const needGeocode = []
     for (const [loc, mems] of locMap) {
-      // 1. 优先使用数据库中存储的坐标
       const memWithCoord = mems.find(m => m.coordinates && m.coordinates.lat)
       if (memWithCoord && memWithCoord.coordinates) {
         const c = memWithCoord.coordinates
-        geoResults.push({ location: loc, lat: c.lat, lng: c.lng, memories: mems, fromStored: true })
-        continue
+        storedResults.push({ location: loc, lat: c.lat, lng: c.lng, memories: mems, fromStored: true })
+      } else {
+        needGeocode.push([loc, mems])
       }
+    }
+    setGeoData(storedResults)
+    setLoading(false) // 立即结束 loading，地图先显示出来
 
-      // 2. 回退到 Nominatim geocode（仅对没有坐标的地址）
+    // 第2步：后台逐个 geocode 剩余位置，完成后逐个追加
+    for (const [loc, mems] of needGeocode) {
       try {
         const coords = await geocode(loc)
-        if (coords) {
-          geoResults.push({ location: loc, lat: coords.lat, lng: coords.lng, memories: mems, fromStored: false })
-        } else {
-          geoResults.push({ location: loc, lat: null, lng: null, memories: mems })
-        }
+        setGeoData(prev => [...prev, {
+          location: loc,
+          lat: coords ? coords.lat : null,
+          lng: coords ? coords.lng : null,
+          memories: mems,
+          fromStored: false,
+        }])
       } catch {
-        geoResults.push({ location: loc, lat: null, lng: null, memories: mems })
+        setGeoData(prev => [...prev, { location: loc, lat: null, lng: null, memories: mems }])
       }
+      // 限速 1 秒，但不阻塞已显示的内容
       await new Promise(r => setTimeout(r, 1100))
     }
-
-    setGeoData(geoResults)
-    setLoading(false)
   }
 
   async function geocode(query) {
