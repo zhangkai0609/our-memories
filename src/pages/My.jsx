@@ -701,15 +701,11 @@ function SettingsView({ onBack }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
-  const navigate = useNavigate()
-
   async function handleLogout() {
     setLoggingOut(true)
     setLogoutError('')
     localStorage.removeItem('room_code')
     window.location.reload()
-    // navigate 会被 RoomGuard 拦截到 /welcome
-    }
   }
 
   return (
