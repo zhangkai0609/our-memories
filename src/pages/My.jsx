@@ -692,28 +692,30 @@ function EditProfileModal({ onClose }) {
   const [partnerName, setPartnerName] = useState(localStorage.getItem('partner_name') || '')
   const [myAvatar, setMyAvatar] = useState(localStorage.getItem('my_avatar') || null)
   const [partnerAvatar, setPartnerAvatar] = useState(localStorage.getItem('partner_avatar') || null)
+  const [myPet, setMyPet] = useState(localStorage.getItem('my_pet') || null)
+  const [partnerPet, setPartnerPet] = useState(localStorage.getItem('partner_pet') || null)
 
-  function handleMyFile(e) {
-    const f = e.target.files[0]
+  function readFile(f, cb) {
     if (!f) return
     const reader = new FileReader()
-    reader.onload = () => setMyAvatar(reader.result)
+    reader.onload = () => cb(reader.result)
     reader.readAsDataURL(f)
   }
 
-  function handlePartnerFile(e) {
-    const f = e.target.files[0]
-    if (!f) return
-    const reader = new FileReader()
-    reader.onload = () => setPartnerAvatar(reader.result)
-    reader.readAsDataURL(f)
-  }
+  function handleMyFile(e) { readFile(e.target.files[0], setMyAvatar) }
+  function handlePartnerFile(e) { readFile(e.target.files[0], setPartnerAvatar) }
+  function handleMyPetFile(e) { readFile(e.target.files[0], setMyPet) }
+  function handlePartnerPetFile(e) { readFile(e.target.files[0], setPartnerPet) }
 
   function handleSave() {
     if (myName) localStorage.setItem('my_name', myName)
     if (partnerName) localStorage.setItem('partner_name', partnerName)
     if (myAvatar) localStorage.setItem('my_avatar', myAvatar)
     if (partnerAvatar) localStorage.setItem('partner_avatar', partnerAvatar)
+    if (myPet) localStorage.setItem('my_pet', myPet)
+    else localStorage.removeItem('my_pet')
+    if (partnerPet) localStorage.setItem('partner_pet', partnerPet)
+    else localStorage.removeItem('partner_pet')
     onClose()
     window.location.reload()
   }
@@ -725,29 +727,49 @@ function EditProfileModal({ onClose }) {
         <button onClick={onClose} style={{ position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.04)', border: 'none', cursor: 'pointer', fontSize: 16, color: C.light }}>✕</button>
         <h3 style={{ fontFamily: 'EB Garamond, serif', fontSize: 20, color: C.brown, fontWeight: 600, margin: '0 0 20px', textAlign: 'center' }}>编辑资料</h3>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 12, marginBottom: 20 }}>
+          {/* 我的宠物 */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <label style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(156,66,51,0.18)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 22, position: 'relative' }}>
+              {myPet ? <img src={myPet} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐱'}
+              <div style={{ position: 'absolute', bottom: -1, right: -1, width: 16, height: 16, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff' }}>✎</div>
+              <input type="file" accept="image/*" onChange={handleMyPetFile} style={{ display: 'none' }} />
+            </label>
+            <span style={{ fontSize: 10, color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>宠物</span>
+          </div>
+
           {/* 我的头像 */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <label style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(156,66,51,0.25)', boxShadow: '0 3px 14px rgba(156,66,51,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 32, position: 'relative' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <label style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(156,66,51,0.25)', boxShadow: '0 3px 14px rgba(156,66,51,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 30, position: 'relative' }}>
               {myAvatar ? <img src={myAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <img src={avatarPets} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>✎</div>
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 18, height: 18, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>✎</div>
               <input type="file" accept="image/*" onChange={handleMyFile} style={{ display: 'none' }} />
             </label>
             <input type="text" placeholder="你的名字" value={myName} onChange={e => setMyName(e.target.value)} maxLength={10}
-              style={{ width: 90, padding: '6px 10px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, background: C.card, color: C.brown, textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif', outline: 'none' }} />
+              style={{ width: 80, padding: '5px 8px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 12, background: C.card, color: C.brown, textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif', outline: 'none' }} />
           </div>
 
-          <span style={{ fontSize: 20, color: C.primary }}>♥</span>
+          <span style={{ fontSize: 18, color: C.primary, marginBottom: 28 }}>♥</span>
 
           {/* 伴侣头像 */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <label style={{ width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(156,66,51,0.25)', boxShadow: '0 3px 14px rgba(156,66,51,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 32 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <label style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', border: '3px solid rgba(156,66,51,0.25)', boxShadow: '0 3px 14px rgba(156,66,51,0.10)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 30 }}>
               {partnerAvatar ? <img src={partnerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐾'}
-              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>✎</div>
+              <div style={{ position: 'absolute', bottom: 0, right: 0, width: 18, height: 18, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' }}>✎</div>
               <input type="file" accept="image/*" onChange={handlePartnerFile} style={{ display: 'none' }} />
             </label>
             <input type="text" placeholder="ta 的名字" value={partnerName} onChange={e => setPartnerName(e.target.value)} maxLength={10}
-              style={{ width: 90, padding: '6px 10px', borderRadius: 12, border: `1.5px solid ${C.border}`, fontSize: 13, background: C.card, color: C.brown, textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif', outline: 'none' }} />
+              style={{ width: 80, padding: '5px 8px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 12, background: C.card, color: C.brown, textAlign: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif', outline: 'none' }} />
+          </div>
+
+          {/* 伴侣宠物 */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <label style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(156,66,51,0.18)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fce4e0', fontSize: 22, position: 'relative' }}>
+              {partnerPet ? <img src={partnerPet} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐶'}
+              <div style={{ position: 'absolute', bottom: -1, right: -1, width: 16, height: 16, borderRadius: '50%', background: C.primary, color: '#fff', fontSize: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff' }}>✎</div>
+              <input type="file" accept="image/*" onChange={handlePartnerPetFile} style={{ display: 'none' }} />
+            </label>
+            <span style={{ fontSize: 10, color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>宠物</span>
           </div>
         </div>
 

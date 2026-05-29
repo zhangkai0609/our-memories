@@ -172,50 +172,76 @@ function GreetingSection() {
   const partnerName = localStorage.getItem('partner_name') || '另一半'
   const myAvatar = localStorage.getItem('my_avatar') || petAvatar
   const partnerAvatar = localStorage.getItem('partner_avatar') || null
+  const myPet = localStorage.getItem('my_pet') || null
+  const partnerPet = localStorage.getItem('partner_pet') || null
   const mode = localStorage.getItem('room_mode') || 'couple'
   const modeLabels = { couple: '情侣模式', friends: '好友模式', besties: '闺蜜模式', family: '家人模式' }
 
   return (
-    <section style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 16px', gap: 14, position: 'relative', zIndex: 1 }}>
+    <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px 16px', gap: 10, position: 'relative', zIndex: 1 }}>
+      {/* 我的宠物 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: '50%', overflow: 'hidden',
+          border: '2px solid rgba(156,66,51,0.15)',
+          background: 'linear-gradient(135deg, #fce4e0, #fdf0ed)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18,
+        }}>
+          {myPet ? <img src={myPet} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐱'}
+        </div>
+      </div>
+
       {/* 左侧头像：我 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <div style={{
-          width: 64, height: 64, borderRadius: '50%', overflow: 'hidden',
-          border: '3px solid rgba(156,66,51,0.25)', flexShrink: 0,
+          width: 60, height: 60, borderRadius: '50%', overflow: 'hidden',
+          border: '2.5px solid rgba(156,66,51,0.25)', flexShrink: 0,
           boxShadow: '0 3px 14px rgba(156,66,51,0.10)',
         }}>
           <img src={myAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {myName}
         </span>
       </div>
 
       {/* 中间爱心 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 20 }}>♥</span>
-      </div>
+      <span style={{ fontSize: 18, color: C.primary }}>♥</span>
 
       {/* 右侧头像：伴侣 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <div style={{
-          width: 64, height: 64, borderRadius: '50%', overflow: 'hidden',
-          border: '3px solid rgba(156,66,51,0.25)', flexShrink: 0,
+          width: 60, height: 60, borderRadius: '50%', overflow: 'hidden',
+          border: '2.5px solid rgba(156,66,51,0.25)', flexShrink: 0,
           boxShadow: '0 3px 14px rgba(156,66,51,0.10)',
           background: 'linear-gradient(135deg, #fce4e0, #fdf0ed)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28,
+          fontSize: 26,
         }}>
           {partnerAvatar ? <img src={partnerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐾'}
         </div>
-        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: C.brown, fontFamily: 'Plus Jakarta Sans, sans-serif', maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {partnerName}
         </span>
       </div>
 
+      {/* 伴侣宠物 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: '50%', overflow: 'hidden',
+          border: '2px solid rgba(156,66,51,0.15)',
+          background: 'linear-gradient(135deg, #fce4e0, #fdf0ed)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 18,
+        }}>
+          {partnerPet ? <img src={partnerPet} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐶'}
+        </div>
+      </div>
+
       {/* 模式标签 */}
       <span style={{
-        position: 'absolute', right: 0, bottom: 4,
+        position: 'absolute', right: 8, bottom: 4,
         display: 'inline-flex', alignItems: 'center', gap: 4,
         padding: '3px 10px', borderRadius: 12,
         background: 'rgba(156,66,51,0.07)', color: C.primary,
@@ -274,6 +300,40 @@ function StatsCard({ onCalendarClick, memoryDays, allMemories }) {
         <p style={{ fontSize: 11, color: C.light, margin: '6px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif', fontStyle: 'italic' }}>
           从第一条记录到今天
         </p>
+
+        {/* 记忆时间曲线 — 最近14天的迷你柱状图 */}
+        {allMemories && allMemories.length > 0 && (() => {
+          const dayMap = {}
+          const last14 = []
+          for (let i = 13; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 86400000)
+            const key = `${d.getMonth() + 1}/${d.getDate()}`
+            dayMap[key] = 0
+            last14.push(key)
+          }
+          allMemories.forEach(m => {
+            const d = new Date(m.created_at)
+            const key = `${d.getMonth() + 1}/${d.getDate()}`
+            if (key in dayMap) dayMap[key]++
+          })
+          const maxVal = Math.max(...Object.values(dayMap), 1)
+          return (
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 30, marginTop: 8, marginBottom: 4 }}>
+              {last14.map((key, i) => {
+                const v = dayMap[key]
+                const h = v === 0 ? 3 : Math.max(4, (v / maxVal) * 28)
+                return (
+                  <div key={i} style={{
+                    flex: 1, height: h,
+                    borderRadius: 2,
+                    background: v > 0 ? C.primary : 'rgba(220,192,188,0.3)',
+                    transition: 'height 0.3s',
+                  }} title={`${key}: ${v}条`} />
+                )
+              })}
+            </div>
+          )
+        })()}
       </div>
 
       {/* 右侧迷你日历 — 拉宽 */}
