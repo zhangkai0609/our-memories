@@ -42,7 +42,7 @@ export default function DiaryDetail() {
     manPhoto:'https://lh3.googleusercontent.com/aida-public/AB6AXuBhbtjIjdNiba5Xd1t4FwrOE6Ry1Ux9VKXeciczJtOTzhhuJXaFSSKtENfBIvtAsWpILMglF8XLCX0tZMctLiNFHyQDiG9mnEk_T4sjIWBGRvrajIag73tCHsrAglSSF7TlxVWF2rYnCNZkgdtYMF_b2axMsewaCArvcJ5n2Y4zFE1H3_qJ2a7b9PGhCcrWwJ4FyAlyaMG4YF4k90Ugnf52AsHd1kM0uh9uc7MwCVT955QmONTQDFYGBqMYoAM_OmKJZ3_AacHj3CY',
   }
 
-  const e = entry || mockEntry
+  const e = (entry && entry.title) ? {...mockEntry, ...entry, tags: entry.tags || mockEntry.tags, image_urls: entry.image_urls || [], narrative: entry.content || mockEntry.narrative} : mockEntry
 
   if(loading) return <div style={{ minHeight:'100vh',background:T.bg,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'"Plus Jakarta Sans",sans-serif',color:T.light }}>Loading...</div>
 
