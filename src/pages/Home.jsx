@@ -35,7 +35,7 @@ function readJson(key, fallback) {
   }
 }
 
-function withTimeout(promise, ms = 4000) {
+function withTimeout(promise, ms = 12000) {
   return Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
@@ -111,7 +111,8 @@ export default function Home() {
           .from('memories')
           .select('*')
           .eq('room_code', roomCode)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        cached.length ? 8000 : 18000
       )
 
       const next = data || []

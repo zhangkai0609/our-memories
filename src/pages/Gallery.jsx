@@ -35,7 +35,7 @@ function readJson(key, fallback) {
   }
 }
 
-function withTimeout(promise, ms = 4000) {
+function withTimeout(promise, ms = 12000) {
   return Promise.race([
     promise,
     new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
@@ -81,6 +81,8 @@ export default function Gallery() {
   const cacheKey = roomCode ? `gallery_cache_v1_${roomCode}` : null
   const [records, setRecords] = useState(() => cacheKey ? readJson(cacheKey, []) : [])
   const [loading, setLoading] = useState(() => cacheKey ? readJson(cacheKey, []).length === 0 : true)
+  const [loadedOnce, setLoadedOnce] = useState(() => cacheKey ? readJson(cacheKey, []).length > 0 : false)
+  const [loadError, setLoadError] = useState(false)
   const [page, setPage] = useState(1)
   const [drafts, setDrafts] = useState({})
   const [social, setSocial] = useState(() => readJson('memory_social_v1', {}))
@@ -89,20 +91,23 @@ export default function Gallery() {
     const cached = cacheKey ? readJson(cacheKey, []) : []
     if (cached.length) {
       setRecords(cached)
+      setLoadedOnce(true)
       setLoading(false)
     } else {
       setLoading(true)
     }
 
     try {
+      setLoadError(false)
       let query = supabase.from('memories').select('*').order('created_at', { ascending: false })
       if (roomCode) query = query.eq('room_code', roomCode)
-      const { data } = await withTimeout(query)
+      const { data } = await withTimeout(query, cached.length ? 8000 : 18000)
       const next = (data || []).map(normalizeRecord)
       setRecords(next)
+      setLoadedOnce(true)
       if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(next))
     } catch {
-      if (!cached.length) setRecords([])
+      if (!cached.length) setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -265,8 +270,10 @@ export default function Gallery() {
               </div>
             </div>
 
-            {loading ? (
+            {loading && !loadedOnce ? (
               <EmptyState text="记忆正在翻页中..." />
+            ) : loadError && !loadedOnce ? (
+              <EmptyState text="网络有点慢，数据还没有读出来。请稍后再试。" />
             ) : records.length === 0 ? (
               <EmptyState text="还没有记忆，先写下第一条吧。" action={() => navigate('/new')} />
             ) : (
