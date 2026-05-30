@@ -1,284 +1,302 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 
-const icon = new L.DivIcon({
-  className: '',
-  html: `<div style="width:36px;height:36px;background:#9c4233;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid #fff;box-shadow:0 3px 12px rgba(156,66,51,0.35)">♥</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
-})
-
-const C = {
-  bg: '#fff0f3', primary: '#9c4233', pLight: '#ffb4a6', pFixed: '#ffdad4',
-  secondary: '#536346', brown: '#1c1c18', text: '#56423f', light: '#89726e',
-  border: '#dcc0bc', card: '#fcf9f2',
+/* ═══ 与 Home.jsx 一致的设计 token ═══ */
+const T = {
+  bg: '#f1f5f5', ink: '#2f1d1a', muted: '#7d6460', primary: '#8f3428',
+  primarySoft: '#ffd8d1', green: '#5b704f', white: '#fffaf8',
+  glass: 'rgba(255,255,255,0.46)', glassStrong: 'rgba(255,255,255,0.68)',
+  border: 'rgba(255,255,255,0.58)', borderWarm: 'rgba(214,154,145,0.36)',
+  shadow: '0 24px 70px rgba(104,45,38,0.16)', softShadow: '0 14px 38px rgba(104,45,38,0.10)',
+  fontTitle: '"EB Garamond","Noto Serif SC",serif',
+  fontBody: '"Plus Jakarta Sans","PingFang SC","Microsoft YaHei",sans-serif',
 }
 
-function FlyTo({ lat, lng }) {
+/* ═══ 工具函数 (与 Home.jsx 一致) ═══ */
+function readJson(key, fallback) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback } catch { return fallback }
+}
+
+/* ═══ 用户头像标记 ═══ */
+function createAvatarIcon(avatarUrl, name) {
+  const initial = (name || '?')[0]
+  const img = avatarUrl ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>` : `<span style="font-size:16px;font-weight:700;color:#8f3428">${initial}</span>`
+  return new L.DivIcon({
+    className: '',
+    html: `<div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;border:3px solid #8f3428;box-shadow:0 4px 16px rgba(143,52,40,0.30);overflow:hidden">${img}</div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -24],
+  })
+}
+const defaultIcon = createAvatarIcon(null, '?')
+
+/* ═══ 地图初始化：自动缩放到包含所有标记的最高视角 ═══ */
+function FitBoundsOnLoad({ markers }) {
   const map = useMap()
   useEffect(() => {
-    if (lat && lng) map.flyTo([lat, lng], 14, { duration: 1.2 })
-  }, [lat, lng])
+    if (markers.length === 0) return
+    if (markers.length === 1) {
+      map.setView([markers[0].lat, markers[0].lng], 14, { animate: false })
+      return
+    }
+    const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng]))
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14, animate: false })
+  }, [])
   return null
 }
 
-// Map 内部组件：接收 geoData 变化，更新 markers 但不重建 MapContainer
-function MapMarkers({ markers, activeLoc, setActiveLoc }) {
-  const map = useMap()
-  useEffect(() => {
-    if (activeLoc?.lat) map.flyTo([activeLoc.lat, activeLoc.lng], 14, { duration: 1 })
-  }, [activeLoc])
+/* ═══ 底部导航 ═══ */
+const navItems = [
+  { id: 'home', label: '家', icon: '⌂', to: '/' },
+  { id: 'memory', label: '记忆', icon: '◫', to: '/gallery' },
+  { id: 'map', label: '地图', icon: '⌖', to: '/map' },
+]
 
-  return markers.map((g, i) => (
-    <Marker key={i} position={[g.lat, g.lng]} icon={icon}
-      eventHandlers={{ click: () => setActiveLoc(g) }}>
-      <Popup>
-        <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', padding: 4 }}>
-          <h3 style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, margin: '0 0 4px', color: C.brown }}>{g.location}</h3>
-          <p style={{ fontSize: 13, color: C.text, margin: 0 }}>{g.memories.length} 条回忆</p>
-        </div>
-      </Popup>
-    </Marker>
-  ))
+function BottomNav({ navigate }) {
+  return (
+    <nav style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+      display: 'flex', justifyContent: 'center',
+      padding: '0 20px max(14px, env(safe-area-inset-bottom))',
+    }}>
+      <div style={{
+        width: '100%', maxWidth: 390, display: 'flex', justifyContent: 'space-around', alignItems: 'center',
+        background: T.white, borderRadius: 20, padding: '10px 12px',
+        boxShadow: T.softShadow, border: `1px solid ${T.border}`,
+      }}>
+        {navItems.map(item => {
+          const active = item.id === 'map'
+          return (
+            <button key={item.id} onClick={() => item.to && navigate(item.to)} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              background: active ? T.primarySoft : 'transparent', border: 'none',
+              cursor: 'pointer', padding: '8px 16px', borderRadius: 14,
+              color: active ? T.primary : T.muted, fontFamily: T.fontBody, fontSize: 11,
+              fontWeight: active ? 700 : 500, transition: 'all 0.2s',
+            }}>
+              <span style={{ fontSize: 18 }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </nav>
+  )
 }
 
+/* ═══ 主组件 ═══ */
 export default function MapPage() {
-  const [geoData, setGeoData] = useState([])
-  const [memories, setMemories] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [activeLoc, setActiveLoc] = useState(null)
-  const [panelOpen, setPanelOpen] = useState(false)
-  const [geocoding, setGeocoding] = useState(0) // 正在 geocode 的数量
   const navigate = useNavigate()
+  const myName = localStorage.getItem('my_name') || ''
+  const myAvatar = localStorage.getItem('my_avatar') || null
+  const partnerAvatar = localStorage.getItem('partner_avatar') || null
 
-  useEffect(() => { fetchMemories() }, [])
+  const [markers, setMarkers] = useState(() => {
+    const rc = localStorage.getItem('room_code')
+    return rc ? readJson(`geo_cache_v1_${rc}`, []) : []
+  })
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [geocoding, setGeocoding] = useState(0)
+  const [selectedMarker, setSelectedMarker] = useState(null)
+  const panelKeyRef = useRef(0)
 
-  async function fetchMemories() {
+  const fetchData = useCallback(async () => {
     const roomCode = localStorage.getItem('room_code')
-    let query = supabase.from('memories').select('*').order('created_at', { ascending: false })
-    if (roomCode) query = query.eq('room_code', roomCode)
-    const { data } = await query
-    setMemories(data || [])
+    if (!roomCode) return
 
-    const locMap = new Map()
-    for (const m of data || []) {
-      if (m.location && !locMap.has(m.location)) locMap.set(m.location, [])
-      if (m.location) locMap.get(m.location).push(m)
-    }
+    const cacheKey = `geo_cache_v1_${roomCode}`
+    const cached = readJson(cacheKey, null)
+    if (cached && cached.length > 0) setMarkers(cached)
 
-    // 第1步：有存储坐标的直接显示
-    const storedResults = []
-    const needGeocode = []
-    for (const [loc, mems] of locMap) {
-      const memWithCoord = mems.find(m => m.coordinates && m.coordinates.lat)
-      if (memWithCoord && memWithCoord.coordinates) {
-        const c = memWithCoord.coordinates
-        storedResults.push({ location: loc, lat: c.lat, lng: c.lng, memories: mems, fromStored: true })
-      } else {
-        needGeocode.push([loc, mems])
-      }
-    }
-    setGeoData(storedResults)
-    setLoading(false)
+    try {
+      const { data } = await supabase.from('memories').select('*').eq('room_code', roomCode).order('created_at', { ascending: false })
+      if (!data?.length) return
 
-    // 第2步：后台 geocode，不阻塞地图
-    if (needGeocode.length === 0) return
-    setGeocoding(needGeocode.length)
+      // 按地点分组：每个地点取所有记忆 + 优先使用存储坐标
+      const locMap = new Map()
+      data.forEach(m => {
+        if (!m.location) return
+        if (!locMap.has(m.location)) locMap.set(m.location, [])
+        locMap.get(m.location).push(m)
+      })
 
-    // 并行 geocode，每批 2 个（Nominatim 限制 ~1/sec，2个一批安全）
-    for (let i = 0; i < needGeocode.length; i += 2) {
-      const batch = needGeocode.slice(i, i + 2)
-      const results = await Promise.allSettled(
-        batch.map(([loc]) => geocode(loc))
-      )
-      results.forEach((r, j) => {
-        const [loc, mems] = batch[j]
-        if (r.status === 'fulfilled' && r.value) {
-          setGeoData(prev => [...prev, {
-            location: loc, lat: r.value.lat, lng: r.value.lng, memories: mems, fromStored: false,
-          }])
+      const results = []
+      const needGeocode = []
+
+      locMap.forEach((mems, loc) => {
+        const withCoord = mems.find(m => m.coordinates?.lat)
+        if (withCoord) {
+          results.push({ location: loc, lat: withCoord.coordinates.lat, lng: withCoord.coordinates.lng, memories: mems })
         } else {
-          setGeoData(prev => [...prev, { location: loc, lat: null, lng: null, memories: mems }])
+          needGeocode.push({ loc, mems })
         }
       })
-      setGeocoding(needGeocode.length - i - batch.length)
-      if (i + 2 < needGeocode.length) {
-        await new Promise(r => setTimeout(r, 700))
-      }
-    }
-  }
 
-  // 改进的 geocode：对中文地址做更智能的查询
+      // 立即显示有坐标的
+      if (results.length > 0) {
+        setMarkers(results)
+        localStorage.setItem(cacheKey, JSON.stringify(results))
+      }
+
+      // 后台 geocode 无坐标的地点，300ms 间隔加速
+      if (needGeocode.length > 0) {
+        setGeocoding(needGeocode.length)
+        for (let i = 0; i < needGeocode.length; i++) {
+          const { loc, mems } = needGeocode[i]
+          try {
+            const coord = await geocode(loc)
+            results.push({ location: loc, lat: coord?.lat || null, lng: coord?.lng || null, memories: mems })
+          } catch {
+            results.push({ location: loc, lat: null, lng: null, memories: mems })
+          }
+          setMarkers([...results])
+          localStorage.setItem(cacheKey, JSON.stringify(results))
+          setGeocoding(needGeocode.length - i - 1)
+          if (i < needGeocode.length - 1) await new Promise(r => setTimeout(r, 300))
+        }
+      }
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
   async function geocode(query) {
-    const cacheKey = `geo_${query}`
-    const cached = sessionStorage.getItem(cacheKey)
-    if (cached) {
-      try { return JSON.parse(cached) } catch {}
-    }
+    const ck = `geo_${query}`
+    const cached = sessionStorage.getItem(ck)
+    if (cached) return JSON.parse(cached)
 
-    // 尝试 1: 完整地址查询
-    let res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=zh`
-    )
-    let data = await res.json()
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=zh`)
+    const data = await res.json()
     if (data[0]) {
-      const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
-      sessionStorage.setItem(cacheKey, JSON.stringify(result))
-      return result
+      const r = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+      sessionStorage.setItem(ck, JSON.stringify(r))
+      return r
     }
-
-    // 尝试 2: 提取短地址（取前几个关键词）重试
-    const shortQuery = query.split(/[,，·\s]+/).slice(0, 3).join(' ')
-    if (shortQuery !== query) {
-      await new Promise(r => setTimeout(r, 300))
-      res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&limit=1&accept-language=zh`
-      )
-      data = await res.json()
-      if (data[0]) {
-        const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
-        sessionStorage.setItem(cacheKey, JSON.stringify(result))
-        return result
+    // 短地址重试
+    const short = query.split(/[,，·\s]+/).slice(0, 3).join(' ')
+    if (short !== query) {
+      await new Promise(r => setTimeout(r, 200))
+      const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(short)}&limit=1&accept-language=zh`)
+      const data2 = await res2.json()
+      if (data2[0]) {
+        const r = { lat: parseFloat(data2[0].lat), lng: parseFloat(data2[0].lon) }
+        sessionStorage.setItem(ck, JSON.stringify(r))
+        return r
       }
     }
-
-    // 不缓存 null 结果，允许后续重试
     return null
   }
 
-  const markers = geoData.filter(g => g.lat !== null)
-  const unknownLocs = geoData.filter(g => g.lat === null)
-  const center = markers[0] ? [markers[0].lat, markers[0].lng] : [35, 105]
+  const validMarkers = markers.filter(m => m.lat !== null)
+  const unknownCount = markers.filter(m => m.lat === null).length
+
+  // 选择记忆的作者头像作为标记
+  function getMarkerIcon(marker) {
+    const firstMem = marker.memories[0]
+    const author = firstMem?.author || ''
+    if (author === myName && myAvatar) return createAvatarIcon(myAvatar, author)
+    if (author !== myName && partnerAvatar) return createAvatarIcon(partnerAvatar, author)
+    return defaultIcon
+  }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: C.bg }}>
-      {/* Header */}
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody }}>
+      {/* ═══ Header ═══ */}
       <header style={{
-        background: 'rgba(255,240,243,0.82)', backdropFilter: 'blur(16px)',
-        padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderBottom: `1px solid ${C.border}`, zIndex: 20, flexShrink: 0,
+        background: 'rgba(251,251,248,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+        padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        borderBottom: '1px solid rgba(255,255,255,0.34)', zIndex: 20, flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: C.primary, cursor: 'pointer', fontSize: 15 }}>←</button>
-          <h1 style={{ fontFamily: 'EB Garamond, serif', fontSize: 20, color: C.primary, fontWeight: 600, margin: 0 }}>足迹地图</h1>
-        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {geocoding > 0 && (
-            <span style={{ fontSize: 11, color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              解析中 {geocoding}...
-            </span>
-          )}
-          <button onClick={() => setPanelOpen(!panelOpen)}
-            style={{
-              background: C.primary, color: '#fff', border: 'none', borderRadius: 14,
-              padding: '7px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-              fontFamily: 'Plus Jakarta Sans, sans-serif',
-              boxShadow: '0 2px 8px rgba(156,66,51,0.20)',
-            }}>
-            {panelOpen ? '收起列表' : `${markers.length + unknownLocs.length} 个足迹`}
+          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: T.primary, cursor: 'pointer', fontSize: 16, fontFamily: T.fontBody }}>←</button>
+          <h1 style={{ fontFamily: T.fontTitle, fontSize: 20, color: T.ink, fontWeight: 600, margin: 0 }}>足迹地图</h1>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {geocoding > 0 && <span style={{ fontSize: 11, color: T.muted }}>解析中...</span>}
+          <button onClick={() => { setPanelOpen(!panelOpen); if (!panelOpen) panelKeyRef.current++ }}
+            style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 14, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: T.fontBody, boxShadow: '0 2px 8px rgba(143,52,40,0.22)' }}>
+            {panelOpen ? '收起' : `${validMarkers.length + unknownCount} 个足迹`}
           </button>
         </div>
       </header>
 
-      {/* Map + Floating Panel */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        <MapContainer center={center} zoom={5} style={{ width: '100%', height: '100%' }} zoomControl={false}>
+      {/* ═══ 地图 ═══ */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <MapContainer center={[35, 105]} zoom={5} style={{ width: '100%', height: '100%' }} zoomControl={true} key={`map-${panelKeyRef.current}`}>
           <TileLayer
             attribution='&copy; OSM'
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            maxNativeZoom={19}
+            keepBuffer={4}
           />
-          <MapMarkers markers={markers} activeLoc={activeLoc} setActiveLoc={setActiveLoc} />
+          {/* 初始化时自动缩放至包含所有标记 */}
+          <FitBoundsOnLoad markers={validMarkers} />
+
+          {/* 渲染所有标记 */}
+          {validMarkers.map((g, i) => (
+            <Marker key={i} position={[g.lat, g.lng]} icon={getMarkerIcon(g)}
+              eventHandlers={{ click: () => setSelectedMarker(g) }}>
+              <Popup maxWidth={240} minWidth={180}>
+                <div style={{ fontFamily: T.fontBody, padding: 4 }}>
+                  <p style={{ fontFamily: T.fontTitle, fontSize: 16, color: T.ink, margin: '0 0 6px', fontWeight: 600 }}>
+                    📍 {g.location.length > 20 ? g.location.slice(0, 20) + '...' : g.location}
+                  </p>
+                  <p style={{ fontSize: 12, color: T.muted, margin: '0 0 8px' }}>{g.memories.length} 条记忆</p>
+                  {g.memories.slice(0, 3).map(m => (
+                    <div key={m.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 6 }}>
+                      {m.image_urls?.[0] && <img src={m.image_urls[0]} alt="" style={{ width: 48, height: 48, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} />}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: T.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title || '无标题'}</p>
+                        <p style={{ fontSize: 11, color: T.muted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{m.content?.slice(0, 60) || ''}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Popup>
+            </Marker>
+          ))}
         </MapContainer>
 
-        {/* 顶部浮动足迹面板 */}
+        {/* ═══ 顶部浮动足迹面板 ═══ */}
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-          maxHeight: panelOpen ? '50%' : '0',
-          overflow: 'hidden',
-          transition: 'max-height 0.35s ease',
+          maxHeight: panelOpen ? '50%' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease',
         }}>
-          <div style={{
-            background: 'rgba(252,249,242,0.95)', backdropFilter: 'blur(12px)',
-            borderBottom: `1px solid ${C.border}`,
-            borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
-            boxShadow: '0 4px 24px rgba(156,66,51,0.12)',
-            maxHeight: '50vh', display: 'flex', flexDirection: 'column',
-          }}>
-            {/* 面板标题 */}
-            <div style={{ padding: '12px 18px 8px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: 'rgba(255,250,248,0.96)', backdropFilter: 'blur(14px)', borderBottom: `1px solid ${T.borderWarm}`, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, boxShadow: T.softShadow, maxHeight: '50vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '12px 16px 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div>
-                <h2 style={{ fontFamily: 'EB Garamond, serif', fontSize: 18, color: C.brown, margin: 0 }}>
-                  足迹列表
-                </h2>
-                <p style={{ fontSize: 11, color: C.light, margin: '2px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  {markers.length} 个有坐标 · {unknownLocs.length} 个待定位
-                </p>
+                <h2 style={{ fontFamily: T.fontTitle, fontSize: 17, color: T.ink, margin: 0 }}>足迹列表</h2>
+                <p style={{ fontSize: 11, color: T.muted, margin: '2px 0 0' }}>{validMarkers.length} 定位 · {unknownCount} 待解析</p>
               </div>
-              <button onClick={() => setPanelOpen(false)} style={{
-                background: 'rgba(220,192,188,0.2)', border: 'none', borderRadius: 12,
-                padding: '4px 12px', cursor: 'pointer', fontSize: 11, color: C.light,
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-              }}>收起</button>
+              <button onClick={() => setPanelOpen(false)} style={{ background: 'rgba(143,52,40,0.08)', border: 'none', borderRadius: 10, padding: '4px 12px', cursor: 'pointer', fontSize: 11, color: T.muted, fontFamily: T.fontBody }}>收起</button>
             </div>
-
-            {/* 面板内容 */}
-            <div style={{ flex: 1, overflow: 'auto', padding: '4px 14px 14px' }}>
-              {markers.length === 0 && unknownLocs.length === 0 ? (
-                <p style={{ textAlign: 'center', color: C.light, fontSize: 14, padding: 40, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  还没有带地点的回忆，去添加第一条吧
-                </p>
+            <div style={{ flex: 1, overflow: 'auto', padding: '4px 14px 12px' }}>
+              {validMarkers.length === 0 && unknownCount === 0 ? (
+                <p style={{ textAlign: 'center', color: T.muted, fontSize: 13, padding: 36, fontFamily: T.fontBody }}>还没有带地点的回忆</p>
               ) : (
                 <>
-                  {markers.map((g, i) => (
-                    <div key={i}
-                      onClick={() => { setActiveLoc(g); setPanelOpen(false); }}
-                      style={{
-                        padding: '12px 14px', borderRadius: 16, cursor: 'pointer', marginBottom: 8,
-                        background: activeLoc?.lat === g.lat ? C.pFixed : 'rgba(255,255,255,0.6)',
-                        border: `1px solid ${activeLoc?.lat === g.lat ? C.primary : 'rgba(220,192,188,0.25)'}`,
-                        transition: 'all 0.2s',
-                      }}>
+                  {validMarkers.map((g, i) => (
+                    <div key={i} onClick={() => { setSelectedMarker(g); setPanelOpen(false) }}
+                      style={{ padding: '10px 12px', borderRadius: 14, cursor: 'pointer', marginBottom: 6, background: selectedMarker?.lat === g.lat ? T.primarySoft : 'rgba(255,255,255,0.7)', border: `1px solid ${selectedMarker?.lat === g.lat ? T.borderWarm : 'rgba(0,0,0,0.04)'}`, transition: 'all 0.2s' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h4 style={{ fontFamily: 'EB Garamond, serif', fontSize: 15, color: C.brown, margin: 0 }}>
-                          ♥ {g.location.length > 25 ? g.location.slice(0, 25) + '...' : g.location}
-                        </h4>
-                        <span style={{ fontSize: 11, color: C.primary, fontWeight: 600, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                          {g.memories.length} 条
-                        </span>
+                        <h4 style={{ fontFamily: T.fontTitle, fontSize: 14, color: T.ink, margin: 0 }}>{g.location.length > 22 ? g.location.slice(0, 22) + '...' : g.location}</h4>
+                        <span style={{ fontSize: 11, color: T.primary, fontWeight: 600 }}>{g.memories.length}条</span>
                       </div>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
                         {g.memories.slice(0, 3).map(m => (
-                          <span key={m.id} style={{
-                            fontSize: 10, color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif',
-                            background: 'rgba(156,66,51,0.04)', padding: '2px 8px', borderRadius: 8,
-                            maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {m.title}
-                          </span>
+                          <span key={m.id} style={{ fontSize: 10, color: T.muted, background: 'rgba(143,52,40,0.04)', padding: '2px 6px', borderRadius: 6, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
                         ))}
                       </div>
                     </div>
                   ))}
-
-                  {/* 无法定位的地点 */}
-                  {unknownLocs.map((g, i) => (
-                    <div key={`unk-${i}`} style={{
-                      padding: '10px 14px', borderRadius: 14, marginBottom: 6,
-                      opacity: 0.55, border: `1px dashed ${C.border}`,
-                      background: 'rgba(255,255,255,0.3)',
-                    }}>
-                      <div style={{ fontSize: 13, color: C.light, fontFamily: 'Plus Jakarta Sans, sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>📍</span>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {g.location.length > 30 ? g.location.slice(0, 30) + '...' : g.location}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 11, color: C.light, margin: '4px 0 0', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                        暂无坐标 · {g.memories.length} 条记录
-                      </p>
+                  {markers.filter(m => m.lat === null).map((g, i) => (
+                    <div key={`unk-${i}`} style={{ padding: '8px 12px', borderRadius: 12, marginBottom: 4, opacity: 0.5, border: '1px dashed rgba(0,0,0,0.08)', background: 'rgba(255,255,255,0.3)' }}>
+                      <span style={{ fontSize: 12, color: T.muted }}>📍 {g.location?.slice(0, 26)}</span>
+                      <span style={{ fontSize: 10, color: T.muted, marginLeft: 8 }}>待解析 · {g.memories.length}条</span>
                     </div>
                   ))}
                 </>
@@ -287,6 +305,9 @@ export default function MapPage() {
           </div>
         </div>
       </div>
+
+      {/* ═══ 底部导航 ═══ */}
+      <BottomNav navigate={navigate} />
     </div>
   )
 }
