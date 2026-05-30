@@ -80,9 +80,8 @@ function GlassPanel({ children, style }) {
 export default function Home() {
   const navigate = useNavigate()
   const roomCode = localStorage.getItem('room_code')
-  const cacheKey = roomCode ? `memories_cache_v1_${roomCode}` : null
-  const [memories, setMemories] = useState(() => cacheKey ? readJson(cacheKey, []) : [])
-  const [loading, setLoading] = useState(() => cacheKey ? readJson(cacheKey, []).length === 0 : true)
+  const [memories, setMemories] = useState(() => roomCode ? (getCached('memories') || []) : [])
+  const [loading, setLoading] = useState(() => roomCode ? !getCached('memories') : true)
   const [now] = useState(() => Date.now())
 
   const [cacheVersion, setCacheVersion] = useState(() => getVersion())
