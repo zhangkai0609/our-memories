@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { getCached, setCached, getVersion, isStale } from '../lib/cache'
+import { getCached, setCached } from '../lib/cache'
 
 const T = {
   bg: '#f1f5f5',
