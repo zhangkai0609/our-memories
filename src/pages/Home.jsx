@@ -26,6 +26,22 @@ const navItems = [
   { id: 'map', label: '地图', icon: '⌖', to: '/map' },
 ]
 
+function readJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function withTimeout(promise, ms = 4000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ])
+}
+
 function formatDate(dateLike) {
   if (!dateLike) return '今天'
   return new Date(dateLike).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
@@ -71,26 +87,42 @@ function GlassPanel({ children, style }) {
 
 export default function Home() {
   const navigate = useNavigate()
-  const [memories, setMemories] = useState([])
-  const [loading, setLoading] = useState(true)
+  const roomCode = localStorage.getItem('room_code')
+  const cacheKey = roomCode ? `memories_cache_v1_${roomCode}` : null
+  const [memories, setMemories] = useState(() => cacheKey ? readJson(cacheKey, []) : [])
+  const [loading, setLoading] = useState(() => cacheKey ? readJson(cacheKey, []).length === 0 : true)
   const [now] = useState(() => Date.now())
 
   const fetchMemories = useCallback(async () => {
-    const roomCode = localStorage.getItem('room_code')
     if (!roomCode) {
       setLoading(false)
       return
     }
 
-    const { data } = await supabase
-      .from('memories')
-      .select('*')
-      .eq('room_code', roomCode)
-      .order('created_at', { ascending: false })
+    try {
+      const cached = cacheKey ? readJson(cacheKey, []) : []
+      if (cached.length) {
+        setMemories(cached)
+        setLoading(false)
+      }
 
-    setMemories(data || [])
-    setLoading(false)
-  }, [])
+      const { data } = await withTimeout(
+        supabase
+          .from('memories')
+          .select('*')
+          .eq('room_code', roomCode)
+          .order('created_at', { ascending: false })
+      )
+
+      const next = data || []
+      setMemories(next)
+      if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(next))
+    } catch {
+      if (!memories.length) setLoading(false)
+    } finally {
+      setLoading(false)
+    }
+  }, [cacheKey, memories.length, roomCode])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

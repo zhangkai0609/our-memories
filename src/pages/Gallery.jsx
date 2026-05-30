@@ -35,6 +35,13 @@ function readJson(key, fallback) {
   }
 }
 
+function withTimeout(promise, ms = 4000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ])
+}
+
 function formatDate(dateLike) {
   if (!dateLike) return 'Today'
   return new Date(dateLike).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
@@ -70,26 +77,36 @@ function GlassShell({ children, style }) {
 
 export default function Gallery() {
   const navigate = useNavigate()
-  const [records, setRecords] = useState([])
-  const [loading, setLoading] = useState(true)
+  const roomCode = localStorage.getItem('room_code')
+  const cacheKey = roomCode ? `gallery_cache_v1_${roomCode}` : null
+  const [records, setRecords] = useState(() => cacheKey ? readJson(cacheKey, []) : [])
+  const [loading, setLoading] = useState(() => cacheKey ? readJson(cacheKey, []).length === 0 : true)
   const [page, setPage] = useState(1)
   const [drafts, setDrafts] = useState({})
   const [social, setSocial] = useState(() => readJson('memory_social_v1', {}))
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
+    const cached = cacheKey ? readJson(cacheKey, []) : []
+    if (cached.length) {
+      setRecords(cached)
+      setLoading(false)
+    } else {
+      setLoading(true)
+    }
+
     try {
-      const roomCode = localStorage.getItem('room_code')
       let query = supabase.from('memories').select('*').order('created_at', { ascending: false })
       if (roomCode) query = query.eq('room_code', roomCode)
-      const { data } = await query
-      setRecords((data || []).map(normalizeRecord))
+      const { data } = await withTimeout(query)
+      const next = (data || []).map(normalizeRecord)
+      setRecords(next)
+      if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(next))
     } catch {
-      setRecords([])
+      if (!cached.length) setRecords([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [cacheKey, roomCode])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
