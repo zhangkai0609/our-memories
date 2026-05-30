@@ -91,10 +91,7 @@ export default function MapPage() {
   const myAvatar = localStorage.getItem('my_avatar') || null
   const partnerAvatar = localStorage.getItem('partner_avatar') || null
 
-  const [markers, setMarkers] = useState(() => {
-    const rc = localStorage.getItem('room_code')
-    return rc ? readJson(`geo_cache_v1_${rc}`, []) : []
-  })
+  const [markers, setMarkers] = useState(() => getCached('geo_markers') || [])
   const [panelOpen, setPanelOpen] = useState(false)
   const [geocoding, setGeocoding] = useState(0)
   const [selectedMarker, setSelectedMarker] = useState(null)
