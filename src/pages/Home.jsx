@@ -83,24 +83,27 @@ export default function Home() {
     if (!roomCode) return
     setLoading(true)
 
-    // 1. 缓存立即展示
+    // 1. 缓存兜底 (后台读)
     const cached = getCached('memories')
-    if (cached?.length) {
-      setMemories(cached)
-      setLoading(false)
-      if (!isStale(getVersion())) return // 数据新鲜，跳过请求
-    }
+    if (cached?.length) setMemories(cached)
 
-    // 2. 请求 Supabase (轻量字段)
+    // 2. 总是请求 Supabase 最新数据
     try {
       const { data } = await supabase.from('memories')
         .select('id,title,content,location,author,tags,room_code,coordinates,created_at')
         .eq('room_code', roomCode)
         .order('created_at', { ascending: false })
       const next = data || []
-      setMemories(next)
-      setCached('memories', next)
-    } catch {} finally { setLoading(false) }
+      if (next.length) {
+        setMemories(next)
+        setCached('memories', next)
+      } else if (cached?.length) {
+        setMemories(cached) // 请求空但有缓存，用缓存
+      }
+    } catch {
+      // Supabase 挂了用缓存兜底
+      if (cached?.length) setMemories(cached)
+    } finally { setLoading(false) }
   }
 
   const myName = localStorage.getItem('my_name') || '小周同学'
