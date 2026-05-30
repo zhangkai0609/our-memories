@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const T = {
-  bg: '#fff2f2',
+  bg: '#f1f5f5',
   ink: '#2f1d1a',
   muted: '#7d6460',
   primary: '#8f3428',
@@ -172,10 +172,10 @@ export default function Home() {
     <div style={{
       minHeight: '100dvh',
       background: `
-        radial-gradient(circle at 18% 8%, rgba(255,183,173,0.62), transparent 28%),
-        radial-gradient(circle at 88% 18%, rgba(255,235,196,0.52), transparent 26%),
-        radial-gradient(circle at 50% 92%, rgba(189,210,174,0.32), transparent 30%),
-        linear-gradient(180deg, #fff7f4 0%, ${T.bg} 48%, #fff8f1 100%)
+        radial-gradient(circle at 16% 8%, rgba(255,255,255,0.92), transparent 30%),
+        radial-gradient(circle at 86% 18%, rgba(184,217,224,0.42), transparent 28%),
+        radial-gradient(circle at 50% 92%, rgba(255,219,211,0.34), transparent 32%),
+        linear-gradient(180deg, #fbfbf8 0%, ${T.bg} 48%, #fff3ef 100%)
       `,
       color: T.ink,
       fontFamily: T.fontBody,
@@ -202,7 +202,7 @@ export default function Home() {
           zIndex: 20,
           margin: '0 -14px',
           padding: '0 14px',
-          background: 'rgba(255,246,244,0.62)',
+          background: 'rgba(251,251,248,0.68)',
           backdropFilter: 'blur(22px)',
           WebkitBackdropFilter: 'blur(22px)',
           borderBottom: '1px solid rgba(255,255,255,0.34)',
