@@ -26,6 +26,19 @@ input::placeholder, textarea::placeholder { color: #b8a89d; }
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
 
+/* ═══ Leaflet 保护样式：防止全局 img 样式破坏地图瓦片 ═══ */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+.leaflet-container img.leaflet-tile {
+  max-width: none !important;
+}
+.leaflet-container img.leaflet-marker-icon,
+.leaflet-container img.leaflet-marker-shadow {
+  max-width: none !important;
+}
+
 /* Grainy texture overlay */
 .grain-overlay::after {
   content: '';
