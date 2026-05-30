@@ -6,6 +6,7 @@ import NewRecord from './pages/NewRecord'
 import Map from './pages/Map'
 import Gallery from './pages/Gallery'
 import My from './pages/My'
+import DiaryDetail from './pages/DiaryDetail'
 import Welcome from './pages/Welcome'
 
 class ErrorBoundary extends Component {
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/map" element={<RoomGuard><Map /></RoomGuard>} />
           <Route path="/gallery" element={<RoomGuard><Gallery /></RoomGuard>} />
           <Route path="/my" element={<RoomGuard><My /></RoomGuard>} />
+          <Route path="/diary/:id" element={<RoomGuard><DiaryDetail /></RoomGuard>} />
         </Routes>
       </HashRouter>
     </ErrorBoundary>
