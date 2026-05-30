@@ -251,7 +251,7 @@ export default function NewRecord() {
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(156,66,51,0.05)'}
-                  onMouseLeave={e => { if (addr !== location) e.currentTarget.style.background = 'transparent'; }}
+                  onMouse退出={e => { if (addr !== location) e.currentTarget.style.background = 'transparent'; }}
                 >{addr}</button>
               ))}
             </div>
@@ -263,7 +263,7 @@ export default function NewRecord() {
           onChange={e => setContent(e.target.value)} rows={6}
           style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.8, minHeight: 140 }} />
 
-        {/* Photos */}
+        {/* 照片 */}
         <div>
           <button type="button" onClick={() => fileRef.current.click()}
             style={{

@@ -9,7 +9,7 @@ const T = {
   tapeBlue:'#a8c8e8', tapeGreen:'#b8d4b0',
 }
 
-export default function DiaryDetail() {
+export default function 日记Detail() {
   const navigate=useNavigate()
   const [entry,setEntry]=useState(null)
   const [loading,setLoading]=useState(true)
@@ -213,14 +213,14 @@ export default function DiaryDetail() {
             <div style={{ display:'flex',gap:6,alignItems:'center' }}>
               <span style={{ fontSize:10,pointerEvents:'none' }}>🌸</span>
               <span style={{ fontSize:12,pointerEvents:'none',transform:'rotate(-8deg)' }}>💝</span>
-              <span style={{ fontSize:9,color:T.light,fontFamily:'"Plus Jakarta Sans",sans-serif' }}>Saved as memory</span>
+              <span style={{ fontSize:9,color:T.light,fontFamily:'"Plus Jakarta Sans",sans-serif' }}>保存d as memory</span>
             </div>
             <button onClick={()=>navigate('/gallery')} style={{
               background:'none',border:'none',color:T.maroon,cursor:'pointer',
               fontFamily:'"Plus Jakarta Sans",sans-serif',fontSize:12,fontWeight:600,
               display:'flex',alignItems:'center',gap:4,
             }}>
-              ← Back to Diary
+              ← 返回日记本
             </button>
           </div>
 

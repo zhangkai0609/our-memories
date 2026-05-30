@@ -117,7 +117,7 @@ export default function Welcome() {
                 {/* 标题区 space-y-2 */}
                 <div style={{ marginTop:32 }}>
                   <h1 style={{ ...T.display,color:T.primary,fontStyle:'italic',margin:0 }}>Our Memories</h1>
-                  <p style={{ ...T.bodyMd,color:T.onSurfaceVariant,margin:'8px 0 0' }}>Start your digital scrapbook together.</p>
+                  <p style={{ ...T.bodyMd,color:T.onSurfaceVariant,margin:'8px 0 0' }}>开启属于你们的数字手账。</p>
                 </div>
               </div>
 
@@ -132,7 +132,7 @@ export default function Welcome() {
                 <div>
                   <label style={{ ...T.label,color:T.onBg,marginLeft:16,textTransform:'uppercase',fontSize:12,display:'block',marginBottom:8 }}>Room Code</label>
                   {/* 输入框 - h-14 rounded-full bg-white/60 border-white/50 tracking-[0.2em] body-lg text-center */}
-                  <input value={code} onChange={e=>setCode(e.target.value)} placeholder="Enter room code..."
+                  <input value={code} onChange={e=>setCode(e.target.value)} placeholder="输入小屋代号..."
                     style={{ width:'100%',height:56,padding:'0 24px',borderRadius:999,
                       background:'rgba(255,255,255,0.6)',border:'1px solid rgba(255,255,255,0.5)',
                       fontSize:18,fontFamily:'"Plus Jakarta Sans",sans-serif',textAlign:'center',
@@ -144,9 +144,9 @@ export default function Welcome() {
                   width:'100%',height:56,borderRadius:999,background:T.primary,color:T.onPrimary,
                   ...T.label,textTransform:'uppercase',letterSpacing:'0.05em',
                   border:'none',cursor:'pointer',boxShadow:T.btnShadow,opacity:loading?0.7:1 }}>
-                  {loading?'Joining...':'Join Scrapbook'}
+                  {loading?'进入中...':'进入小屋'}
                 </button>
-                <p style={{ textAlign:'center',...T.bodySm,color:T.onSurfaceVariant,cursor:'pointer' }}>or create a new one</p>
+                <p style={{ textAlign:'center',...T.bodySm,color:T.onSurfaceVariant,cursor:'pointer' }}>或创建新的小屋</p>
               </form>
             </div>
           )}
@@ -155,8 +155,8 @@ export default function Welcome() {
           {step==='mode'&&(
             <div style={{ display:'flex',flexDirection:'column',height:'100%',paddingTop:64,paddingBottom:32,animation:'fadeIn .4s ease-out' }}>
               <div style={{ textAlign:'center',marginBottom:48 }}>
-                <h2 style={{ ...T.headlineMobile,color:T.onBg,margin:'0 0 12px' }}>Select Relationship Mode</h2>
-                <p style={{ ...T.bodyMd,color:T.onSurfaceVariant,margin:0 }}>How do you know each other?</p>
+                <h2 style={{ ...T.headlineMobile,color:T.onBg,margin:'0 0 12px' }}>选择关系模式</h2>
+                <p style={{ ...T.bodyMd,color:T.onSurfaceVariant,margin:0 }}>你们是什么样的关系？</p>
               </div>
               {/* 2×2 网格 - grid grid-cols-2 gap-4 */}
               <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,flex:1 }}>
@@ -178,7 +178,7 @@ export default function Welcome() {
                 <button onClick={()=>{localStorage.setItem('room_mode',mode);setStep('profile')}} style={{
                   width:'100%',height:56,borderRadius:999,background:T.primary,color:T.onPrimary,
                   ...T.label,textTransform:'uppercase',letterSpacing:'0.05em',border:'none',cursor:'pointer',boxShadow:T.btnShadow }}>
-                  Continue
+                  继续
                 </button>
               </div>
             </div>
@@ -188,8 +188,8 @@ export default function Welcome() {
           {step==='profile'&&(
             <div style={{ display:'flex',flexDirection:'column',height:'100%',paddingTop:64,paddingBottom:32,animation:'fadeIn .4s ease-out' }}>
               <div style={{ textAlign:'center',marginBottom:64 }}>
-                <h2 style={{ ...T.headlineMobile,color:T.onBg,margin:'0 0 12px' }}>Set Your Avatars</h2>
-                <p style={{ ...T.bodyMd,color:T.onSurfaceVariant,margin:0 }}>Personalize your scrapbook pages.</p>
+                <h2 style={{ ...T.headlineMobile,color:T.onBg,margin:'0 0 12px' }}>设置头像</h2>
+                <p style={{ ...T.bodyMd,color:T.onSurfaceVariant,margin:0 }}>让小屋更有你们的感觉</p>
               </div>
               <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:48,padding:'0 16px' }}>
                 {/* 双头像行 + 心形分隔 */}
@@ -208,7 +208,7 @@ export default function Welcome() {
                         :<span style={{ fontSize:30,color:T.outline }}>📷</span>}
                       <input ref={meRef} type="file" accept="image/*" onChange={e=>handleFile(e,setMyAvatar)} style={{ display:'none' }} />
                     </button>
-                    <input value={myName} onChange={e=>setMyName(e.target.value)} placeholder="Your Name" style={{
+                    <input value={myName} onChange={e=>setMyName(e.target.value)} placeholder="你的名字" style={{
                       width:112,textAlign:'center',background:'transparent',border:'none',
                       borderBottom:'1px solid rgba(220,192,188,0.5)',padding:'4px 8px',
                       ...T.bodyMd,color:T.onBg,outline:'none',
@@ -232,7 +232,7 @@ export default function Welcome() {
                         :<span style={{ fontSize:30,color:T.outline }}>📷</span>}
                       <input ref={partnerRef} type="file" accept="image/*" onChange={e=>handleFile(e,setPartnerAvatar)} style={{ display:'none' }} />
                     </button>
-                    <input value={partnerName} onChange={e=>setPartnerName(e.target.value)} placeholder="Their Name" style={{
+                    <input value={partnerName} onChange={e=>setPartnerName(e.target.value)} placeholder="ta的名字" style={{
                       width:112,textAlign:'center',background:'transparent',border:'none',
                       borderBottom:'1px solid rgba(220,192,188,0.5)',padding:'4px 8px',
                       ...T.bodyMd,color:T.onBg,outline:'none',
@@ -257,7 +257,7 @@ export default function Welcome() {
                   flex:1,height:56,borderRadius:999,background:T.primary,color:T.onPrimary,
                   ...T.label,textTransform:'uppercase',letterSpacing:'0.05em',border:'none',
                   cursor:'pointer',boxShadow:T.btnShadow,
-                }}>Finish Setup</button>
+                }}>完成设置</button>
               </div>
             </div>
           )}

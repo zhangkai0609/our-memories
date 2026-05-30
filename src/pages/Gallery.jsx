@@ -28,7 +28,7 @@ const mockEntries = [
     tags:['#food','#date'],image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBPygZfQI3dscIzvK-N7cn8AvAiwVj3VEz22GjQNUaLg02jh2t0yVNyi8mKGMJqFdx_gv7W4eY8UeDSlE5tE06w-6et6jm1XxfHUilZJVM8d4f5Rvur41bXahxAYq28oyaIB4C4lq4BmFwpC5-K8yP1otZCX2izMJHDutM21RDuaX8j7KxQAmK95AlP6-XWeJQKNcQzumtx1WgfTAqS9gF9BanAi6t84H1qFB4kNxxUvei4ImTNWE5WnJkUWpcjjkuI824NepDjriQ'},
 ]
 
-export default function Gallery() {
+export default function 日记本() {
   const navigate=useNavigate()
   const [records,setRecords]=useState([])
   const [viewMode,setViewMode]=useState('list')
@@ -59,18 +59,18 @@ export default function Gallery() {
         {/* ═══ TopAppBar - bg-white/40 backdrop-blur-lg ═══ */}
         <header style={{ display:'flex',alignItems:'center',justifyContent:'space-between',height:64,background:'rgba(255,255,255,0.4)',...T.glassLg,borderBottom:'1px solid rgba(255,255,255,0.4)',position:'sticky',top:0,zIndex:40,padding:'0 20px' }}>
           <button onClick={()=>navigate('/')} style={{ background:'none',border:'none',color:T.onSurfaceVariant,cursor:'pointer',fontSize:20 }}>←</button>
-          <h1 style={{ ...T.headlineMobile,color:T.primary,fontStyle:'italic',margin:0 }}>Gallery</h1>
+          <h1 style={{ ...T.headlineMobile,color:T.primary,fontStyle:'italic',margin:0 }}>日记本</h1>
           <div style={{ display:'flex',gap:8,alignItems:'center' }}>
             <button style={{ background:'none',border:'none',color:T.onSurfaceVariant,cursor:'pointer',fontSize:20 }}>🔍</button>
-            <button onClick={()=>navigate('/new')} style={{ background:'rgba(156,66,51,0.8)',...T.glassMd,border:'1px solid rgba(255,255,255,0.3)',color:T.onPrimary,borderRadius:999,padding:'6px 12px',fontSize:14,fontWeight:600,fontFamily:'"Plus Jakarta Sans",sans-serif',cursor:'pointer',display:'flex',alignItems:'center',gap:4 }}>＋ Write</button>
+            <button onClick={()=>navigate('/new')} style={{ background:'rgba(156,66,51,0.8)',...T.glassMd,border:'1px solid rgba(255,255,255,0.3)',color:T.onPrimary,borderRadius:999,padding:'6px 12px',fontSize:14,fontWeight:600,fontFamily:'"Plus Jakarta Sans",sans-serif',cursor:'pointer',display:'flex',alignItems:'center',gap:4 }}>＋ 写日记</button>
           </div>
         </header>
 
         {/* ═══ Filters - sticky top-16 bg-white/40 backdrop-blur-md ═══ */}
         <section style={{ padding:'12px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:64,background:'rgba(255,255,255,0.4)',...T.glassMd,zIndex:30,borderBottom:'1px solid rgba(255,255,255,0.2)' }}>
           <div style={{ display:'flex',gap:8,overflowX:'auto',flex:1,marginRight:16 }}>
-            {['Time ▾','Location ▾','Tags ▾'].map((f,i)=>(
-              <button key={i} onMouseEnter={()=>setHoverFilter(i)} onMouseLeave={()=>setHoverFilter(null)}
+            {['时间 ▾','地点 ▾','标签 ▾'].map((f,i)=>(
+              <button key={i} onMouseEnter={()=>setHoverFilter(i)} onMouse退出={()=>setHoverFilter(null)}
                 style={{ background:hoverFilter===i?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.5)',...T.glassMd,color:T.onSurfaceVariant,border:'1px solid rgba(255,255,255,0.6)',borderRadius:999,padding:'6px 16px',...T.bodySm,fontWeight:600,fontFamily:'"Plus Jakarta Sans",sans-serif',whiteSpace:'nowrap',cursor:'pointer',transition:'all .3s' }}>{f}</button>
             ))}
           </div>

@@ -26,14 +26,14 @@ const T = {
 }
 
 const quickActions = [
-  {id:'diary',icon:'📔',label:'Diary',to:'/new'},
-  {id:'gallery',icon:'📷',label:'Gallery',to:'/gallery'},
+  {id:'diary',icon:'📔',label:'日记',to:'/new'},
+  {id:'gallery',icon:'📷',label:'日记本',to:'/gallery'},
   {id:'map',icon:'🗺',label:'Map',to:'/map'},
-  {id:'dates',icon:'💝',label:'Anniv.',to:null},
+  {id:'dates',icon:'💝',label:'纪念日',to:null},
 ]
 const navItems = [
   {id:'home',icon:'🏠',label:'Home',to:'/'},
-  {id:'diary',icon:'📔',label:'Diary',to:'/gallery'},
+  {id:'diary',icon:'📔',label:'日记',to:'/gallery'},
   {id:'new',icon:'＋',label:'Add',to:'/new'},
   {id:'map',icon:'🗺',label:'Map',to:'/map'},
   {id:'my',icon:'👤',label:'My',to:'/my'},
@@ -86,7 +86,7 @@ export default function Home() {
 
   if(!localStorage.getItem('room_code')) return (
     <div style={{ minHeight:'100vh',background:T.surface,display:'flex',alignItems:'center',justifyContent:'center',...T.bodyMd,color:T.onSurfaceVariant,fontStyle:'italic' }}>
-      Enter a room code to begin...
+      请输入小屋代号
     </div>
   )
 
@@ -148,7 +148,7 @@ export default function Home() {
             <div style={{ position:'absolute',inset:0,background:T.dreamyGlow,pointerEvents:'none' }} />
             <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16,position:'relative',zIndex:10 }}>
               <div>
-                <p style={{ ...T.bodySm,color:T.onSurfaceVariant,margin:'0 0 4px' }}>Together for</p>
+                <p style={{ ...T.bodySm,color:T.onSurfaceVariant,margin:'0 0 4px' }}>我们的记忆</p>
                 <h2 style={{ ...T.display,color:T.primary,margin:0 }}>
                   {memoryDays?memoryDays.toLocaleString():'--'} <span style={{ ...T.headlineMd,fontWeight:400,color:T.onSurfaceVariant }}>days</span>
                 </h2>
@@ -162,7 +162,7 @@ export default function Home() {
             {/* 14天柱状图 */}
             {barData.length>0&&(
               <div style={{ position:'relative',zIndex:10 }}>
-                <p style={{ ...T.label,color:T.onSurfaceVariant,margin:'0 0 8px' }}>Memory Activity (14 Days)</p>
+                <p style={{ ...T.label,color:T.onSurfaceVariant,margin:'0 0 8px' }}>记忆活跃度 (14天)</p>
                 <div style={{ display:'flex',alignItems:'flex-end',gap:1,height:48 }}>
                   {barData.map((b,i)=>(<div key={i} style={{ flex:1,height:`${Math.max(4,b.h)}%`,borderRadius:'2px 2px 0 0',background:b.v>0?T.primaryContainer:T.surfVariant,transition:'height .3s',cursor:'pointer' }} title={`${b.v} memories`} />))}
                 </div>
@@ -174,7 +174,7 @@ export default function Home() {
           <section style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16,marginTop:8 }}>
             {quickActions.map(a=>(
               <button key={a.id} onClick={()=>a.to?navigate(a.to):null}
-                onMouseEnter={()=>setHoverQA(p=>({...p,[a.id]:true}))} onMouseLeave={()=>setHoverQA(p=>({...p,[a.id]:false}))}
+                onMouseEnter={()=>setHoverQA(p=>({...p,[a.id]:true}))} onMouse退出={()=>setHoverQA(p=>({...p,[a.id]:false}))}
                 style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:8,background:'none',border:'none',cursor:'pointer' }}>
                 {/* w-14 h-14 rounded-full bg-white/40 backdrop-blur-sm group-hover:bg-primary-container */}
                 <div style={{
@@ -189,11 +189,11 @@ export default function Home() {
             ))}
           </section>
 
-          {/* ═══ Recent Memories Polaroids ═══ */}
+          {/* ═══ 最近回忆 Polaroids ═══ */}
           <section style={{ marginTop:16 }}>
             <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16 }}>
-              <h3 style={{ ...T.headlineMd,color:T.onBg,margin:0 }}>Recent Memories</h3>
-              <button onClick={()=>navigate('/gallery')} style={{ background:'none',border:'none',...T.label,color:T.primary,cursor:'pointer' }}>View All</button>
+              <h3 style={{ ...T.headlineMd,color:T.onBg,margin:0 }}>最近回忆</h3>
+              <button onClick={()=>navigate('/gallery')} style={{ background:'none',border:'none',...T.label,color:T.primary,cursor:'pointer' }}>查看全部</button>
             </div>
             {/* 水平滚动 - overflow-x-auto hide-scrollbar snap-x -mx-margin-mobile px-margin-mobile */}
             <div style={{ display:'flex',gap:16,overflowX:'auto',paddingBottom:24,margin:'0 -20px',padding:'0 20px',scrollSnapType:'x mandatory',scrollbarWidth:'none' }}>
@@ -230,7 +230,7 @@ export default function Home() {
       }}>
         {navItems.map(item=>{const active=activeNav===item.id;return(
           <button key={item.id} onClick={()=>{setActiveNav(item.id);if(item.to)navigate(item.to)}}
-            onMouseEnter={()=>setHoverNavBtn(item.id)} onMouseLeave={()=>setHoverNavBtn(null)}
+            onMouseEnter={()=>setHoverNavBtn(item.id)} onMouse退出={()=>setHoverNavBtn(null)}
             style={{
               display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
               background:active?T.primaryContainer:hoverNavBtn===item.id?'rgba(255,180,167,0.2)':'transparent',
