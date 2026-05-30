@@ -45,44 +45,12 @@ function FitBoundsOnLoad({ markers }) {
   return null
 }
 
-/* ═══ 底部导航 ═══ */
+/* ═══ 底部导航 (与 Home.jsx 完全一致) ═══ */
 const navItems = [
   { id: 'home', label: '家', icon: '⌂', to: '/' },
   { id: 'memory', label: '记忆', icon: '◫', to: '/gallery' },
   { id: 'map', label: '地图', icon: '⌖', to: '/map' },
 ]
-
-function BottomNav({ navigate }) {
-  return (
-    <nav style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      display: 'flex', justifyContent: 'center',
-      padding: '0 20px max(14px, env(safe-area-inset-bottom))',
-    }}>
-      <div style={{
-        width: '100%', maxWidth: 390, display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-        background: T.white, borderRadius: 20, padding: '10px 12px',
-        boxShadow: T.softShadow, border: `1px solid ${T.border}`,
-      }}>
-        {navItems.map(item => {
-          const active = item.id === 'map'
-          return (
-            <button key={item.id} onClick={() => item.to && navigate(item.to)} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              background: active ? T.primarySoft : 'transparent', border: 'none',
-              cursor: 'pointer', padding: '8px 16px', borderRadius: 14,
-              color: active ? T.primary : T.muted, fontFamily: T.fontBody, fontSize: 11,
-              fontWeight: active ? 700 : 500, transition: 'all 0.2s',
-            }}>
-              <span style={{ fontSize: 18 }}>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
-    </nav>
-  )
-}
 
 /* ═══ 主组件 ═══ */
 export default function MapPage() {
@@ -202,7 +170,7 @@ export default function MapPage() {
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody, paddingBottom: 80 }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody }}>
       {/* ═══ Header ═══ */}
       <header style={{
         background: 'rgba(251,251,248,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
@@ -304,8 +272,43 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* ═══ 底部导航 ═══ */}
-      <BottomNav navigate={navigate} />
+      {/* ═══ 底部导航 (与 Home.jsx 完全一致) ═══ */}
+      <nav style={{
+        position: 'fixed',
+        left: '50%',
+        bottom: 'calc(34px + env(safe-area-inset-bottom))',
+        transform: 'translateX(-50%)',
+        width: 'min(calc(100% - 44px), 356px)',
+        height: 58,
+        zIndex: 50,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 8,
+        padding: 5,
+        borderRadius: 999,
+        border: `1px solid ${T.border}`,
+        background: 'rgba(255,255,255,0.48)',
+        backdropFilter: 'blur(28px) saturate(1.45)',
+        WebkitBackdropFilter: 'blur(28px) saturate(1.45)',
+        boxShadow: '0 18px 48px rgba(104,45,38,0.18), inset 0 1px 0 rgba(255,255,255,0.70)',
+      }}>
+        {navItems.map(item => {
+          const active = item.id === 'map'
+          return (
+            <button key={item.id} onClick={() => navigate(item.to)}
+              style={{
+                border: 'none', borderRadius: 999, background: 'transparent',
+                color: active ? T.primary : T.muted, cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', gap: 2, fontFamily: T.fontBody,
+                fontSize: 12, fontWeight: 800, boxShadow: 'none',
+              }}>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22, lineHeight: '22px' }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
     </div>
   )
 }
