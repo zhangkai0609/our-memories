@@ -79,7 +79,7 @@ export default function MapPage() {
     if (cached && !isStale(cacheVersion)) return
 
     try {
-      const { data } = await supabase.from('memories').select('*').eq('room_code', roomCode).order('created_at', { ascending: false })
+      const { data } = await supabase.from('memories').select('id,title,content,location,author,coordinates,created_at').eq('room_code', roomCode).order('created_at', { ascending: false })
       if (!data?.length) return
 
       // 按地点分组：每个地点取所有记忆 + 优先使用存储坐标

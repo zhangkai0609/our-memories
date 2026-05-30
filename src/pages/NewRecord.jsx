@@ -109,17 +109,34 @@ export default function NewRecord() {
     if (!title.trim()) return
     setUploading(true)
 
-    // 照片转 base64 存数据库（无需 Supabase Storage）
+    // 照片压缩 + base64 (canvas resize → max 1200px, JPEG 0.7, <200KB)
     const imageUrls = []
     for (const file of files) {
       try {
-        const dataUrl = await new Promise((resolve, reject) => {
+        const compressed = await new Promise((resolve) => {
           const reader = new FileReader()
-          reader.onload = () => resolve(reader.result)
-          reader.onerror = reject
+          reader.onload = () => {
+            const img = new Image()
+            img.onload = () => {
+              const maxW = 1200
+              let { width, height } = img
+              if (width > maxW || height > maxW) {
+                const ratio = maxW / Math.max(width, height)
+                width = Math.round(width * ratio)
+                height = Math.round(height * ratio)
+              }
+              const canvas = document.createElement('canvas')
+              canvas.width = width
+              canvas.height = height
+              const ctx = canvas.getContext('2d')
+              ctx.drawImage(img, 0, 0, width, height)
+              resolve(canvas.toDataURL('image/jpeg', 0.7))
+            }
+            img.src = reader.result
+          }
           reader.readAsDataURL(file)
         })
-        imageUrls.push(dataUrl)
+        imageUrls.push(compressed)
       } catch { alert('照片读取失败: ' + file.name) }
     }
 
