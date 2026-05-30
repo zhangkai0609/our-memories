@@ -89,32 +89,35 @@ export default function Home() {
   const fetchMemories = useCallback(async () => {
     if (!roomCode) { setLoading(false); return }
 
-    // 1. 先读缓存立即显示
+    // 1. 先读缓存立即显示 (0ms)
     const cached = getCached('memories')
     if (cached && cached.length) {
       setMemories(cached)
       setLoading(false)
     }
 
-    // 2. 缓存没过期就跳过 Supabase 请求
+    // 2. 缓存没过期就跳过 (版本号没变=无新数据)
     if (cached && !isStale(cacheVersion)) return
 
-    // 3. 缓存过期或为空 → 拉新数据
+    // 3. 缓存过期或为空 → 拉轻量数据 (不含 image_urls)
     try {
       const { data } = await withTimeout(
-        supabase.from('memories').select('*').eq('room_code', roomCode).order('created_at', { ascending: false }),
-        cached ? 8000 : 18000
+        supabase.from('memories')
+          .select('id,title,content,location,author,tags,room_code,coordinates,created_at')
+          .eq('room_code', roomCode)
+          .order('created_at', { ascending: false }),
+        8000
       )
       const next = data || []
       setMemories(next)
       setCached('memories', next)
-      setCacheVersion(getVersion()) // 同步版本号
+      setCacheVersion(getVersion())
     } catch {
-      if (!memories.length) setLoading(false)
+      // 缓存兜底，不报错
     } finally {
       setLoading(false)
     }
-  }, [cacheVersion, roomCode, memories.length])
+  }, [cacheVersion, roomCode])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
