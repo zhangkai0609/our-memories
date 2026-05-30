@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import { getCached, setCached, getVersion, isStale } from '../lib/cache'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 
@@ -13,11 +14,6 @@ const T = {
   shadow: '0 24px 70px rgba(104,45,38,0.16)', softShadow: '0 14px 38px rgba(104,45,38,0.10)',
   fontTitle: '"EB Garamond","Noto Serif SC",serif',
   fontBody: '"Plus Jakarta Sans","PingFang SC","Microsoft YaHei",sans-serif',
-}
-
-/* ═══ 工具函数 (与 Home.jsx 一致) ═══ */
-function readJson(key, fallback) {
-  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback } catch { return fallback }
 }
 
 /* ═══ 用户头像标记 ═══ */
@@ -104,13 +100,18 @@ export default function MapPage() {
   const [selectedMarker, setSelectedMarker] = useState(null)
   const panelKeyRef = useRef(0)
 
+  const [cacheVersion] = useState(() => getVersion())
+
   const fetchData = useCallback(async () => {
     const roomCode = localStorage.getItem('room_code')
     if (!roomCode) return
 
-    const cacheKey = `geo_cache_v1_${roomCode}`
-    const cached = readJson(cacheKey, null)
-    if (cached && cached.length > 0) setMarkers(cached)
+    // 1. 读缓存立即显示
+    const cached = getCached('geo_markers')
+    if (cached?.length) setMarkers(cached)
+
+    // 2. 缓存没过期就跳过
+    if (cached && !isStale(cacheVersion)) return
 
     try {
       const { data } = await supabase.from('memories').select('*').eq('room_code', roomCode).order('created_at', { ascending: false })
@@ -139,7 +140,7 @@ export default function MapPage() {
       // 立即显示有坐标的
       if (results.length > 0) {
         setMarkers(results)
-        localStorage.setItem(cacheKey, JSON.stringify(results))
+        setCached('geo_markers', results)
       }
 
       // 后台 geocode 无坐标的地点，300ms 间隔加速
@@ -154,7 +155,7 @@ export default function MapPage() {
             results.push({ location: loc, lat: null, lng: null, memories: mems })
           }
           setMarkers([...results])
-          localStorage.setItem(cacheKey, JSON.stringify(results))
+          setCached('geo_markers', [...results])
           setGeocoding(needGeocode.length - i - 1)
           if (i < needGeocode.length - 1) await new Promise(r => setTimeout(r, 300))
         }
@@ -204,7 +205,7 @@ export default function MapPage() {
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody, paddingBottom: 80 }}>
       {/* ═══ Header ═══ */}
       <header style={{
         background: 'rgba(251,251,248,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',

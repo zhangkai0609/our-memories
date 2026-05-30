@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { bumpVersion } from '../lib/cache'
 import { supabase } from '../lib/supabase'
 
 const C = {
@@ -140,7 +141,7 @@ export default function NewRecord() {
     }
 
     if (error) alert('发布失败：' + error.message)
-    else navigate('/')
+    else { bumpVersion(); navigate('/') }
     setUploading(false)
   }
 

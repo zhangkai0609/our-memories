@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { getCached, setCached, getVersion, isStale } from '../lib/cache'
 
 const T = {
   bg: '#f1f5f5',
@@ -25,15 +26,6 @@ const navItems = [
   { id: 'memory', label: '记忆', icon: '◫', to: '/gallery' },
   { id: 'map', label: '地图', icon: '⌖', to: '/map' },
 ]
-
-function readJson(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch {
-    return fallback
-  }
-}
 
 function withTimeout(promise, ms = 12000) {
   return Promise.race([
@@ -93,37 +85,37 @@ export default function Home() {
   const [loading, setLoading] = useState(() => cacheKey ? readJson(cacheKey, []).length === 0 : true)
   const [now] = useState(() => Date.now())
 
+  const [cacheVersion, setCacheVersion] = useState(() => getVersion())
+
   const fetchMemories = useCallback(async () => {
-    if (!roomCode) {
+    if (!roomCode) { setLoading(false); return }
+
+    // 1. 先读缓存立即显示
+    const cached = getCached('memories')
+    if (cached && cached.length) {
+      setMemories(cached)
       setLoading(false)
-      return
     }
 
+    // 2. 缓存没过期就跳过 Supabase 请求
+    if (cached && !isStale(cacheVersion)) return
+
+    // 3. 缓存过期或为空 → 拉新数据
     try {
-      const cached = cacheKey ? readJson(cacheKey, []) : []
-      if (cached.length) {
-        setMemories(cached)
-        setLoading(false)
-      }
-
       const { data } = await withTimeout(
-        supabase
-          .from('memories')
-          .select('*')
-          .eq('room_code', roomCode)
-          .order('created_at', { ascending: false }),
-        cached.length ? 8000 : 18000
+        supabase.from('memories').select('*').eq('room_code', roomCode).order('created_at', { ascending: false }),
+        cached ? 8000 : 18000
       )
-
       const next = data || []
       setMemories(next)
-      if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(next))
+      setCached('memories', next)
+      setCacheVersion(getVersion()) // 同步版本号
     } catch {
       if (!memories.length) setLoading(false)
     } finally {
       setLoading(false)
     }
-  }, [cacheKey, memories.length, roomCode])
+  }, [cacheVersion, roomCode, memories.length])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
