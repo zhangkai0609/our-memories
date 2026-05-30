@@ -199,7 +199,7 @@ export default function DiaryDetail() {
               </p>
               {/* Hashtags */}
               <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
-                {e.tags.map(t=>(
+                {(e.tags||[]).map(t=>(
                   <span key={t} style={{ fontSize:11,fontFamily:'"Plus Jakarta Sans",sans-serif',color:T.light,background:'rgba(139,58,58,0.05)',padding:'3px 8px',borderRadius:6 }}>{t}</span>
                 ))}
               </div>

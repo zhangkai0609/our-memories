@@ -48,7 +48,7 @@ export default function Gallery() {
     }catch{setRecords(mockEntries)}
   }
 
-  const pagedRecords=records.slice((currentPage-1)*2,currentPage*2)
+  const pagedRecords=(records||[]).slice((currentPage-1)*2,currentPage*2)
 
   return (
     <div style={{ minHeight:'max(884px,100dvh)',background:T.surface,paddingBottom:96 }}>
@@ -143,7 +143,7 @@ export default function Gallery() {
                 </div>
 
                 {/* Tags */}
-                {entry.tags&&<div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>{entry.tags.map(t=>(
+                {entry.tags&&<div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>{(entry.tags||[]).map(t=>(
                   <span key={t} style={{ background:'rgba(255,255,255,0.5)',...T.glassMd,color:'#8b7770',borderRadius:999,padding:'2px 8px',fontSize:10,fontWeight:500,fontFamily:'"Plus Jakarta Sans",sans-serif',border:'1px solid rgba(255,255,255,0.6)' }}>{t}</span>
                 ))}</div>}
               </div>
