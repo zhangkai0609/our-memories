@@ -285,16 +285,16 @@ export default function Gallery() {
       <nav style={{
         position: 'fixed',
         left: '50%',
-        bottom: 'calc(22px + env(safe-area-inset-bottom))',
+        bottom: 'calc(34px + env(safe-area-inset-bottom))',
         transform: 'translateX(-50%)',
-        width: 'min(calc(100% - 24px), 392px)',
-        height: 68,
+        width: 'min(calc(100% - 44px), 356px)',
+        height: 58,
         zIndex: 50,
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: 8,
-        padding: 6,
-        borderRadius: 24,
+        padding: 5,
+        borderRadius: 999,
         border: `1px solid ${T.border}`,
         background: 'rgba(255,255,255,0.50)',
         backdropFilter: 'blur(28px) saturate(1.45)',
@@ -306,7 +306,7 @@ export default function Gallery() {
           return (
             <button key={item.id} onClick={() => navigate(item.to)} style={{
               border: 'none',
-              borderRadius: 18,
+              borderRadius: 999,
               background: 'transparent',
               color: active ? T.primary : T.muted,
               display: 'flex',
@@ -321,13 +321,13 @@ export default function Gallery() {
               boxShadow: 'none',
             }}>
               <span style={{
-                width: 34,
-                height: 34,
+                width: 30,
+                height: 30,
                 borderRadius: '50%',
                 display: 'grid',
                 placeItems: 'center',
-                fontSize: 24,
-                lineHeight: '24px',
+                fontSize: 22,
+                lineHeight: '22px',
                 background: active ? 'rgba(156,66,51,0.10)' : 'rgba(255,255,255,0.18)',
                 boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.56)' : 'none',
               }}>{item.icon}</span>
