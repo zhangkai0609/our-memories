@@ -214,7 +214,7 @@ export default function Home() {
 
         <main style={{ display: 'grid', gap: 14, paddingTop: 14 }}>
           <GlassPanel style={{ borderRadius: 26, padding: 18 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'grid', gap: 12 }}>
               <div style={{ minWidth: 0 }}>
                 <p style={{ margin: '0 0 6px', color: T.muted, fontSize: 13, fontWeight: 650 }}>欢迎回家，{myName}</p>
                 <h2 style={{
@@ -229,7 +229,7 @@ export default function Home() {
                   把今天收藏起来
                 </h2>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexShrink: 0 }}>
                 {[myAvatar, partnerAvatar].map((avatar, index) => (
                   <div key={index} style={{
                     width: 48,
@@ -308,25 +308,27 @@ export default function Home() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -14px', padding: '0 14px 16px', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, paddingBottom: 16 }}>
               {recentMemories.map((memory, index) => (
                 <article
                   key={memory.id}
                   onClick={() => memory.id.toString().startsWith('demo') ? navigate('/new') : navigate(`/diary/${memory.id}`)}
                   style={{
-                    minWidth: 164,
-                    scrollSnapAlign: 'center',
+                    width: '100%',
+                    minWidth: 0,
+                    boxSizing: 'border-box',
                     borderRadius: 8,
                     background: 'rgba(255,255,255,0.84)',
-                    padding: '8px 8px 20px',
+                    padding: '7px 7px 18px',
                     boxShadow: T.softShadow,
-                    transform: `rotate(${index % 2 ? 2 : -2}deg)`,
+                    transform: `rotate(${index % 2 ? 1 : -1}deg)`,
                     cursor: 'pointer',
                     border: '1px solid rgba(255,255,255,0.8)',
                   }}
                 >
                   <div style={{
-                    height: 116,
+                    width: '100%',
+                    aspectRatio: '1.22 / 1',
                     borderRadius: 4,
                     background: 'linear-gradient(135deg, #ffe3dd, #fff2d8)',
                     overflow: 'hidden',
@@ -346,8 +348,8 @@ export default function Home() {
                     margin: '12px 4px 4px',
                     color: T.ink,
                     fontFamily: T.fontTitle,
-                    fontSize: 19,
-                    lineHeight: '23px',
+                    fontSize: 18,
+                    lineHeight: '22px',
                     fontWeight: 700,
                     overflow: 'hidden',
                     display: '-webkit-box',
