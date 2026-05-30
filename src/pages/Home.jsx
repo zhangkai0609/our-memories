@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached, getVersion, isStale } from '../lib/cache'
@@ -26,13 +26,6 @@ const navItems = [
   { id: 'memory', label: '记忆', icon: '◫', to: '/gallery' },
   { id: 'map', label: '地图', icon: '⌖', to: '/map' },
 ]
-
-function withTimeout(promise, ms = 12000) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-  ])
-}
 
 function formatDate(dateLike) {
   if (!dateLike) return '今天'
@@ -80,49 +73,35 @@ function GlassPanel({ children, style }) {
 export default function Home() {
   const navigate = useNavigate()
   const roomCode = localStorage.getItem('room_code')
-  const [memories, setMemories] = useState(() => roomCode ? (getCached('memories') || []) : [])
-  const [loading, setLoading] = useState(() => roomCode ? !getCached('memories') : true)
+  const [memories, setMemories] = useState([])
+  const [loading, setLoading] = useState(false)
   const [now] = useState(() => Date.now())
 
-  const [cacheVersion, setCacheVersion] = useState(() => getVersion())
+  useEffect(() => { fetchData() }, [])
 
-  const fetchMemories = useCallback(async () => {
-    if (!roomCode) { setLoading(false); return }
+  async function fetchData() {
+    if (!roomCode) return
+    setLoading(true)
 
-    // 1. 先读缓存立即显示 (0ms)
+    // 1. 缓存立即展示
     const cached = getCached('memories')
-    if (cached && cached.length) {
+    if (cached?.length) {
       setMemories(cached)
       setLoading(false)
+      if (!isStale(getVersion())) return // 数据新鲜，跳过请求
     }
 
-    // 2. 缓存没过期就跳过 (版本号没变=无新数据)
-    if (cached && !isStale(cacheVersion)) return
-
-    // 3. 缓存过期或为空 → 拉轻量数据 (不含 image_urls)
+    // 2. 请求 Supabase (轻量字段)
     try {
-      const { data } = await withTimeout(
-        supabase.from('memories')
-          .select('id,title,content,location,author,tags,room_code,coordinates,created_at')
-          .eq('room_code', roomCode)
-          .order('created_at', { ascending: false }),
-        8000
-      )
+      const { data } = await supabase.from('memories')
+        .select('id,title,content,location,author,tags,room_code,coordinates,created_at')
+        .eq('room_code', roomCode)
+        .order('created_at', { ascending: false })
       const next = data || []
       setMemories(next)
       setCached('memories', next)
-      setCacheVersion(getVersion())
-    } catch {
-      // 缓存兜底，不报错
-    } finally {
-      setLoading(false)
-    }
-  }, [cacheVersion, roomCode])
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchMemories()
-  }, [fetchMemories])
+    } catch {} finally { setLoading(false) }
+  }
 
   const myName = localStorage.getItem('my_name') || '小周同学'
   const partnerName = localStorage.getItem('partner_name') || '另一半'
