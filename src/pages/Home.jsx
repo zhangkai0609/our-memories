@@ -137,7 +137,7 @@ export default function Home() {
 
   return (
     <div style={{
-      minHeight: 'max(884px, 100dvh)',
+      minHeight: '100dvh',
       background: `
         radial-gradient(circle at 18% 8%, rgba(255,183,173,0.62), transparent 28%),
         radial-gradient(circle at 88% 18%, rgba(255,235,196,0.52), transparent 26%),
@@ -146,9 +146,9 @@ export default function Home() {
       `,
       color: T.ink,
       fontFamily: T.fontBody,
-      paddingBottom: 112,
+      paddingBottom: 'calc(104px + env(safe-area-inset-bottom))',
       position: 'relative',
-      overflow: 'hidden',
+      overflowX: 'hidden',
     }}>
       <div style={{
         position: 'fixed',
@@ -158,17 +158,17 @@ export default function Home() {
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
       }} />
 
-      <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 18px', position: 'relative', zIndex: 1 }}>
+      <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <header style={{
-          height: 74,
+          height: 68,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           position: 'sticky',
           top: 0,
           zIndex: 20,
-          margin: '0 -18px',
-          padding: '0 18px',
+          margin: '0 -14px',
+          padding: '0 14px',
           background: 'rgba(255,246,244,0.62)',
           backdropFilter: 'blur(22px)',
           WebkitBackdropFilter: 'blur(22px)',
@@ -179,8 +179,8 @@ export default function Home() {
             <h1 style={{
               margin: 0,
               fontFamily: T.fontTitle,
-              fontSize: 28,
-              lineHeight: '32px',
+              fontSize: 26,
+              lineHeight: '30px',
               fontWeight: 700,
               fontStyle: 'italic',
               color: T.primary,
@@ -193,8 +193,8 @@ export default function Home() {
             onClick={() => navigate('/my')}
             aria-label="打开资料"
             style={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               borderRadius: '50%',
               border: '2px solid rgba(255,255,255,0.86)',
               background: 'rgba(255,255,255,0.52)',
@@ -212,17 +212,17 @@ export default function Home() {
           </button>
         </header>
 
-        <main style={{ display: 'grid', gap: 18, paddingTop: 18 }}>
-          <GlassPanel style={{ borderRadius: 30, padding: 22 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <main style={{ display: 'grid', gap: 14, paddingTop: 14 }}>
+          <GlassPanel style={{ borderRadius: 26, padding: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <div style={{ minWidth: 0 }}>
                 <p style={{ margin: '0 0 6px', color: T.muted, fontSize: 13, fontWeight: 650 }}>欢迎回家，{myName}</p>
                 <h2 style={{
                   margin: 0,
                   color: T.ink,
                   fontFamily: T.fontTitle,
-                  fontSize: 42,
-                  lineHeight: '44px',
+                  fontSize: 32,
+                  lineHeight: '36px',
                   fontWeight: 760,
                   letterSpacing: 0,
                 }}>
@@ -232,9 +232,9 @@ export default function Home() {
               <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                 {[myAvatar, partnerAvatar].map((avatar, index) => (
                   <div key={index} style={{
-                    width: 54,
-                    height: 54,
-                    marginLeft: index ? -14 : 0,
+                    width: 48,
+                    height: 48,
+                    marginLeft: index ? -12 : 0,
                     borderRadius: '50%',
                     overflow: 'hidden',
                     background: index ? '#f8ded8' : '#ffe7e1',
@@ -251,7 +251,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
               {[
                 ['记忆天数', stats.memoryDays || '--'],
                 ['回忆总数', loading ? '--' : memories.length],
@@ -259,13 +259,13 @@ export default function Home() {
                 ['足迹', stats.locationCount],
               ].map(([label, value]) => (
                 <div key={label} style={{
-                  borderRadius: 20,
-                  padding: '14px 14px 12px',
+                  borderRadius: 18,
+                  padding: '12px 12px 10px',
                   background: 'rgba(255,255,255,0.46)',
                   border: `1px solid ${T.border}`,
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72)',
                 }}>
-                  <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 30, lineHeight: '32px', fontWeight: 760 }}>{value}</div>
+                  <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 28, lineHeight: '30px', fontWeight: 760 }}>{value}</div>
                   <div style={{ color: T.muted, fontSize: 12, fontWeight: 700, marginTop: 4 }}>{label}</div>
                 </div>
               ))}
@@ -275,8 +275,8 @@ export default function Home() {
               onClick={() => navigate('/new')}
               style={{
                 width: '100%',
-                height: 56,
-                marginTop: 18,
+                height: 52,
+                marginTop: 16,
                 border: '1px solid rgba(255,255,255,0.60)',
                 borderRadius: 999,
                 color: '#fff',
@@ -295,7 +295,7 @@ export default function Home() {
 
           <section>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '2px 2px 12px' }}>
-              <h3 style={{ margin: 0, fontFamily: T.fontTitle, fontSize: 26, lineHeight: '30px', color: T.ink, fontWeight: 700 }}>最近记忆</h3>
+              <h3 style={{ margin: 0, fontFamily: T.fontTitle, fontSize: 24, lineHeight: '28px', color: T.ink, fontWeight: 700 }}>最近记忆</h3>
               <button onClick={() => navigate('/gallery')} style={{
                 border: 'none',
                 background: 'transparent',
@@ -308,13 +308,13 @@ export default function Home() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', margin: '0 -18px', padding: '0 18px 18px', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -14px', padding: '0 14px 16px', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
               {recentMemories.map((memory, index) => (
                 <article
                   key={memory.id}
                   onClick={() => memory.id.toString().startsWith('demo') ? navigate('/new') : navigate(`/diary/${memory.id}`)}
                   style={{
-                    minWidth: 178,
+                    minWidth: 164,
                     scrollSnapAlign: 'center',
                     borderRadius: 8,
                     background: 'rgba(255,255,255,0.84)',
@@ -326,7 +326,7 @@ export default function Home() {
                   }}
                 >
                   <div style={{
-                    height: 132,
+                    height: 116,
                     borderRadius: 4,
                     background: 'linear-gradient(135deg, #ffe3dd, #fff2d8)',
                     overflow: 'hidden',
@@ -346,8 +346,8 @@ export default function Home() {
                     margin: '12px 4px 4px',
                     color: T.ink,
                     fontFamily: T.fontTitle,
-                    fontSize: 20,
-                    lineHeight: '24px',
+                    fontSize: 19,
+                    lineHeight: '23px',
                     fontWeight: 700,
                     overflow: 'hidden',
                     display: '-webkit-box',
@@ -373,7 +373,7 @@ export default function Home() {
             </div>
           </section>
 
-          <GlassPanel style={{ borderRadius: 24, padding: 16, boxShadow: T.softShadow }}>
+          <GlassPanel style={{ borderRadius: 22, padding: 14, boxShadow: T.softShadow }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button onClick={() => navigate('/gallery')} style={quickButtonStyle('#fff1ed')}>
                 <span style={quickIconStyle}>◫</span>
@@ -391,16 +391,16 @@ export default function Home() {
       <nav style={{
         position: 'fixed',
         left: '50%',
-        bottom: 16,
+        bottom: 'calc(10px + env(safe-area-inset-bottom))',
         transform: 'translateX(-50%)',
-        width: 'min(calc(100% - 32px), 398px)',
-        height: 72,
+        width: 'min(calc(100% - 24px), 392px)',
+        height: 64,
         zIndex: 50,
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: 8,
-        padding: 8,
-        borderRadius: 26,
+        padding: 6,
+        borderRadius: 24,
         border: `1px solid ${T.border}`,
         background: 'rgba(255,255,255,0.48)',
         backdropFilter: 'blur(28px) saturate(1.45)',
@@ -415,7 +415,7 @@ export default function Home() {
               onClick={() => navigate(item.to)}
               style={{
                 border: 'none',
-                borderRadius: 20,
+                borderRadius: 18,
                 background: active ? 'rgba(156,66,51,0.92)' : 'rgba(255,255,255,0.20)',
                 color: active ? '#fff' : T.muted,
                 cursor: 'pointer',
@@ -430,7 +430,7 @@ export default function Home() {
                 boxShadow: active ? '0 10px 22px rgba(156,66,51,0.22), inset 0 1px 0 rgba(255,255,255,0.26)' : 'none',
               }}
             >
-              <span style={{ fontSize: 19, lineHeight: '20px' }}>{item.icon}</span>
+              <span style={{ fontSize: 18, lineHeight: '19px' }}>{item.icon}</span>
               <span>{item.label}</span>
             </button>
           )
