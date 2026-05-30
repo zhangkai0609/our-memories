@@ -99,7 +99,7 @@ export default function Gallery() {
 
     try {
       setLoadError(false)
-      let query = supabase.from('memories').select('id,title,content,location,author,tags,room_code,created_at,image_urls').order('created_at', { ascending: false }).limit(20)
+      let query = supabase.from('memories').select('id,title,content,location,author,room_code,created_at,image_urls').order('created_at', { ascending: false }).limit(20)
       if (roomCode) query = query.eq('room_code', roomCode)
       const { data } = await withTimeout(query, cached.length ? 8000 : 18000)
       const next = (data || []).map(normalizeRecord)

@@ -90,7 +90,7 @@ export default function Home() {
     // 2. 总是请求 Supabase 最新数据
     try {
       const { data } = await supabase.from('memories')
-        .select('id,title,content,location,author,tags,room_code,coordinates,created_at')
+        .select('id,title,content,location,author,room_code,coordinates,created_at')
         .eq('room_code', roomCode)
         .order('created_at', { ascending: false })
       const next = data || []
