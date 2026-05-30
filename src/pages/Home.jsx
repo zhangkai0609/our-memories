@@ -213,7 +213,73 @@ export default function Home() {
         </header>
 
         <main style={{ display: 'grid', gap: 14, paddingTop: 14 }}>
-          <GlassPanel style={{ borderRadius: 26, padding: 18 }}>
+          <GlassPanel style={{ borderRadius: 30, padding: '18px 16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
+              {[
+                ['♡', stats.memoryDays || '--', '记忆天数'],
+                ['◫', stats.photoCount, '照片'],
+                ['⌖', stats.locationCount, '足迹'],
+              ].map(([icon, value, label], index) => (
+                <div key={label} style={{
+                  minWidth: 0,
+                  textAlign: 'center',
+                  padding: '2px 8px',
+                  borderLeft: index ? '1px solid rgba(143,52,40,0.12)' : 'none',
+                }}>
+                  <div style={{ color: T.primary, fontSize: 18, lineHeight: '20px', marginBottom: 4 }}>{icon}</div>
+                  <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 30, lineHeight: '32px', fontWeight: 760 }}>
+                    {loading && label === '照片' ? '--' : value}
+                  </div>
+                  <div style={{ color: T.muted, fontSize: 11, lineHeight: '16px', fontWeight: 750 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </GlassPanel>
+
+          <div>
+            <p style={{ margin: '2px 2px 8px', color: T.primary, fontFamily: T.fontTitle, fontSize: 22, lineHeight: '26px', fontWeight: 700 }}>
+              Today
+            </p>
+            <GlassPanel style={{ borderRadius: 24, padding: 16, boxShadow: T.softShadow }}>
+              <button
+                onClick={() => navigate('/new')}
+                style={{
+                  width: '100%',
+                  minHeight: 64,
+                  display: 'grid',
+                  gridTemplateColumns: '52px 1fr',
+                  alignItems: 'center',
+                  gap: 12,
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 0,
+                  color: T.ink,
+                  cursor: 'pointer',
+                  fontFamily: T.fontBody,
+                }}
+              >
+                <span style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: '#c95f4f',
+                  background: 'rgba(255,255,255,0.52)',
+                  border: `1px solid ${T.border}`,
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(104,45,38,0.10)',
+                  fontSize: 22,
+                }}>
+                  ♥
+                </span>
+                <span style={{ textAlign: 'center', color: T.ink, fontFamily: T.fontTitle, fontSize: 18, lineHeight: '24px', fontWeight: 600 }}>
+                  Every day with you<br />is my favorite.
+                </span>
+              </button>
+            </GlassPanel>
+          </div>
+
+          <GlassPanel style={{ display: 'none', borderRadius: 26, padding: 18 }}>
             <div style={{ display: 'grid', gap: 12 }}>
               <div style={{ minWidth: 0 }}>
                 <p style={{ margin: '0 0 6px', color: T.muted, fontSize: 13, fontWeight: 650 }}>欢迎回家，{myName}</p>
