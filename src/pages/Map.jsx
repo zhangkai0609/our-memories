@@ -280,7 +280,7 @@ export default function MapPage() {
         transform: 'translateX(-50%)',
         width: 'min(calc(100% - 44px), 356px)',
         height: 58,
-        zIndex: 50,
+        zIndex: 9999,
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: 8,
