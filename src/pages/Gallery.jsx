@@ -20,15 +20,12 @@ const T = {
 
 // Mock 数据 - 来自 code.html Entry 1 + Entry 2
 const mockEntries = [
-  {id:1,date:'Apr 14',title:'Kyoto Spring',location:'Arashiyama Bamboo Grove',
-    text:'The light through the bamboo today was absolutely magical. It felt like walking through a dream. We found a small matcha stand near the river and just sat listening to the rustling leaves for hours.',
-    tags:['#travel','#nature','#peaceful'],
-    image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBl70PvtMl_1xr3u8s-in_qt3O4m8S_oq0l9oi1XUc79DjUx-Lq-3dlRSB2AYLqw_EwUSjZvHO0WWkRX3m7Wt4qPP69Aq2ME6FAXDpLrCMOCyJTOFRCH9_ucP2FCwD7-mrBTzm21Lrgxweqpelb4fQU8eh0wlWCYqI54L21fbFAqnOJxuxKRSzdM2zVF8fFm-wdSsKMbX3PGBsutuyaN02L1UDwzoEEP4qEOKBlOTjYkPX6HnzhFamjGnRYE85pZnuXyk6F1614r2I'},
-  {id:2,date:'Apr 10',title:'Coffee Date',location:'Downtown Café',
-    text:'Spent the entire afternoon at our favorite corner café. The barista remembered our usual order. We talked about everything and nothing, and somehow the hours just melted away.',
-    tags:['#food','#date'],
-    images:['https://lh3.googleusercontent.com/aida-public/AB6AXuBPygZfQI3dscIzvK-N7cn8AvAiwVj3VEz22GjQNUaLg02jh2t0yVNyi8mKGMJqFdx_gv7W4eY8UeDSlE5tE06w-6et6jm1XxfHUilZJVM8d4f5Rvur41bXahxAYq28oyaIB4C4lq4BmFwpC5-K8yP1otZCX2izMJHDutM21RDuaX8j7KxQAmK95AlP6-XWeJQKNcQzumtx1WgfTAqS9gF9BanAi6t84H1qFB4kNxxUvei4ImTNWE5WnJkUWpcjjkuI824NepDjriQ',
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBPygZfQI3dscIzvK-N7cn8AvAiwVj3VEz22GjQNUaLg02jh2t0yVNyi8mKGMJqFdx_gv7W4eY8UeDSlE5tE06w-6et6jm1XxfHUilZJVM8d4f5Rvur41bXahxAYq28oyaIB4C4lq4BmFwpC5-K8yP1otZCX2izMJHDutM21RDuaX8j7KxQAmK95AlP6-XWeJQKNcQzumtx1WgfTAqS9gF9BanAi6t84H1qFB4kNxxUvei4ImTNWE5WnJkUWpcjjkuI824NepDjriQ']},
+  {id:1,date:'Apr 14',author:'小周同学',title:'Kyoto Spring',location:'Arashiyama Bamboo Grove',
+    text:'The light through the bamboo today was absolutely magical. It felt like walking through a dream.',
+    tags:['#travel','#nature'],image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBl70PvtMl_1xr3u8s-in_qt3O4m8S_oq0l9oi1XUc79DjUx-Lq-3dlRSB2AYLqw_EwUSjZvHO0WWkRX3m7Wt4qPP69Aq2ME6FAXDpLrCMOCyJTOFRCH9_ucP2FCwD7-mrBTzm21Lrgxweqpelb4fQU8eh0wlWCYqI54L21fbFAqnOJxuxKRSzdM2zVF8fFm-wdSsKMbX3PGBsutuyaN02L1UDwzoEEP4qEOKBlOTjYkPX6HnzhFamjGnRYE85pZnuXyk6F1614r2I'},
+  {id:2,date:'Apr 10',author:'另一半',title:'Coffee Date',location:'Downtown Café',
+    text:'Spent the entire afternoon at our favorite corner café. The barista remembered our usual order.',
+    tags:['#food','#date'],image:'https://lh3.googleusercontent.com/aida-public/AB6AXuBPygZfQI3dscIzvK-N7cn8AvAiwVj3VEz22GjQNUaLg02jh2t0yVNyi8mKGMJqFdx_gv7W4eY8UeDSlE5tE06w-6et6jm1XxfHUilZJVM8d4f5Rvur41bXahxAYq28oyaIB4C4lq4BmFwpC5-K8yP1otZCX2izMJHDutM21RDuaX8j7KxQAmK95AlP6-XWeJQKNcQzumtx1WgfTAqS9gF9BanAi6t84H1qFB4kNxxUvei4ImTNWE5WnJkUWpcjjkuI824NepDjriQ'},
 ]
 
 export default function Gallery() {
@@ -46,7 +43,7 @@ export default function Gallery() {
       let q=supabase.from('memories').select('*').order('created_at',{ascending:false})
       if(rc)q=q.eq('room_code',rc)
       const {data}=await q
-      if(data&&data.length>0) setRecords(data.map(m=>({id:m.id,title:m.title,location:m.location,date:new Date(m.created_at).toLocaleDateString('en',{month:'short',day:'numeric'}),text:m.content,caption:'',tags:m.tags||[],image:m.image_urls?.[0]||null,images:m.image_urls})))
+      if(data&&data.length>0) setRecords(data.map(m=>({id:m.id,title:m.title,author:m.author||null,location:m.location,date:new Date(m.created_at).toLocaleDateString('en',{month:'short',day:'numeric'}),text:m.content,caption:'',tags:m.tags||[],image:m.image_urls?.[0]||null,images:m.image_urls})))
       else setRecords(mockEntries)
     }catch{setRecords(mockEntries)}
   }
@@ -84,63 +81,74 @@ export default function Gallery() {
           </div>
         </section>
 
-        {/* ═══ Entries - bg-white/30 backdrop-blur-lg rounded-[24px] grid-paper ═══ */}
-        <main style={{ padding:'8px 16px',display:'flex',flexDirection:'column',gap:24 }}>
-          {pagedRecords.map(entry=>(
-            <article key={entry.id} style={{ background:'rgba(255,255,255,0.3)',...T.glassLg,borderRadius:24,boxShadow:T.softShadow,position:'relative',overflow:'hidden',border:'1px solid rgba(255,255,255,0.5)' }}>
-              {/* Grid paper - CSS grid lines 20px */}
-              <div style={{ position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'linear-gradient(rgba(156,66,51,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(156,66,51,0.04) 1px,transparent 1px)',backgroundSize:'20px 20px' }} />
-              {/* Binding Holes - 6个 from code.html */}
-              <div style={{ position:'absolute',left:12,top:0,bottom:0,display:'flex',flexDirection:'column',justifyContent:'space-evenly',padding:'24px 0' }}>
-                {[0,1,2,3,4,5].map(i=>(<div key={i} style={{ width:12,height:12,borderRadius:'50%',background:'rgba(255,255,255,0.5)',boxShadow:'inset 0 1px 2px rgba(0,0,0,0.05)',border:'1px solid rgba(255,255,255,0.3)' }} />))}
+        {/* ═══ Entries - 紧凑版，双条目一页 ═══ */}
+        <main style={{ padding:'8px 16px',display:'flex',flexDirection:'column',gap:14 }}>
+          {pagedRecords.map(entry=>{
+            const myName = localStorage.getItem('my_name') || '小周同学'
+            const isMe = entry.author === myName
+            return (
+            <article key={entry.id} style={{ background:'rgba(255,255,255,0.3)',...T.glassLg,borderRadius:20,boxShadow:T.softShadow,position:'relative',overflow:'hidden',border:'1px solid rgba(255,255,255,0.5)' }}>
+              {/* Grid paper */}
+              <div style={{ position:'absolute',inset:0,pointerEvents:'none',backgroundImage:'linear-gradient(rgba(156,66,51,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(156,66,51,0.04) 1px,transparent 1px)',backgroundSize:'18px 18px' }} />
+              {/* Binding holes - 只显示3个缩小的 */}
+              <div style={{ position:'absolute',left:8,top:'50%',transform:'translateY(-50%)',display:'flex',flexDirection:'column',gap:10 }}>
+                {[0,1,2].map(i=>(<div key={i} style={{ width:8,height:8,borderRadius:'50%',background:'rgba(255,255,255,0.5)',boxShadow:'inset 0 1px 2px rgba(0,0,0,0.05)',border:'1px solid rgba(255,255,255,0.3)' }} />))}
               </div>
-              {/* Content - pl-12 pr-6 py-6 */}
-              <div style={{ paddingLeft:48,paddingRight:24,paddingTop:24,paddingBottom:24,position:'relative' }}>
-                {/* Decor sticker - 🎀 rotate-[-12deg] */}
-                <span style={{ position:'absolute',top:16,right:16,fontSize:24,transform:'rotate(-12deg)',opacity:.8,filter:'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',pointerEvents:'none' }}>🎀</span>
+              {/* Content */}
+              <div style={{ paddingLeft:28,paddingRight:14,paddingTop:14,paddingBottom:14,position:'relative' }}>
 
-                {/* Header: Date & Location */}
-                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16 }}>
-                  <div>
-                    <h2 style={{ ...T.headlineMd,color:T.primary,margin:'0 0 4px' }}>{entry.title}</h2>
-                    {entry.location&&<p style={{ ...T.bodySm,color:T.onSurfaceVariant,display:'flex',alignItems:'center',gap:4,margin:0 }}>📍 {entry.location}</p>}
-                  </div>
-                  {/* 日期徽章 - bg-white/50 backdrop-blur-md rounded-full */}
-                  <div style={{ background:'rgba(255,255,255,0.5)',...T.glassMd,color:'#8b7770',borderRadius:999,padding:'4px 12px',fontSize:14,fontWeight:600,fontFamily:'"Plus Jakarta Sans",sans-serif',border:'1px solid rgba(255,255,255,0.6)' }}>{entry.date}</div>
+                {/* 顶行: 作者标签 + 日期 */}
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8 }}>
+                  {/* 作者徽章 */}
+                  <span style={{
+                    display:'inline-flex',alignItems:'center',gap:4,
+                    padding:'3px 10px',borderRadius:999,
+                    background:isMe?'rgba(156,66,51,0.12)':'rgba(83,99,70,0.12)',
+                    color:isMe?T.primary:T.secondary,
+                    fontSize:11,fontWeight:600,
+                    fontFamily:'"Plus Jakarta Sans",sans-serif',
+                  }}>
+                    {isMe?'🧑‍💻':'💕'} {entry.author||myName}
+                  </span>
+                  <span style={{ background:'rgba(255,255,255,0.5)',...T.glassMd,color:'#8b7770',borderRadius:999,padding:'2px 10px',fontSize:11,fontWeight:600,fontFamily:'"Plus Jakarta Sans",sans-serif',border:'1px solid rgba(255,255,255,0.6)' }}>{entry.date}</span>
                 </div>
 
-                {/* Photos - Polaroid style */}
-                {entry.images&&entry.images.length>1?(
-                  <div style={{ display:'flex',gap:8,marginBottom:24 }}>
-                    {entry.images.slice(0,2).map((img,j)=>(
-                      <div key={j} style={{ flex:1,background:'#fff',padding:'4px 4px 16px',borderRadius:2,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',transform:`rotate(${j===0?-6:3}deg)` }}>
-                        <div style={{ position:'absolute',top:-12,left:'50%',transform:'translateX(-50%) skewX(-12deg)',width:48,height:20,background:'rgba(255,255,255,0.6)',backdropFilter:'blur(4px)',borderRadius:2,zIndex:20,border:'1px solid rgba(255,255,255,0.8)' }} />
-                        <img src={img} alt="" style={{ width:'100%',height:j===0?160:130,objectFit:'cover',borderRadius:1,filter:'grayscale(20%) sepia(10%)' }} />
-                      </div>
-                    ))}
+                {/* 标题 + 照片 水平排列 */}
+                <div style={{ display:'flex',gap:10,marginBottom:8 }}>
+                  <div style={{ flex:1 }}>
+                    <h2 style={{ fontFamily:'"EB Garamond",serif',fontSize:18,fontWeight:600,color:T.primary,margin:'0 0 4px',lineHeight:1.3 }}>{entry.title}</h2>
+                    {entry.location&&<p style={{ fontSize:11,fontFamily:'"Plus Jakarta Sans",sans-serif',color:T.onSurfaceVariant,display:'flex',alignItems:'center',gap:3,margin:'0 0 6px' }}>📍 {entry.location}</p>}
+                    {/* 正文 - 截断 */}
+                    <p style={{ fontSize:12,fontFamily:'"Plus Jakarta Sans",sans-serif',color:T.onBg,lineHeight:1.6,margin:0,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden' }}>
+                      {entry.text}
+                    </p>
                   </div>
-                ):entry.image&&(
-                  <div style={{ position:'relative',background:'#fff',padding:'8px 8px 32px',borderRadius:2,boxShadow:'0 4px 16px rgba(0,0,0,0.08)',transform:'rotate(2deg)',marginBottom:24 }}>
-                    {/* Tape decoration - absolute -top-3 left-1/2 */}
-                    <div style={{ position:'absolute',top:-12,left:'50%',transform:'translateX(-50%) skewX(-12deg)',width:64,height:24,background:'rgba(255,255,255,0.6)',backdropFilter:'blur(4px)',borderRadius:2,zIndex:20,border:'1px solid rgba(255,255,255,0.8)' }} />
-                    <img src={entry.image} alt="" style={{ width:'100%',height:192,objectFit:'cover',borderRadius:1,filter:'grayscale(20%) sepia(10%)' }} />
-                    {entry.caption&&<p style={{ position:'absolute',bottom:8,left:0,right:0,textAlign:'center',...T.accent,color:T.onSurfaceVariant,opacity:.8 }}>{entry.caption}</p>}
-                  </div>
-                )}
+                  {/* 缩小的照片 */}
+                  {entry.image&&(
+                    <div style={{ position:'relative',background:'#fff',padding:'3px 3px 12px',borderRadius:2,boxShadow:'0 3px 10px rgba(0,0,0,0.06)',transform:'rotate(2deg)',width:100,flexShrink:0,height:100 }}>
+                      <div style={{ position:'absolute',top:-8,left:'50%',transform:'translateX(-50%) skewX(-12deg)',width:32,height:12,background:'rgba(255,255,255,0.6)',borderRadius:1,zIndex:20 }} />
+                      <img src={entry.images?.[0]||entry.image} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',borderRadius:1,filter:'grayscale(15%) sepia(8%)' }} />
+                    </div>
+                  )}
+                  {entry.images&&entry.images.length>1&&(
+                    <div style={{ display:'flex',flexDirection:'column',gap:4,width:100,flexShrink:0 }}>
+                      {entry.images.slice(0,2).map((img,j)=>(
+                        <div key={j} style={{ position:'relative',background:'#fff',padding:'2px 2px 10px',borderRadius:2,boxShadow:'0 3px 10px rgba(0,0,0,0.06)',transform:`rotate(${j===0?-3:3}deg)`,height:55 }}>
+                          <div style={{ position:'absolute',top:-6,left:'50%',transform:'translateX(-50%) skewX(-12deg)',width:24,height:8,background:'rgba(255,255,255,0.6)',borderRadius:1,zIndex:20 }} />
+                          <img src={img} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',borderRadius:1 }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                {/* Body text - ✦ decorated */}
-                <p style={{ ...T.bodyMd,color:T.onBg,lineHeight:1.8,margin:'0 0 16px',position:'relative',paddingLeft:16 }}>
-                  <span style={{ position:'absolute',left:-8,top:2,color:T.secondary,opacity:.5 }}>✦</span>
-                  {entry.text}
-                </p>
-
-                {/* Tags - bg-white/50 backdrop-blur-md rounded-full */}
-                {entry.tags&&<div style={{ display:'flex',flexWrap:'wrap',gap:8,paddingLeft:8 }}>{entry.tags.map(t=>(
-                  <span key={t} style={{ background:'rgba(255,255,255,0.5)',...T.glassMd,color:'#8b7770',borderRadius:999,padding:'6px 12px',fontSize:12,fontWeight:600,fontFamily:'"Plus Jakarta Sans",sans-serif',border:'1px solid rgba(255,255,255,0.6)' }}>{t}</span>
+                {/* Tags */}
+                {entry.tags&&<div style={{ display:'flex',flexWrap:'wrap',gap:4 }}>{entry.tags.map(t=>(
+                  <span key={t} style={{ background:'rgba(255,255,255,0.5)',...T.glassMd,color:'#8b7770',borderRadius:999,padding:'2px 8px',fontSize:10,fontWeight:500,fontFamily:'"Plus Jakarta Sans",sans-serif',border:'1px solid rgba(255,255,255,0.6)' }}>{t}</span>
                 ))}</div>}
               </div>
             </article>
-          ))}
+          )})}
         </main>
 
         {/* ═══ Pager - 便签纸风格 ═══ */}

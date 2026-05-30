@@ -30,7 +30,16 @@ export default function NewRecord() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [location, setLocation] = useState('')
-  const [coords, setCoords] = useState(null) // { lat, lng }
+  const [coords, setCoords] = useState(null)
+  const [author, setAuthor] = useState(localStorage.getItem('current_author') || localStorage.getItem('my_name') || '小周同学')
+  const myName = localStorage.getItem('my_name') || '小周同学'
+  const partnerName = localStorage.getItem('partner_name') || '另一半'
+
+  function toggleAuthor() {
+    const next = author === myName ? partnerName : myName
+    setAuthor(next)
+    localStorage.setItem('current_author', next)
+  } // { lat, lng }
   const [gpsLoading, setGpsLoading] = useState(false)
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
@@ -113,8 +122,9 @@ export default function NewRecord() {
       } catch { alert('照片读取失败: ' + file.name) }
     }
 
+    const author = localStorage.getItem('current_author') || localStorage.getItem('my_name') || '小周同学'
     const recordData = {
-      title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls,
+      title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls, author,
     }
     if (coords) recordData.coordinates = coords
     const roomCode = localStorage.getItem('room_code')
@@ -154,10 +164,13 @@ export default function NewRecord() {
           style={{ background: 'none', border: 'none', color: C.primary, fontSize: 15, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
           ← 返回
         </button>
-        <span style={{ fontFamily: 'EB Garamond, serif', fontSize: 20, color: C.primary, fontWeight: 600 }}>
-          New Moment
-        </span>
-        <div style={{ width: 48 }} />
+        <button onClick={toggleAuthor} style={{
+          display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.5)',border:'1px solid rgba(255,255,255,0.6)',
+          borderRadius:999,padding:'6px 14px',cursor:'pointer',fontFamily:'Plus Jakarta Sans,sans-serif',
+          fontSize:13,color:C.primary,fontWeight:600,
+        }}>
+          ✍ {author}
+        </button>
       </header>
 
       <form onSubmit={handleSubmit} style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
