@@ -88,6 +88,7 @@ export default function NewRecord() {
   const navigate = useNavigate()
   const fileRef = useRef(null)
   const recognitionRef = useRef(null)
+  const speechTextRef = useRef('')
   const previewRef = useRef([])
   const myName = localStorage.getItem('my_name') || '小周同学'
   const partnerName = localStorage.getItem('partner_name') || '另一半'
@@ -194,7 +195,16 @@ export default function NewRecord() {
     return window.SpeechRecognition || window.webkitSpeechRecognition
   }
 
+  const appendSpeechText = useCallback(() => {
+    const text = speechTextRef.current.trim()
+    if (!text) return
+    setContent(prev => `${prev}${prev ? '\n' : ''}${text}`)
+    speechTextRef.current = ''
+    setSpeechText('')
+  }, [])
+
   function startVoice() {
+    if (recording) return
     const SpeechRecognition = getSpeechApi()
     if (!SpeechRecognition) {
       alert('当前浏览器暂不支持语音输入，可以先使用文字输入')
@@ -206,24 +216,40 @@ export default function NewRecord() {
     recognition.continuous = true
     recognition.onresult = event => {
       let text = ''
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+      for (let i = 0; i < event.results.length; i += 1) {
         text += event.results[i][0].transcript
       }
+      speechTextRef.current = text
       setSpeechText(text)
     }
-    recognition.onend = () => setRecording(false)
+    recognition.onerror = () => {
+      setRecording(false)
+      recognitionRef.current = null
+    }
+    recognition.onend = () => {
+      appendSpeechText()
+      setRecording(false)
+      recognitionRef.current = null
+    }
     recognitionRef.current = recognition
+    speechTextRef.current = ''
     setSpeechText('')
     setRecording(true)
-    recognition.start()
+    try {
+      recognition.start()
+    } catch {
+      setRecording(false)
+      recognitionRef.current = null
+    }
   }
 
   function stopVoice() {
-    const text = speechText.trim()
-    recognitionRef.current?.stop()
-    if (text) setContent(prev => `${prev}${prev ? '\n' : ''}${text}`)
+    if (recognitionRef.current) {
+      recognitionRef.current.stop()
+      return
+    }
+    appendSpeechText()
     setRecording(false)
-    setSpeechText('')
   }
 
   async function submitMemory(status = '发布') {
@@ -278,7 +304,7 @@ export default function NewRecord() {
       background: pageBackground,
       color: T.ink,
       fontFamily: T.fontBody,
-      paddingBottom: 'calc(28px + env(safe-area-inset-bottom))',
+      paddingBottom: 'calc(14px + env(safe-area-inset-bottom))',
       overflowX: 'hidden',
       position: 'relative',
     }}>
@@ -291,9 +317,9 @@ export default function NewRecord() {
       }} />
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <header style={{
-          height: 66,
+          height: 56,
           display: 'grid',
-          gridTemplateColumns: '44px 1fr 82px',
+          gridTemplateColumns: '40px 1fr 76px',
           alignItems: 'center',
           gap: 8,
         }}>
@@ -306,12 +332,12 @@ export default function NewRecord() {
           </button>
         </header>
 
-        <main style={{ display: 'grid', gap: 12 }}>
-          <GlassCard style={{ padding: 12 }}>
+        <main style={{ display: 'grid', gap: 8 }}>
+          <GlassCard style={{ padding: 10 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8, alignItems: 'center' }}>
               <button onClick={locate} type="button" style={pillButtonStyle(Boolean(coords))}>
                 <span>⌖</span>
-                <span>{gpsLoading ? '定位中...' : coords ? '准确定位已开启' : '准确定位'}</span>
+                <span>{gpsLoading ? '获取中...' : coords ? '坐标已获取' : '获取坐标'}</span>
               </button>
               <button onClick={toggleAuthor} type="button" style={{ ...smallGlassButtonStyle, maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</button>
             </div>
@@ -319,7 +345,7 @@ export default function NewRecord() {
               value={location}
               onChange={event => { setLocation(event.target.value); setCoords(null) }}
               placeholder="输入或自动获取位置"
-              style={inputStyle}
+              style={{ ...inputStyle, marginTop: 8, minHeight: 40 }}
             />
             {gpsMessage && (
               <p style={{ margin: '8px 4px 0', color: coords ? '#5b704f' : T.primary, fontSize: 11, lineHeight: '16px', fontWeight: 800 }}>
@@ -337,10 +363,10 @@ export default function NewRecord() {
             )}
           </GlassCard>
 
-          <GlassCard style={{ padding: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <GlassCard style={{ padding: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={labelStyle}>主题</span>
-              <button type="button" onClick={() => fileRef.current?.click()} style={smallGlassButtonStyle}>添加照片</button>
+              <button type="button" onClick={() => fileRef.current?.click()} style={addPhotoButtonStyle}>添加照片</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7 }}>
               {themes.map(item => (
@@ -350,7 +376,7 @@ export default function NewRecord() {
               ))}
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple onChange={pickFiles} style={{ display: 'none' }} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7, marginTop: 8 }}>
               <button type="button" onClick={() => fileRef.current?.click()} style={photoAddStyle}>＋</button>
               {previews.slice(0, 7).map((url, index) => (
                 <button key={url} type="button" onClick={() => removeFile(index)} style={photoThumbStyle}>
@@ -360,40 +386,36 @@ export default function NewRecord() {
             </div>
           </GlassCard>
 
-          <GlassCard style={{ padding: 14 }}>
+          <GlassCard style={{ padding: 10 }}>
             <input
               value={title}
               onChange={event => setTitle(event.target.value)}
               placeholder="标题"
-              style={{ ...inputStyle, height: 48, fontSize: 20, fontWeight: 800, fontFamily: T.fontTitle }}
+              style={{ ...inputStyle, marginTop: 0, height: 40, fontSize: 18, fontWeight: 800, fontFamily: T.fontTitle }}
             />
             <textarea
               value={content}
               onChange={event => setContent(event.target.value)}
               placeholder="主文章 · 输入文字"
-              rows={7}
-              style={{ ...inputStyle, minHeight: 166, resize: 'vertical', lineHeight: '24px' }}
+              rows={4}
+              style={{ ...inputStyle, minHeight: 106, resize: 'vertical', lineHeight: '22px' }}
             />
           </GlassCard>
 
-          <GlassCard style={{ padding: 12 }}>
-            <div style={{ display: 'grid', justifyItems: 'center', gap: 9 }}>
+          <GlassCard style={{ padding: 9 }}>
+            <div style={{ display: 'grid', justifyItems: 'center', gap: 7 }}>
               <button
                 type="button"
-                onMouseDown={startVoice}
-                onMouseUp={stopVoice}
-                onMouseLeave={() => recording && stopVoice()}
-                onTouchStart={startVoice}
-                onTouchEnd={stopVoice}
+                onClick={recording ? stopVoice : startVoice}
                 aria-label="语音输入"
                 style={micCircleStyle(recording)}
               >
-                🎙
+                <MicIcon active={recording} />
               </button>
               <div style={{
-                height: 34,
+                height: 30,
                 width: '100%',
-                maxWidth: 236,
+                maxWidth: 218,
                 borderRadius: 999,
                 background: 'rgba(255,255,255,0.42)',
                 border: '1px solid rgba(255,255,255,0.72)',
@@ -404,7 +426,7 @@ export default function NewRecord() {
                 padding: '0 12px',
                 overflow: 'hidden',
               }}>
-                {Array.from({ length: 18 }, (_, i) => (
+                {Array.from({ length: 16 }, (_, i) => (
                   <span key={i} style={{
                     width: 3,
                     height: recording ? 10 + ((i * 7) % 22) : 6 + ((i * 5) % 12),
@@ -449,6 +471,51 @@ function GlassCard({ children, style }) {
   )
 }
 
+function MicIcon({ active }) {
+  return (
+    <span style={{ position: 'relative', width: 18, height: 26, display: 'inline-block' }}>
+      <span style={{
+        position: 'absolute',
+        left: 5,
+        top: 0,
+        width: 8,
+        height: 15,
+        borderRadius: 999,
+        background: active ? '#fff' : T.primary,
+        boxShadow: active ? 'none' : 'inset 0 1px 0 rgba(255,255,255,0.40)',
+      }} />
+      <span style={{
+        position: 'absolute',
+        left: 2,
+        top: 8,
+        width: 14,
+        height: 10,
+        border: `2px solid ${active ? '#fff' : T.primary}`,
+        borderTop: 0,
+        borderRadius: '0 0 10px 10px',
+      }} />
+      <span style={{
+        position: 'absolute',
+        left: 8,
+        top: 18,
+        width: 2,
+        height: 6,
+        borderRadius: 999,
+        background: active ? '#fff' : T.primary,
+      }} />
+      <span style={{
+        position: 'absolute',
+        left: 4,
+        top: 24,
+        width: 10,
+        height: 2,
+        borderRadius: 999,
+        background: active ? '#fff' : T.primary,
+      }} />
+    </span>
+  )
+}
+
 const labelStyle = {
   color: T.primary,
   fontSize: 14,
@@ -471,8 +538,8 @@ const inputStyle = {
 }
 
 const roundButtonStyle = {
-  width: 42,
-  height: 42,
+  width: 38,
+  height: 38,
   borderRadius: '50%',
   border: `1px solid ${T.border}`,
   background: 'rgba(255,255,255,0.54)',
@@ -487,7 +554,7 @@ const roundButtonStyle = {
 }
 
 const publishButtonStyle = {
-  height: 38,
+  height: 36,
   border: 'none',
   borderRadius: 999,
   background: T.primary,
@@ -511,13 +578,29 @@ const smallGlassButtonStyle = {
   whiteSpace: 'nowrap',
 }
 
+const addPhotoButtonStyle = {
+  border: '1px solid rgba(143,52,40,0.26)',
+  borderRadius: 999,
+  background: 'linear-gradient(145deg, rgba(255,255,255,0.80), rgba(143,52,40,0.13))',
+  color: T.primary,
+  padding: '8px 13px',
+  fontFamily: T.fontBody,
+  fontSize: 12,
+  fontWeight: 950,
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  boxShadow: '0 10px 22px rgba(143,52,40,0.12), inset 0 1px 0 rgba(255,255,255,0.82)',
+}
+
 function pillButtonStyle(active) {
   return {
-    border: `1px solid ${active ? 'rgba(143,52,40,0.28)' : T.border}`,
+    border: `1px solid ${active ? 'rgba(143,52,40,0.30)' : 'rgba(143,52,40,0.20)'}`,
     borderRadius: 999,
-    background: active ? 'rgba(143,52,40,0.10)' : 'rgba(255,255,255,0.46)',
-    color: active ? T.primary : T.ink,
-    minHeight: 42,
+    background: active
+      ? 'linear-gradient(145deg, rgba(255,255,255,0.76), rgba(143,52,40,0.14))'
+      : 'linear-gradient(145deg, rgba(255,255,255,0.78), rgba(185,215,223,0.24))',
+    color: T.primary,
+    minHeight: 38,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -526,6 +609,7 @@ function pillButtonStyle(active) {
     fontSize: 13,
     fontWeight: 900,
     cursor: 'pointer',
+    boxShadow: '0 10px 22px rgba(64,80,86,0.10), inset 0 1px 0 rgba(255,255,255,0.82)',
   }
 }
 
@@ -547,7 +631,7 @@ const historyChipStyle = {
 
 function themeChipStyle(active) {
   return {
-    minHeight: 38,
+    minHeight: 34,
     border: `1px solid ${active ? 'rgba(143,52,40,0.30)' : T.border}`,
     borderRadius: 999,
     background: active ? 'rgba(143,52,40,0.12)' : 'rgba(255,255,255,0.40)',
@@ -561,9 +645,9 @@ function themeChipStyle(active) {
 
 const photoAddStyle = {
   aspectRatio: '1',
-  border: `1px dashed ${T.border}`,
-  borderRadius: 18,
-  background: 'rgba(255,255,255,0.36)',
+  border: '1.5px dashed rgba(143,52,40,0.30)',
+  borderRadius: 16,
+  background: 'rgba(255,255,255,0.52)',
   color: T.primary,
   fontSize: 26,
   fontWeight: 800,
@@ -573,7 +657,7 @@ const photoAddStyle = {
 const photoThumbStyle = {
   aspectRatio: '1',
   border: `1px solid ${T.border}`,
-  borderRadius: 18,
+  borderRadius: 16,
   overflow: 'hidden',
   padding: 0,
   background: 'rgba(255,255,255,0.42)',
@@ -582,8 +666,8 @@ const photoThumbStyle = {
 
 function micCircleStyle(active) {
   return {
-    width: 70,
-    height: 70,
+    width: 58,
+    height: 58,
     border: '1.5px solid rgba(255,255,255,0.78)',
     borderRadius: '50%',
     background: active
@@ -591,7 +675,7 @@ function micCircleStyle(active) {
       : 'linear-gradient(145deg, rgba(255,255,255,0.82), rgba(207,229,234,0.46))',
     color: active ? '#fff' : T.primary,
     fontFamily: T.fontBody,
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 900,
     cursor: 'pointer',
     display: 'grid',
@@ -603,7 +687,7 @@ function micCircleStyle(active) {
 }
 
 const draftButtonStyle = {
-  height: 50,
+  height: 44,
   borderRadius: 18,
   border: `1px solid ${T.border}`,
   background: 'rgba(255,255,255,0.50)',
@@ -615,7 +699,7 @@ const draftButtonStyle = {
 }
 
 const publishLargeButtonStyle = {
-  height: 50,
+  height: 44,
   borderRadius: 18,
   border: '1px solid rgba(255,255,255,0.70)',
   background: 'linear-gradient(135deg, #8f3428, #c95f4f)',
