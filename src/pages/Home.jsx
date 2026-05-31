@@ -208,6 +208,7 @@ export default function Home() {
     memories.length ? memories.slice(0, 4) : [
       { id: 'demo-1', title: '第一张回忆', content: '写下今天的小事，让它慢慢变成你们的小宇宙。', created_at: now, image_urls: [] },
       { id: 'demo-2', title: '去过的地方', content: '每一个地点，都可以在地图里重新亮起来。', created_at: now - 86400000, image_urls: [] },
+      { id: 'demo-3', title: '想记录的小事', content: '一张照片，一句话，都可以先放进小屋。', created_at: now - 172800000, image_urls: [] },
     ]
   ), [memories, now])
 
@@ -246,23 +247,21 @@ export default function Home() {
 
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <div style={{
-          height: 58,
-          display: 'grid',
-          gridTemplateColumns: '44px minmax(0, 1fr) 44px',
+          height: 86,
+          display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
           position: 'sticky',
           top: 0,
           zIndex: 20,
           margin: '0 -14px',
-          padding: '0 14px',
+          padding: '4px 14px 0',
           pointerEvents: 'none',
         }}>
-          <span />
           <div style={{
             position: 'relative',
             overflow: 'hidden',
-            justifySelf: 'center',
-            maxWidth: '100%',
+            maxWidth: 'calc(100% - 70px)',
             minWidth: 0,
             padding: '0 8px',
           }}>
@@ -271,8 +270,8 @@ export default function Home() {
               color: T.primary,
               fontFamily: '"Noto Serif SC", "LXGW WenKai", "Songti SC", serif',
               fontSize: 23,
-              lineHeight: '38px',
-              fontWeight: 700,
+              lineHeight: '34px',
+              fontWeight: 760,
               letterSpacing: 0,
               textAlign: 'center',
               textShadow: '0 1px 0 rgba(255,255,255,0.78), 0 10px 24px rgba(143,52,40,0.10)',
@@ -282,10 +281,15 @@ export default function Home() {
             }}>
               {myName}和{partnerName}的小屋
             </h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 3 }}>
+              <span style={{ width: 38, height: 1, background: 'linear-gradient(90deg, transparent, rgba(143,52,40,0.60))' }} />
+              <span style={{ color: T.primary, fontSize: 12, lineHeight: '12px' }}>♥</span>
+              <span style={{ width: 38, height: 1, background: 'linear-gradient(90deg, rgba(143,52,40,0.60), transparent)' }} />
+            </div>
             <span style={{
               position: 'absolute',
-              top: 6,
-              bottom: 6,
+              top: 0,
+              bottom: 0,
               left: '-58%',
               width: '46%',
               borderRadius: 999,
@@ -303,8 +307,10 @@ export default function Home() {
             }}
             aria-label="打开资料"
             style={{
-              width: 40,
-              height: 40,
+              position: 'absolute',
+              right: 14,
+              width: 50,
+              height: 50,
               borderRadius: '50%',
               border: '2px solid rgba(255,255,255,0.86)',
               background: 'rgba(255,255,255,0.52)',
@@ -323,8 +329,8 @@ export default function Home() {
           </button>
         </div>
 
-        <main style={{ display: 'grid', gap: 14, paddingTop: 4 }}>
-          <GlassPanel style={{ borderRadius: 30, padding: '18px 16px' }}>
+        <main style={{ display: 'grid', gap: 10, paddingTop: 0 }}>
+          <GlassPanel style={{ borderRadius: 38, padding: '14px 16px', boxShadow: '0 18px 48px rgba(104,45,38,0.12)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
                 ['♡', stats.memoryDays || '--', '记忆天数'],
@@ -337,62 +343,106 @@ export default function Home() {
                   padding: '2px 8px',
                   borderLeft: index ? '1px solid rgba(143,52,40,0.12)' : 'none',
                 }}>
-                  <div style={{ color: T.primary, fontSize: 18, lineHeight: '20px', marginBottom: 4 }}>{icon}</div>
-                  <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 30, lineHeight: '32px', fontWeight: 760 }}>
+                  <div style={{ color: T.primary, fontSize: 18, lineHeight: '20px', marginBottom: 3 }}>{icon}</div>
+                  <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 34, lineHeight: '34px', fontWeight: 760 }}>
                     {loading && label === '照片' ? '--' : value}
                   </div>
-                  <div style={{ color: T.muted, fontSize: 11, lineHeight: '16px', fontWeight: 750 }}>{label}</div>
+                  <div style={{ color: T.muted, fontSize: 13, lineHeight: '18px', fontWeight: 800 }}>{label}</div>
                 </div>
               ))}
             </div>
           </GlassPanel>
 
           <div>
-            <p style={{ margin: '2px 2px 8px', color: T.primary, fontFamily: T.fontTitle, fontSize: 22, lineHeight: '26px', fontWeight: 700 }}>
-              Today
-            </p>
-            <GlassPanel style={{ borderRadius: 24, padding: 16, boxShadow: T.softShadow }}>
+            <GlassPanel style={{ borderRadius: 28, padding: 0, minHeight: 112, boxShadow: T.softShadow }}>
               <button
                 onClick={() => navigate('/new')}
                 style={{
                   width: '100%',
-                  minHeight: 64,
+                  minHeight: 112,
                   display: 'grid',
-                  gridTemplateColumns: '52px 1fr',
+                  gridTemplateColumns: '1fr 132px',
                   alignItems: 'center',
-                  gap: 12,
                   border: 'none',
                   background: 'transparent',
-                  padding: 0,
+                  padding: '14px 14px 14px 18px',
                   color: T.ink,
                   cursor: 'pointer',
                   fontFamily: T.fontBody,
+                  overflow: 'hidden',
                 }}
               >
-                <span style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#c95f4f',
-                  background: 'rgba(255,255,255,0.52)',
-                  border: `1px solid ${T.border}`,
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(104,45,38,0.10)',
-                  fontSize: 22,
-                }}>
-                  ♥
+                <span style={{ display: 'grid', gap: 4, justifyItems: 'start', textAlign: 'left' }}>
+                  <span style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: T.primary,
+                    background: 'rgba(255,255,255,0.58)',
+                    border: `1px solid ${T.border}`,
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(104,45,38,0.10)',
+                    fontSize: 17,
+                  }}>
+                    ▣
+                  </span>
+                  <span style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 28, lineHeight: '30px', fontWeight: 760 }}>
+                    Today
+                  </span>
+                  <span style={{ color: T.ink, fontFamily: T.fontTitle, fontSize: 18, lineHeight: '22px', fontWeight: 600 }}>
+                    Every day with you<br />is my favorite.
+                  </span>
                 </span>
-                <span style={{ textAlign: 'center', color: T.ink, fontFamily: T.fontTitle, fontSize: 18, lineHeight: '24px', fontWeight: 600 }}>
-                  Every day with you<br />is my favorite.
+                <span style={{
+                  position: 'relative',
+                  height: 92,
+                  borderRadius: 22,
+                  overflow: 'hidden',
+                  background: 'radial-gradient(circle at 62% 34%, rgba(255,255,255,0.90), transparent 22%), linear-gradient(135deg, rgba(218,236,240,0.72), rgba(255,222,215,0.45))',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74), 0 14px 30px rgba(104,45,38,0.08)',
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    right: 18,
+                    bottom: 10,
+                    width: 54,
+                    height: 54,
+                    borderRadius: '48% 48% 44% 44%',
+                    background: 'rgba(255,255,255,0.62)',
+                    border: '1px solid rgba(255,255,255,0.78)',
+                  }} />
+                  <span style={{
+                    position: 'absolute',
+                    right: 24,
+                    bottom: 52,
+                    width: 14,
+                    height: 18,
+                    borderRadius: '70% 30% 60% 40%',
+                    background: 'rgba(255,255,255,0.72)',
+                    transform: 'rotate(-18deg)',
+                  }} />
+                  <span style={{
+                    position: 'absolute',
+                    right: 55,
+                    bottom: 50,
+                    width: 14,
+                    height: 18,
+                    borderRadius: '30% 70% 40% 60%',
+                    background: 'rgba(255,255,255,0.72)',
+                    transform: 'rotate(18deg)',
+                  }} />
                 </span>
               </button>
             </GlassPanel>
           </div>
 
           <section>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '2px 2px 12px' }}>
-              <h3 style={{ margin: 0, fontFamily: T.fontTitle, fontSize: 24, lineHeight: '28px', color: T.ink, fontWeight: 700 }}>最近记忆</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '2px 2px 8px' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontFamily: T.fontTitle, fontSize: 24, lineHeight: '28px', color: T.ink, fontWeight: 760 }}>
+                <span style={{ width: 4, height: 22, borderRadius: 999, background: T.primary }} />
+                最近记忆
+              </h3>
               <button onClick={() => navigate('/gallery')} style={{
                 border: 'none',
                 background: 'transparent',
@@ -405,34 +455,40 @@ export default function Home() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, paddingBottom: 16 }}>
-              {recentMemories.map((memory, index) => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.18fr 0.92fr', gridTemplateRows: '1fr 1fr', gap: 12, height: 318, paddingBottom: 8 }}>
+              {[recentMemories[0], recentMemories[1], recentMemories[2]].filter(Boolean).map((memory, index) => (
                 <article
                   key={memory.id}
                   onClick={() => memory.id.toString().startsWith('demo') ? navigate('/new') : navigate(`/diary/${memory.id}`)}
                   style={{
                     width: '100%',
                     minWidth: 0,
+                    height: '100%',
+                    gridColumn: index === 0 ? '1' : '2',
+                    gridRow: index === 0 ? '1 / 3' : index === 1 ? '1' : '2',
+                    alignSelf: index === 0 ? 'stretch' : 'auto',
                     boxSizing: 'border-box',
-                    borderRadius: 8,
-                    background: 'rgba(255,255,255,0.84)',
-                    padding: '7px 7px 18px',
-                    boxShadow: T.softShadow,
-                    transform: `rotate(${index % 2 ? 1 : -1}deg)`,
+                    borderRadius: 24,
+                    background: 'rgba(255,255,255,0.72)',
+                    padding: index === 0 ? 9 : 7,
+                    boxShadow: '0 16px 38px rgba(104,45,38,0.12), inset 0 1px 0 rgba(255,255,255,0.72)',
                     cursor: 'pointer',
-                    border: '1px solid rgba(255,255,255,0.8)',
+                    border: '1px solid rgba(255,255,255,0.84)',
+                    overflow: 'hidden',
+                    display: 'grid',
+                    gridTemplateRows: index === 0 ? '1fr auto auto' : '1fr auto',
                   }}
                 >
                   <div style={{
                     width: '100%',
-                    aspectRatio: '1.22 / 1',
-                    borderRadius: 4,
+                    minHeight: 0,
+                    borderRadius: 18,
                     background: 'linear-gradient(135deg, #ffe3dd, #fff2d8)',
                     overflow: 'hidden',
                     display: 'grid',
                     placeItems: 'center',
                     color: T.primary,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: 800,
                   }}>
                     {memory.image_urls?.[0] ? (
@@ -442,48 +498,37 @@ export default function Home() {
                     )}
                   </div>
                   <h4 style={{
-                    margin: '12px 4px 4px',
+                    margin: index === 0 ? '10px 6px 2px' : '8px 5px 2px',
                     color: T.ink,
-                    fontFamily: T.fontTitle,
-                    fontSize: 18,
-                    lineHeight: '22px',
-                    fontWeight: 700,
+                    fontFamily: T.fontBody,
+                    fontSize: index === 0 ? 19 : 14,
+                    lineHeight: index === 0 ? '24px' : '18px',
+                    fontWeight: 900,
                     overflow: 'hidden',
                     display: '-webkit-box',
-                    WebkitLineClamp: 1,
+                    WebkitLineClamp: index === 0 ? 1 : 2,
                     WebkitBoxOrient: 'vertical',
                   }}>
                     {memory.title || '未命名记忆'}
                   </h4>
-                  <p style={{
-                    margin: '0 4px',
-                    color: T.muted,
-                    fontSize: 12,
-                    lineHeight: '18px',
-                    overflow: 'hidden',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}>
-                    {memory.content || formatDate(memory.created_at)}
-                  </p>
+                  {index === 0 && (
+                    <p style={{
+                      margin: '0 6px 2px',
+                      color: T.muted,
+                      fontSize: 12,
+                      lineHeight: '18px',
+                      overflow: 'hidden',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}>
+                      {memory.content || formatDate(memory.created_at)}
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
           </section>
-
-          <GlassPanel style={{ borderRadius: 22, padding: 14, boxShadow: T.softShadow }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button onClick={() => navigate('/gallery')} style={quickButtonStyle('#fff1ed')}>
-                <span style={quickIconStyle}>◆</span>
-                <span>记忆本</span>
-              </button>
-              <button onClick={() => navigate('/map')} style={quickButtonStyle('#f2f8ed')}>
-                <span style={quickIconStyle}>⌖</span>
-                <span>足迹地图</span>
-              </button>
-            </div>
-          </GlassPanel>
         </main>
       </div>
 
@@ -750,18 +795,6 @@ export default function Home() {
   )
 }
 
-const quickIconStyle = {
-  width: 34,
-  height: 34,
-  borderRadius: '50%',
-  background: 'rgba(255,255,255,0.72)',
-  display: 'grid',
-  placeItems: 'center',
-  color: T.primary,
-  fontSize: 18,
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
-}
-
 const sheetTitleStyle = {
   margin: '0 0 8px',
   color: T.primary,
@@ -849,25 +882,6 @@ const uploadButtonStyle = {
   ...sheetButtonStyle,
   display: 'grid',
   placeItems: 'center',
-}
-
-function quickButtonStyle(background) {
-  return {
-    minHeight: 76,
-    border: `1px solid ${T.border}`,
-    borderRadius: 20,
-    background,
-    color: T.ink,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    fontFamily: T.fontBody,
-    fontSize: 14,
-    fontWeight: 800,
-    cursor: 'pointer',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.78)',
-  }
 }
 
 function themeChoiceStyle(active) {
