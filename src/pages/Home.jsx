@@ -415,6 +415,7 @@ export default function Home() {
                     Every day with you<br />is my favorite.
                   </span>
                 </span>
+                {/* ═══ 毛绒兔子 ═══ */}
                 <span style={{
                   position: 'relative',
                   height: 92,
@@ -423,36 +424,14 @@ export default function Home() {
                   background: 'radial-gradient(circle at 62% 34%, rgba(255,255,255,0.90), transparent 22%), linear-gradient(135deg, rgba(218,236,240,0.72), rgba(255,222,215,0.45))',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74), 0 14px 30px rgba(104,45,38,0.08)',
                 }}>
-                  <span style={{
-                    position: 'absolute',
-                    right: 18,
-                    bottom: 10,
-                    width: 38,
-                    height: 38,
-                    borderRadius: '48% 48% 44% 44%',
-                    background: 'rgba(255,255,255,0.62)',
-                    border: '1px solid rgba(255,255,255,0.78)',
-                  }} />
-                  <span style={{
-                    position: 'absolute',
-                    right: 18,
-                    bottom: 38,
-                    width: 10,
-                    height: 14,
-                    borderRadius: '70% 30% 60% 40%',
-                    background: 'rgba(255,255,255,0.72)',
-                    transform: 'rotate(-18deg)',
-                  }} />
-                  <span style={{
-                    position: 'absolute',
-                    right: 40,
-                    bottom: 36,
-                    width: 10,
-                    height: 14,
-                    borderRadius: '30% 70% 40% 60%',
-                    background: 'rgba(255,255,255,0.72)',
-                    transform: 'rotate(18deg)',
-                  }} />
+                  {/* 身体毛绒团 */}
+                  <span style={{ position:'absolute',right:28,bottom:8,width:42,height:48,borderRadius:'55% 55% 48% 48%',background:'radial-gradient(circle at 42% 28%, rgba(255,255,255,0.92), rgba(230,220,210,0.55) 60%, rgba(200,185,165,0.30))',boxShadow:'0 8px 20px rgba(160,130,100,0.15), inset 0 -4px 8px rgba(180,160,140,0.18), 0 0 0 5px rgba(255,255,255,0.22), 0 0 0 9px rgba(200,180,155,0.08)' }} />
+                  {/* 左耳 */}
+                  <span style={{ position:'absolute',right:46,bottom:44,width:16,height:34,borderRadius:'60% 60% 30% 40%',background:'linear-gradient(180deg,rgba(250,235,220,0.9),rgba(240,215,190,0.6))',transform:'rotate(-20deg)',boxShadow:'inset 0 4px 6px rgba(255,200,170,0.40), 0 2px 6px rgba(160,130,100,0.12)' }} />
+                  {/* 右耳 */}
+                  <span style={{ position:'absolute',right:22,bottom:44,width:16,height:34,borderRadius:'60% 60% 40% 30%',background:'linear-gradient(180deg,rgba(250,235,220,0.9),rgba(240,215,190,0.6))',transform:'rotate(20deg)',boxShadow:'inset 0 4px 6px rgba(255,200,170,0.40), 0 2px 6px rgba(160,130,100,0.12)' }} />
+                  {/* 尾巴毛球 */}
+                  <span style={{ position:'absolute',right:8,bottom:16,width:16,height:16,borderRadius:'50%',background:'radial-gradient(circle at 35% 30%,rgba(255,255,255,0.85),rgba(240,225,205,0.55))',boxShadow:'0 3px 8px rgba(160,130,100,0.10)' }} />
                 </span>
               </button>
             </GlassPanel>
