@@ -391,7 +391,6 @@ export default function Home() {
                   color: T.ink,
                   cursor: 'pointer',
                   fontFamily: T.fontBody,
-                  overflow: 'hidden',
                 }}
               >
                 <span style={{ display: 'grid', gap: 4, justifyItems: 'start', textAlign: 'left' }}>
@@ -418,17 +417,16 @@ export default function Home() {
                 </span>
                 {/* ═══ react-kawaii 毛绒猫咪 ═══ */}
                 <span style={{
-                  position: 'relative',
-                  height: 92,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  width: 90,
+                  height: 90,
                   borderRadius: 22,
-                  overflow: 'hidden',
                   background: 'radial-gradient(circle at 62% 34%, rgba(255,255,255,0.90), transparent 22%), linear-gradient(135deg, rgba(218,236,240,0.72), rgba(255,222,215,0.45))',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74), 0 14px 30px rgba(104,45,38,0.08)',
                 }}>
-                  <Cat size={70} mood="blissful" color="#e8a0a0" />
+                  <Cat size={64} mood="blissful" color="#e8a0a0" />
                 </span>
               </button>
             </GlassPanel>
