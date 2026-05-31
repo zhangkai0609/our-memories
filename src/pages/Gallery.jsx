@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { getCached, setCached } from '../lib/cache'
 
 const T = {
   bg: '#fff3f1',
@@ -78,17 +79,18 @@ function GlassShell({ children, style }) {
 export default function Gallery() {
   const navigate = useNavigate()
   const roomCode = localStorage.getItem('room_code')
-  const cacheKey = roomCode ? `gallery_cache_v1_${roomCode}` : null
-  const [records, setRecords] = useState(() => cacheKey ? readJson(cacheKey, []) : [])
-  const [loading, setLoading] = useState(() => cacheKey ? readJson(cacheKey, []).length === 0 : true)
-  const [loadedOnce, setLoadedOnce] = useState(() => cacheKey ? readJson(cacheKey, []).length > 0 : false)
+  const getCachedRecords = useCallback(() => (getCached('memories') || []).map(normalizeRecord), [])
+  const [records, setRecords] = useState(() => getCachedRecords())
+  const [loading, setLoading] = useState(() => getCachedRecords().length === 0)
+  const [loadedOnce, setLoadedOnce] = useState(() => getCachedRecords().length > 0)
   const [loadError, setLoadError] = useState(false)
   const [page, setPage] = useState(1)
   const [drafts, setDrafts] = useState({})
   const [social, setSocial] = useState(() => readJson('memory_social_v1', {}))
 
   const fetchData = useCallback(async () => {
-    const cached = cacheKey ? readJson(cacheKey, []) : []
+    const cachedRaw = getCached('memories') || []
+    const cached = cachedRaw.map(normalizeRecord)
     if (cached.length) {
       setRecords(cached)
       setLoadedOnce(true)
@@ -102,16 +104,17 @@ export default function Gallery() {
       let query = supabase.from('memories').select('id,title,content,location,author,room_code,created_at,image_urls').order('created_at', { ascending: false }).limit(20)
       if (roomCode) query = query.eq('room_code', roomCode)
       const { data } = await withTimeout(query, cached.length ? 8000 : 18000)
-      const next = (data || []).map(normalizeRecord)
+      const nextRaw = data || []
+      const next = nextRaw.map(normalizeRecord)
       setRecords(next)
       setLoadedOnce(true)
-      if (cacheKey) localStorage.setItem(cacheKey, JSON.stringify(next))
+      setCached('memories', nextRaw)
     } catch {
       if (!cached.length) setLoadError(true)
     } finally {
       setLoading(false)
     }
-  }, [cacheKey, roomCode])
+  }, [roomCode])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
