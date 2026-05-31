@@ -213,7 +213,8 @@ export default function NewRecord() {
     const recognition = new SpeechRecognition()
     recognition.lang = 'zh-CN'
     recognition.interimResults = true
-    recognition.continuous = true
+    recognition.continuous = false
+    recognition.maxAlternatives = 1
     recognition.onresult = event => {
       let text = ''
       for (let i = 0; i < event.results.length; i += 1) {
@@ -250,6 +251,14 @@ export default function NewRecord() {
     }
     appendSpeechText()
     setRecording(false)
+  }
+
+  function toggleVoice() {
+    if (recording) {
+      stopVoice()
+      return
+    }
+    startVoice()
   }
 
   async function submitMemory(status = '发布') {
@@ -402,45 +411,19 @@ export default function NewRecord() {
             />
           </GlassCard>
 
-          <GlassCard style={{ padding: 9 }}>
-            <div style={{ display: 'grid', justifyItems: 'center', gap: 7 }}>
-              <button
-                type="button"
-                onClick={recording ? stopVoice : startVoice}
-                aria-label="语音输入"
-                style={micCircleStyle(recording)}
-              >
-                <MicIcon active={recording} />
-              </button>
-              <div style={{
-                height: 30,
-                width: '100%',
-                maxWidth: 218,
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.42)',
-                border: '1px solid rgba(255,255,255,0.72)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                padding: '0 12px',
-                overflow: 'hidden',
-              }}>
-                {Array.from({ length: 16 }, (_, i) => (
-                  <span key={i} style={{
-                    width: 3,
-                    height: recording ? 10 + ((i * 7) % 22) : 6 + ((i * 5) % 12),
-                    borderRadius: 999,
-                    background: recording ? T.primary : 'rgba(143,52,40,0.36)',
-                    transition: 'height 160ms ease',
-                  }} />
-                ))}
-                <span style={{ marginLeft: 8, color: T.muted, fontSize: 12, fontWeight: 800 }}>
-                  {recording ? (speechText || '正在听...') : '语音输入'}
-                </span>
-              </div>
-            </div>
-          </GlassCard>
+          <div style={voiceDockStyle(recording)}>
+            <button
+              type="button"
+              onClick={toggleVoice}
+              aria-label={recording ? '取消录音' : '开始录音'}
+              style={micCircleStyle(recording)}
+            >
+              <MicIcon active={recording} />
+            </button>
+            <span style={voiceHintStyle(recording)}>
+              {recording ? (speechText ? '取消录音' : '正在录音') : '语音'}
+            </span>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 10 }}>
             <button type="button" onClick={() => submitMemory('保存草稿')} disabled={saving} style={draftButtonStyle}>保存草稿</button>
@@ -664,10 +647,46 @@ const photoThumbStyle = {
   cursor: 'pointer',
 }
 
+function voiceDockStyle(active) {
+  return {
+    justifySelf: 'center',
+    width: 96,
+    height: 96,
+    borderRadius: '50%',
+    border: '1.5px solid rgba(255,255,255,0.80)',
+    background: active
+      ? 'linear-gradient(145deg, rgba(255,255,255,0.82), rgba(143,52,40,0.18))'
+      : 'linear-gradient(145deg, rgba(255,255,255,0.80), rgba(207,229,234,0.38))',
+    backdropFilter: 'blur(28px) saturate(1.45)',
+    WebkitBackdropFilter: 'blur(28px) saturate(1.45)',
+    display: 'grid',
+    placeItems: 'center',
+    alignContent: 'center',
+    gap: 4,
+    boxShadow: active
+      ? '0 16px 34px rgba(143,52,40,0.20), inset 0 1px 0 rgba(255,255,255,0.88)'
+      : '0 16px 34px rgba(64,80,86,0.16), inset 0 1px 0 rgba(255,255,255,0.88)',
+  }
+}
+
+function voiceHintStyle(active) {
+  return {
+    color: active ? T.primary : T.muted,
+    fontSize: 10,
+    fontWeight: 900,
+    lineHeight: '12px',
+    maxWidth: 64,
+    textAlign: 'center',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  }
+}
+
 function micCircleStyle(active) {
   return {
-    width: 58,
-    height: 58,
+    width: 54,
+    height: 54,
     border: '1.5px solid rgba(255,255,255,0.78)',
     borderRadius: '50%',
     background: active
@@ -683,6 +702,8 @@ function micCircleStyle(active) {
     boxShadow: active
       ? '0 18px 38px rgba(143,52,40,0.30), inset 0 1px 0 rgba(255,255,255,0.36)'
       : '0 16px 34px rgba(64,80,86,0.18), inset 0 1px 0 rgba(255,255,255,0.84)',
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'transparent',
   }
 }
 
