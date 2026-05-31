@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
+import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
+import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
+import bgImg3 from '../assets/微信图片_20260530235835_96883_4.png'
 
 const T = {
   bg: '#f1f5f5',
@@ -54,6 +57,24 @@ const themes = {
       linear-gradient(180deg, #fffdf7 0%, #f3eee3 52%, #fff5ec 100%)
     `,
     header: 'rgba(255,253,247,0.72)',
+  },
+  bloom: {
+    name: '花语',
+    swatch: bgImg1,
+    background: `url(${bgImg1}) center/cover no-repeat`,
+    header: 'rgba(255,248,245,0.78)',
+  },
+  dream: {
+    name: '梦境',
+    swatch: bgImg2,
+    background: `url(${bgImg2}) center/cover no-repeat`,
+    header: 'rgba(255,250,248,0.78)',
+  },
+  warm: {
+    name: '暖光',
+    swatch: bgImg3,
+    background: `url(${bgImg3}) center/cover no-repeat`,
+    header: 'rgba(255,248,244,0.78)',
   },
 }
 
@@ -713,7 +734,7 @@ export default function Home() {
                       width: 26,
                       height: 26,
                       borderRadius: '50%',
-                      background: item.swatch,
+                      background: typeof item.swatch === "string" && item.swatch.length < 20 ? item.swatch : `url(${item.swatch}) center/cover no-repeat`,
                       border: '2px solid rgba(255,255,255,0.92)',
                       boxShadow: '0 8px 18px rgba(104,45,38,0.10)',
                     }} />
