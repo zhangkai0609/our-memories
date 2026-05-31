@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
-import { Cat } from 'react-kawaii'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
 import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
 import bgImg3 from '../assets/微信图片_20260530235835_96883_4.png'
@@ -269,6 +268,24 @@ export default function Home() {
 
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <div style={{
+          position: 'absolute',
+          top: 12,
+          left: 14,
+          right: 14,
+          height: 138,
+          borderRadius: 34,
+          background: `
+            radial-gradient(circle at 18% 18%, rgba(255,255,255,0.94), transparent 24%),
+            radial-gradient(circle at 84% 26%, rgba(194,222,229,0.54), transparent 32%),
+            linear-gradient(135deg, rgba(255,255,255,0.62), rgba(219,235,239,0.40) 48%, rgba(255,221,214,0.34))
+          `,
+          border: '1px solid rgba(255,255,255,0.62)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72), 0 22px 50px rgba(94,73,68,0.08)',
+          backdropFilter: 'blur(22px) saturate(1.25)',
+          WebkitBackdropFilter: 'blur(22px) saturate(1.25)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
           height: 86,
           display: 'flex',
           alignItems: 'center',
@@ -351,7 +368,7 @@ export default function Home() {
           </button>
         </div>
 
-        <main style={{ display: 'grid', gap: 10, paddingTop: 0 }}>
+        <main style={{ display: 'grid', gap: 10, paddingTop: 0, position: 'relative', zIndex: 1 }}>
           <GlassPanel style={{ borderRadius: 38, padding: '14px 16px', boxShadow: '0 18px 48px rgba(104,45,38,0.12)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
@@ -417,16 +434,30 @@ export default function Home() {
                 </span>
                 {/* ═══ react-kawaii 毛绒猫咪 ═══ */}
                 <span style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  position: 'relative',
                   width: 90,
                   height: 90,
                   borderRadius: 22,
                   background: 'radial-gradient(circle at 62% 34%, rgba(255,255,255,0.90), transparent 22%), linear-gradient(135deg, rgba(218,236,240,0.72), rgba(255,222,215,0.45))',
                   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74), 0 14px 30px rgba(104,45,38,0.08)',
+                  overflow: 'hidden',
                 }}>
-                  <Cat size={64} mood="blissful" color="#e8a0a0" />
+                  <img
+                    src={`${import.meta.env.BASE_URL}assets/opensvg-cute-cat.webp`}
+                    alt=""
+                    style={{
+                      position: 'absolute',
+                      right: -12,
+                      top: -18,
+                      width: 118,
+                      height: 118,
+                      objectFit: 'cover',
+                      objectPosition: 'center top',
+                      opacity: 0.82,
+                      filter: 'drop-shadow(0 12px 18px rgba(84,45,40,0.14))',
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
                 </span>
               </button>
             </GlassPanel>
