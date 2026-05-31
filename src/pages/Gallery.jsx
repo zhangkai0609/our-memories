@@ -204,32 +204,36 @@ export default function Gallery() {
       }} />
 
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
-        <header style={{
-          height: 68,
-          margin: '0 -14px',
-          padding: '0 14px',
+        <div style={{
+          height: 44,
+          margin: 0,
+          padding: 0,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          zIndex: 30,
-          background: 'rgba(255,246,244,0.66)',
-          backdropFilter: 'blur(22px)',
-          WebkitBackdropFilter: 'blur(22px)',
-          borderBottom: '1px solid rgba(255,255,255,0.42)',
+          justifyContent: 'flex-end',
+          position: 'fixed',
+          top: 'calc(12px + env(safe-area-inset-top))',
+          right: 14,
+          zIndex: 9000,
+          background: 'transparent',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+          borderBottom: 'none',
+          pointerEvents: 'none',
+          width: 44,
+          overflow: 'hidden',
         }}>
           <button onClick={() => navigate('/')} style={iconButtonStyle}>‹</button>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', display: 'none' }}>
             <p style={{ margin: 0, color: T.muted, fontSize: 11, fontWeight: 800 }}>Notebook</p>
             <h1 style={{ margin: 0, color: T.primary, fontFamily: T.titleFont, fontSize: 27, lineHeight: '30px', fontWeight: 760, fontStyle: 'italic' }}>
               Memories
             </h1>
           </div>
           <button onClick={() => navigate('/new')} style={{ ...iconButtonStyle, color: '#fff', background: 'rgba(156,66,51,0.92)' }}>＋</button>
-        </header>
+        </div>
 
-        <GlassShell style={{ borderRadius: 28, marginTop: 14, padding: 10, position: 'relative', overflow: 'hidden' }}>
+        <GlassShell style={{ borderRadius: 28, marginTop: 2, padding: 10, position: 'relative', overflow: 'hidden' }}>
           <div style={{
             position: 'absolute',
             inset: -50,

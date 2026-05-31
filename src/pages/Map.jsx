@@ -245,23 +245,24 @@ export default function MapPage() {
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody }}>
       {/* ═══ Header ═══ */}
-      <header style={{
-        background: 'rgba(251,251,248,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
-        padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderBottom: '1px solid rgba(255,255,255,0.34)', zIndex: 20, flexShrink: 0,
+      <div style={{
+        position: 'fixed', top: 'calc(12px + env(safe-area-inset-top))', right: 14,
+        background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none',
+        padding: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+        borderBottom: 'none', zIndex: 9000, flexShrink: 0, pointerEvents: 'none',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'none', alignItems: 'center', gap: 10 }}>
           <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: T.primary, cursor: 'pointer', fontSize: 16, fontFamily: T.fontBody }}>←</button>
           <h1 style={{ fontFamily: T.fontTitle, fontSize: 20, color: T.ink, fontWeight: 600, margin: 0 }}>足迹地图</h1>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
           {geocoding > 0 && <span style={{ fontSize: 11, color: T.muted }}>解析中...</span>}
           <button onClick={() => setPanelOpen(!panelOpen)}
-            style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 14, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: T.fontBody, boxShadow: '0 2px 8px rgba(143,52,40,0.22)' }}>
+            style={{ background: T.primary, color: '#fff', border: '1px solid rgba(255,255,255,0.72)', borderRadius: 999, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: T.fontBody, boxShadow: '0 10px 24px rgba(143,52,40,0.24)', backdropFilter: 'blur(16px)' }}>
             {panelOpen ? '收起' : `${validMarkers.length + unknownLocs.length} 个足迹`}
           </button>
         </div>
-      </header>
+      </div>
 
       {/* ═══ 地图（无动态 key，避免重挂载） ═══ */}
       <div style={{ flex: 1, position: 'relative' }}>

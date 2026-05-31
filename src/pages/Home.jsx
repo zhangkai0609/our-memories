@@ -245,36 +245,18 @@ export default function Home() {
       }} />
 
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
-        <header style={{
-          height: 68,
+        <div style={{
+          height: 50,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           position: 'sticky',
           top: 0,
           zIndex: 20,
           margin: '0 -14px',
-          padding: '0 14px',
-          background: currentTheme.header,
-          backdropFilter: 'blur(22px)',
-          WebkitBackdropFilter: 'blur(22px)',
-          borderBottom: '1px solid rgba(255,255,255,0.34)',
+          padding: '0 14px 0',
+          pointerEvents: 'none',
         }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 12, color: T.muted, fontWeight: 700, letterSpacing: 0 }}>Today</p>
-            <h1 style={{
-              margin: 0,
-              fontFamily: T.fontTitle,
-              fontSize: 26,
-              lineHeight: '30px',
-              fontWeight: 700,
-              fontStyle: 'italic',
-              color: T.primary,
-              letterSpacing: 0,
-            }}>
-              Our Memories
-            </h1>
-          </div>
           <button
             onClick={() => {
               setProfileOpen(true)
@@ -291,6 +273,7 @@ export default function Home() {
               overflow: 'hidden',
               boxShadow: T.softShadow,
               cursor: 'pointer',
+              pointerEvents: 'auto',
             }}
           >
             {myAvatar ? (
@@ -299,9 +282,9 @@ export default function Home() {
               <span style={{ display: 'grid', placeItems: 'center', width: '100%', height: '100%', color: T.primary, fontWeight: 800 }}>我</span>
             )}
           </button>
-        </header>
+        </div>
 
-        <main style={{ display: 'grid', gap: 14, paddingTop: 14 }}>
+        <main style={{ display: 'grid', gap: 14, paddingTop: 2 }}>
           <GlassPanel style={{ borderRadius: 30, padding: '18px 16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
