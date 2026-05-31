@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bumpVersion } from '../lib/cache'
 import { supabase } from '../lib/supabase'
+import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
+import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
+import bgImg3 from '../assets/微信图片_20260530235835_96883_4.png'
 
 const T = {
   bg: '#eef6f7',
@@ -18,6 +21,30 @@ const T = {
 
 const themes = ['日常', '约会', '旅行', '纪念日']
 const draftKey = 'new_memory_draft_v2'
+
+const homeThemes = {
+  pearl: `
+    radial-gradient(circle at 16% 8%, rgba(255,255,255,0.92), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(184,217,224,0.42), transparent 28%),
+    radial-gradient(circle at 50% 92%, rgba(255,219,211,0.34), transparent 32%),
+    linear-gradient(180deg, #fbfbf8 0%, #f1f5f5 48%, #fff3ef 100%)
+  `,
+  rose: `
+    radial-gradient(circle at 18% 10%, rgba(255,255,255,0.94), transparent 30%),
+    radial-gradient(circle at 88% 18%, rgba(246,205,211,0.48), transparent 29%),
+    radial-gradient(circle at 50% 92%, rgba(205,224,229,0.30), transparent 32%),
+    linear-gradient(180deg, #fffafa 0%, #f8eeee 52%, #f0f7f8 100%)
+  `,
+  paper: `
+    radial-gradient(circle at 14% 8%, rgba(255,255,255,0.92), transparent 30%),
+    radial-gradient(circle at 86% 20%, rgba(214,231,232,0.36), transparent 28%),
+    radial-gradient(circle at 46% 92%, rgba(238,210,171,0.36), transparent 32%),
+    linear-gradient(180deg, #fffdf7 0%, #f3eee3 52%, #fff5ec 100%)
+  `,
+  bloom: `url(${bgImg1}) center/cover fixed no-repeat`,
+  dream: `url(${bgImg2}) center/cover fixed no-repeat`,
+  warm: `url(${bgImg3}) center/cover fixed no-repeat`,
+}
 
 async function reverseGeocode(lat, lng) {
   try {
@@ -79,9 +106,12 @@ export default function NewRecord() {
   const [previews, setPreviews] = useState([])
   const [pastLocations, setPastLocations] = useState([])
   const [gpsLoading, setGpsLoading] = useState(false)
+  const [gpsMessage, setGpsMessage] = useState('')
   const [recording, setRecording] = useState(false)
   const [speechText, setSpeechText] = useState('')
   const [saving, setSaving] = useState(false)
+  const homeTheme = localStorage.getItem('home_theme') || 'dream'
+  const pageBackground = homeThemes[homeTheme] || homeThemes.dream
 
   const fetchPastLocations = useCallback(async () => {
     try {
@@ -114,23 +144,30 @@ export default function NewRecord() {
 
   async function locate() {
     if (!navigator.geolocation) {
-      alert('当前设备不支持定位')
+      setGpsMessage('当前设备不支持定位，可以手动输入位置')
       return
     }
     setGpsLoading(true)
+    setGpsMessage('正在请求浏览器定位权限...')
     navigator.geolocation.getCurrentPosition(
       async pos => {
         const nextCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
         setCoords(nextCoords)
         const addr = await reverseGeocode(nextCoords.lat, nextCoords.lng)
         if (addr) setLocation(addr)
+        setGpsMessage(addr ? '已获取准确位置' : '已获取坐标，地址可手动补充')
         setGpsLoading(false)
       },
-      () => {
+      error => {
         setGpsLoading(false)
-        alert('定位失败，请检查浏览器位置权限或手动输入位置')
+        const message = error.code === 1
+          ? '定位权限被拒绝，请在浏览器里允许位置权限，或手动输入位置'
+          : error.code === 2
+            ? '暂时无法获取位置，请稍后再试或手动输入'
+            : '定位超时，请靠近网络后重试或手动输入'
+        setGpsMessage(message)
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+      { enableHighAccuracy: false, timeout: 20000, maximumAge: 600000 }
     )
   }
 
@@ -238,18 +275,21 @@ export default function NewRecord() {
   return (
     <div style={{
       minHeight: '100dvh',
-      background: `
-        radial-gradient(circle at 16% 8%, rgba(255,255,255,0.92), transparent 28%),
-        radial-gradient(circle at 86% 18%, rgba(180,216,225,0.45), transparent 30%),
-        radial-gradient(circle at 52% 92%, rgba(255,218,211,0.35), transparent 34%),
-        linear-gradient(180deg, #f8fcfc 0%, ${T.bg} 54%, #fff1ee 100%)
-      `,
+      background: pageBackground,
       color: T.ink,
       fontFamily: T.fontBody,
       paddingBottom: 'calc(28px + env(safe-area-inset-bottom))',
       overflowX: 'hidden',
+      position: 'relative',
     }}>
-      <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        background: 'linear-gradient(180deg, rgba(248,252,252,0.72), rgba(238,246,247,0.70) 48%, rgba(255,241,238,0.68))',
+        backdropFilter: 'blur(1.5px)',
+      }} />
+      <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <header style={{
           height: 66,
           display: 'grid',
@@ -281,6 +321,11 @@ export default function NewRecord() {
               placeholder="输入或自动获取位置"
               style={inputStyle}
             />
+            {gpsMessage && (
+              <p style={{ margin: '8px 4px 0', color: coords ? '#5b704f' : T.primary, fontSize: 11, lineHeight: '16px', fontWeight: 800 }}>
+                {gpsMessage}
+              </p>
+            )}
             {pastLocations.length > 0 && (
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', overflowY: 'hidden', paddingTop: 2, maxWidth: '100%' }}>
                 {pastLocations.map(addr => (
@@ -332,15 +377,29 @@ export default function NewRecord() {
           </GlassCard>
 
           <GlassCard style={{ padding: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '42px 1fr 88px', gap: 10, alignItems: 'center' }}>
-              <button type="button" style={roundButtonStyle}>⌨</button>
+            <div style={{ display: 'grid', justifyItems: 'center', gap: 9 }}>
+              <button
+                type="button"
+                onMouseDown={startVoice}
+                onMouseUp={stopVoice}
+                onMouseLeave={() => recording && stopVoice()}
+                onTouchStart={startVoice}
+                onTouchEnd={stopVoice}
+                aria-label="语音输入"
+                style={micCircleStyle(recording)}
+              >
+                🎙
+              </button>
               <div style={{
-                height: 42,
+                height: 34,
+                width: '100%',
+                maxWidth: 236,
                 borderRadius: 999,
-                background: 'rgba(255,255,255,0.38)',
-                border: '1px solid rgba(255,255,255,0.66)',
+                background: 'rgba(255,255,255,0.42)',
+                border: '1px solid rgba(255,255,255,0.72)',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: 4,
                 padding: '0 12px',
                 overflow: 'hidden',
@@ -358,17 +417,6 @@ export default function NewRecord() {
                   {recording ? (speechText || '正在听...') : '语音输入'}
                 </span>
               </div>
-              <button
-                type="button"
-                onMouseDown={startVoice}
-                onMouseUp={stopVoice}
-                onMouseLeave={() => recording && stopVoice()}
-                onTouchStart={startVoice}
-                onTouchEnd={stopVoice}
-                style={micButtonStyle(recording)}
-              >
-                按住说话
-              </button>
             </div>
           </GlassCard>
 
@@ -389,11 +437,11 @@ function GlassCard({ children, style }) {
       boxSizing: 'border-box',
       width: '100%',
       overflow: 'hidden',
-      border: `1px solid ${T.border}`,
-      background: 'linear-gradient(145deg, rgba(255,255,255,0.80), rgba(255,255,255,0.34) 54%, rgba(207,229,234,0.24)), rgba(255,255,255,0.52)',
-      backdropFilter: 'blur(28px) saturate(1.35)',
-      WebkitBackdropFilter: 'blur(28px) saturate(1.35)',
-      boxShadow: T.shadow,
+      border: '1.5px solid rgba(255,255,255,0.78)',
+      background: 'linear-gradient(145deg, rgba(255,255,255,0.88), rgba(255,255,255,0.44) 54%, rgba(207,229,234,0.30)), rgba(255,255,255,0.62)',
+      backdropFilter: 'blur(32px) saturate(1.42)',
+      WebkitBackdropFilter: 'blur(32px) saturate(1.42)',
+      boxShadow: '0 22px 60px rgba(64,80,86,0.22), inset 0 1px 0 rgba(255,255,255,0.86), inset 0 0 0 1px rgba(255,255,255,0.30)',
       ...style,
     }}>
       {children}
@@ -411,10 +459,10 @@ const inputStyle = {
   width: '100%',
   boxSizing: 'border-box',
   marginTop: 10,
-  border: '1px solid rgba(255,255,255,0.68)',
+  border: '1.5px solid rgba(255,255,255,0.76)',
   borderRadius: 18,
   outline: 'none',
-  background: 'rgba(255,255,255,0.44)',
+  background: 'rgba(255,255,255,0.56)',
   color: T.ink,
   padding: '12px 14px',
   fontFamily: T.fontBody,
@@ -532,18 +580,25 @@ const photoThumbStyle = {
   cursor: 'pointer',
 }
 
-function micButtonStyle(active) {
+function micCircleStyle(active) {
   return {
-    minHeight: 42,
-    border: 'none',
-    borderRadius: 999,
-    background: active ? 'linear-gradient(135deg, #8f3428, #c95f4f)' : 'rgba(143,52,40,0.92)',
-    color: '#fff',
+    width: 70,
+    height: 70,
+    border: '1.5px solid rgba(255,255,255,0.78)',
+    borderRadius: '50%',
+    background: active
+      ? 'linear-gradient(145deg, rgba(143,52,40,0.95), rgba(201,95,79,0.82))'
+      : 'linear-gradient(145deg, rgba(255,255,255,0.82), rgba(207,229,234,0.46))',
+    color: active ? '#fff' : T.primary,
     fontFamily: T.fontBody,
-    fontSize: 12,
+    fontSize: 28,
     fontWeight: 900,
     cursor: 'pointer',
-    boxShadow: active ? '0 14px 28px rgba(143,52,40,0.28)' : '0 10px 22px rgba(143,52,40,0.18)',
+    display: 'grid',
+    placeItems: 'center',
+    boxShadow: active
+      ? '0 18px 38px rgba(143,52,40,0.30), inset 0 1px 0 rgba(255,255,255,0.36)'
+      : '0 16px 34px rgba(64,80,86,0.18), inset 0 1px 0 rgba(255,255,255,0.84)',
   }
 }
 
