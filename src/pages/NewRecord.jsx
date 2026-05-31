@@ -1,329 +1,573 @@
-import { useState, useRef, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { bumpVersion } from '../lib/cache'
 import { supabase } from '../lib/supabase'
 
-const C = {
-  bg: '#fff0f3', primary: '#9c4233', pLight: '#e87c69', pFixed: '#ffdad4',
-  brown: '#1c1c18', text: '#56423f', light: '#89726e',
-  border: '#dcc0bc', card: '#fcf9f2', inputBg: '#fdfaf7',
+const T = {
+  bg: '#eef6f7',
+  ink: '#2f211d',
+  muted: '#7d6460',
+  primary: '#8f3428',
+  blue: '#b9d7df',
+  glass: 'rgba(255,255,255,0.56)',
+  border: 'rgba(255,255,255,0.68)',
+  shadow: '0 22px 60px rgba(78,93,98,0.18)',
+  fontTitle: '"Noto Serif SC", "LXGW WenKai", "Songti SC", serif',
+  fontBody: '"Noto Serif SC", "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif',
 }
 
-// Nominatim 反地理编码: 坐标 → 地址
+const themes = ['日常', '约会', '旅行', '纪念日']
+const draftKey = 'new_memory_draft_v2'
+
 async function reverseGeocode(lat, lng) {
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&accept-language=zh`
-    )
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&accept-language=zh`)
     const data = await res.json()
-    if (data && data.display_name) {
-      // 精简地址：去掉过长的层级
-      const parts = data.display_name.split(',').map(s => s.trim())
-      return parts.slice(0, 5).join(' · ')
-    }
-    return null
+    if (!data?.display_name) return null
+    return data.display_name.split(',').map(s => s.trim()).slice(0, 5).join(' · ')
   } catch {
     return null
   }
 }
 
+async function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = reject
+    reader.onload = () => {
+      const img = new Image()
+      img.onerror = reject
+      img.onload = () => {
+        const maxW = 1200
+        let { width, height } = img
+        if (width > maxW || height > maxW) {
+          const ratio = maxW / Math.max(width, height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.72))
+      }
+      img.src = reader.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function NewRecord() {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [location, setLocation] = useState('')
-  const [coords, setCoords] = useState(null)
-  const [author, setAuthor] = useState(localStorage.getItem('current_author') || localStorage.getItem('my_name') || '小周同学')
+  const navigate = useNavigate()
+  const fileRef = useRef(null)
+  const recognitionRef = useRef(null)
+  const previewRef = useRef([])
   const myName = localStorage.getItem('my_name') || '小周同学'
   const partnerName = localStorage.getItem('partner_name') || '另一半'
+
+  const draft = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem(draftKey) || '{}') } catch { return {} }
+  }, [])
+
+  const [title, setTitle] = useState(draft.title || '')
+  const [content, setContent] = useState(draft.content || '')
+  const [location, setLocation] = useState(draft.location || '')
+  const [coords, setCoords] = useState(draft.coords || null)
+  const [theme, setTheme] = useState(draft.theme || '日常')
+  const [author, setAuthor] = useState(localStorage.getItem('current_author') || myName)
+  const [files, setFiles] = useState([])
+  const [previews, setPreviews] = useState([])
+  const [pastLocations, setPastLocations] = useState([])
+  const [gpsLoading, setGpsLoading] = useState(false)
+  const [recording, setRecording] = useState(false)
+  const [speechText, setSpeechText] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const fetchPastLocations = useCallback(async () => {
+    try {
+      const { data } = await supabase.from('memories')
+        .select('location')
+        .not('location', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      const unique = [...new Set((data || []).map(m => (m.location || '').trim()).filter(Boolean))]
+      setPastLocations(unique.slice(0, 5))
+    } catch {
+      setPastLocations([])
+    }
+  }, [])
+
+  useEffect(() => {
+    Promise.resolve().then(fetchPastLocations)
+    return () => previewRef.current.forEach(url => URL.revokeObjectURL(url))
+  }, [fetchPastLocations])
+
+  useEffect(() => {
+    localStorage.setItem(draftKey, JSON.stringify({ title, content, location, coords, theme }))
+  }, [title, content, location, coords, theme])
 
   function toggleAuthor() {
     const next = author === myName ? partnerName : myName
     setAuthor(next)
     localStorage.setItem('current_author', next)
-  } // { lat, lng }
-  const [gpsLoading, setGpsLoading] = useState(false)
-  const [files, setFiles] = useState([])
-  const [uploading, setUploading] = useState(false)
-  const [pastLocations, setPastLocations] = useState([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const fileRef = useRef(null)
-  const locationRef = useRef(null)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    fetchPastLocations()
-  }, [])
-
-  async function fetchPastLocations() {
-    try {
-      const { data } = await supabase.from('memories').select('location').not('location', 'is', null).order('created_at', { ascending: false }).limit(20)
-      const seen = new Set()
-      const unique = []
-      for (const m of data || []) {
-        const trimmed = m.location.trim()
-        if (trimmed && !seen.has(trimmed)) {
-          seen.add(trimmed)
-          unique.push(trimmed)
-        }
-      }
-      setPastLocations(unique.slice(0, 8))
-    } catch { /* silent */ }
   }
 
-  // GPS 定位
-  async function handleGpsLocate() {
+  async function locate() {
     if (!navigator.geolocation) {
-      alert('你的设备不支持定位功能')
+      alert('当前设备不支持定位')
       return
     }
     setGpsLoading(true)
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude, longitude } = pos.coords
-        setCoords({ lat: latitude, lng: longitude })
-        const addr = await reverseGeocode(latitude, longitude)
+      async pos => {
+        const nextCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setCoords(nextCoords)
+        const addr = await reverseGeocode(nextCoords.lat, nextCoords.lng)
         if (addr) setLocation(addr)
         setGpsLoading(false)
       },
-      (err) => {
+      () => {
         setGpsLoading(false)
-        if (err.code === 1) alert('定位被拒绝，请在浏览器设置中允许位置权限')
-        else if (err.code === 2) alert('暂时无法获取位置，请稍后重试')
-        else alert('定位超时，请手动输入位置')
+        alert('定位失败，请检查浏览器位置权限或手动输入位置')
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
     )
   }
 
-  // 选择建议位置
-  function selectSuggestion(addr) {
-    setLocation(addr)
-    setCoords(null) // 历史位置没有坐标
-    setShowSuggestions(false)
+  function pickFiles(event) {
+    const next = Array.from(event.target.files || [])
+    previewRef.current.forEach(url => URL.revokeObjectURL(url))
+    setFiles(next)
+    const nextPreviews = next.map(file => URL.createObjectURL(file))
+    previewRef.current = nextPreviews
+    setPreviews(nextPreviews)
   }
 
-  function handleFileChange(e) { setFiles(Array.from(e.target.files)) }
+  function removeFile(index) {
+    URL.revokeObjectURL(previews[index])
+    setFiles(prev => prev.filter((_, i) => i !== index))
+    setPreviews(prev => {
+      const next = prev.filter((_, i) => i !== index)
+      previewRef.current = next
+      return next
+    })
+  }
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!title.trim()) return
-    setUploading(true)
+  function getSpeechApi() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition
+  }
 
-    // 照片压缩 + base64 (canvas resize → max 1200px, JPEG 0.7, <200KB)
+  function startVoice() {
+    const SpeechRecognition = getSpeechApi()
+    if (!SpeechRecognition) {
+      alert('当前浏览器暂不支持语音输入，可以先使用文字输入')
+      return
+    }
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'zh-CN'
+    recognition.interimResults = true
+    recognition.continuous = true
+    recognition.onresult = event => {
+      let text = ''
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        text += event.results[i][0].transcript
+      }
+      setSpeechText(text)
+    }
+    recognition.onend = () => setRecording(false)
+    recognitionRef.current = recognition
+    setSpeechText('')
+    setRecording(true)
+    recognition.start()
+  }
+
+  function stopVoice() {
+    const text = speechText.trim()
+    recognitionRef.current?.stop()
+    if (text) setContent(prev => `${prev}${prev ? '\n' : ''}${text}`)
+    setRecording(false)
+    setSpeechText('')
+  }
+
+  async function submitMemory(status = '发布') {
+    if (!title.trim() && !content.trim()) {
+      alert('先写一点标题或正文吧')
+      return
+    }
+    setSaving(true)
+
     const imageUrls = []
     for (const file of files) {
       try {
-        const compressed = await new Promise((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () => {
-            const img = new Image()
-            img.onload = () => {
-              const maxW = 1200
-              let { width, height } = img
-              if (width > maxW || height > maxW) {
-                const ratio = maxW / Math.max(width, height)
-                width = Math.round(width * ratio)
-                height = Math.round(height * ratio)
-              }
-              const canvas = document.createElement('canvas')
-              canvas.width = width
-              canvas.height = height
-              const ctx = canvas.getContext('2d')
-              ctx.drawImage(img, 0, 0, width, height)
-              resolve(canvas.toDataURL('image/jpeg', 0.7))
-            }
-            img.src = reader.result
-          }
-          reader.readAsDataURL(file)
-        })
-        imageUrls.push(compressed)
-      } catch { alert('照片读取失败: ' + file.name) }
+        imageUrls.push(await compressImage(file))
+      } catch {
+        alert(`照片读取失败：${file.name}`)
+      }
     }
 
-    const author = localStorage.getItem('current_author') || localStorage.getItem('my_name') || '小周同学'
+    const roomCode = localStorage.getItem('room_code')
     const recordData = {
-      title: title.trim(), content, location: location.trim() || null, image_urls: imageUrls, author,
+      title: title.trim() || `${theme}记忆`,
+      content: content.trim(),
+      location: location.trim() || null,
+      image_urls: imageUrls,
+      author,
+      room_code: roomCode,
+      tags: [theme, status === '保存草稿' ? '草稿' : '已发布'],
     }
     if (coords) recordData.coordinates = coords
-    const roomCode = localStorage.getItem('room_code')
-    if (roomCode) recordData.room_code = roomCode
 
     let { error } = await supabase.from('memories').insert(recordData)
-
-    // 如果 coordinates 列不存在，回退重试
-    if (error && coords) {
+    if (error && (recordData.coordinates || recordData.tags)) {
       delete recordData.coordinates
+      delete recordData.tags
       const retry = await supabase.from('memories').insert(recordData)
       error = retry.error
     }
 
-    if (error) alert('发布失败：' + error.message)
-    else { bumpVersion(); navigate('/') }
-    setUploading(false)
-  }
-
-  const inputStyle = {
-    padding: '15px 20px', borderRadius: 16, border: `1.5px solid ${C.border}`,
-    fontSize: 15, background: C.inputBg, color: C.brown,
-    fontFamily: 'Plus Jakarta Sans, sans-serif', width: '100%',
+    setSaving(false)
+    if (error) {
+      alert(`保存失败：${error.message}`)
+      return
+    }
+    localStorage.removeItem(draftKey)
+    bumpVersion()
+    navigate('/')
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: 100 }}>
-      <div className="grain-overlay" />
-
-      {/* Header */}
-      <header style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '14px 24px', background: 'rgba(255,240,243,0.82)', backdropFilter: 'blur(16px)',
-        borderBottom: `1px solid ${C.border}`
-      }}>
-        <button onClick={() => navigate(-1)}
-          style={{ background: 'none', border: 'none', color: C.primary, fontSize: 15, cursor: 'pointer', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          ← 返回
-        </button>
-        <button onClick={toggleAuthor} style={{
-          display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,0.5)',border:'1px solid rgba(255,255,255,0.6)',
-          borderRadius:999,padding:'6px 14px',cursor:'pointer',fontFamily:'Plus Jakarta Sans,sans-serif',
-          fontSize:13,color:C.primary,fontWeight:600,
+    <div style={{
+      minHeight: '100dvh',
+      background: `
+        radial-gradient(circle at 16% 8%, rgba(255,255,255,0.92), transparent 28%),
+        radial-gradient(circle at 86% 18%, rgba(180,216,225,0.45), transparent 30%),
+        radial-gradient(circle at 52% 92%, rgba(255,218,211,0.35), transparent 34%),
+        linear-gradient(180deg, #f8fcfc 0%, ${T.bg} 54%, #fff1ee 100%)
+      `,
+      color: T.ink,
+      fontFamily: T.fontBody,
+      paddingBottom: 'calc(28px + env(safe-area-inset-bottom))',
+      overflowX: 'hidden',
+    }}>
+      <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px' }}>
+        <header style={{
+          height: 66,
+          display: 'grid',
+          gridTemplateColumns: '44px 1fr 82px',
+          alignItems: 'center',
+          gap: 8,
         }}>
-          ✍ {author}
-        </button>
-      </header>
-
-      <form onSubmit={handleSubmit} style={{ maxWidth: 560, margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {/* Title */}
-        <input type="text" placeholder="今天发生了什么？" value={title}
-          onChange={e => setTitle(e.target.value)} required
-          style={{ ...inputStyle, fontSize: 22, fontWeight: 600, fontFamily: 'EB Garamond, serif', padding: '18px 20px' }} />
-
-        {/* Location */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <input ref={locationRef} type="text" placeholder="📍  在哪里？（选填）" value={location}
-                onChange={e => { setLocation(e.target.value); setCoords(null); }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                style={{
-                  ...inputStyle, width: '100%',
-                  paddingRight: location ? 36 : 12,
-                }} />
-              {location && (
-                <button type="button" onClick={() => { setLocation(''); setCoords(null); }}
-                  style={{
-                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', color: C.light, cursor: 'pointer',
-                    fontSize: 16, padding: 4,
-                  }}>✕</button>
-              )}
-            </div>
-            <button type="button" onClick={handleGpsLocate} disabled={gpsLoading}
-              title="使用当前位置"
-              style={{
-                width: 46, height: 46, borderRadius: 16,
-                background: coords ? 'rgba(83,99,70,0.10)' : C.card,
-                border: coords ? `1.5px solid ${C.secondary}` : `1.5px solid ${C.border}`,
-                cursor: 'pointer', fontSize: 18,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                flexShrink: 0, transition: 'all 0.2s',
-                opacity: gpsLoading ? 0.6 : 1,
-              }}>
-              {gpsLoading ? '⏳' : coords ? '📍' : '🎯'}
-            </button>
-          </div>
-
-          {/* GPS 状态提示 */}
-          {coords && (
-            <p style={{
-              margin: '4px 0 0 4px', fontSize: 11, color: C.secondary,
-              fontFamily: 'Plus Jakarta Sans, sans-serif',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              <span>✓</span> 已获取精确位置 ({coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
-            </p>
-          )}
-
-          {/* 历史位置建议 */}
-          {showSuggestions && pastLocations.length > 0 && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, right: 60, zIndex: 20,
-              marginTop: 4, background: C.card, borderRadius: 16,
-              boxShadow: '0 8px 30px rgba(156,66,51,0.12)',
-              border: '1px solid rgba(220,192,188,0.3)',
-              padding: '6px', maxHeight: 200, overflowY: 'auto',
-            }}>
-              <p style={{
-                fontSize: 11, color: C.light, padding: '4px 10px 6px', margin: 0,
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-              }}>📍 历史位置</p>
-              {pastLocations.map((addr, i) => (
-                <button key={i} type="button"
-                  onMouseDown={e => { e.preventDefault(); selectSuggestion(addr); }}
-                  style={{
-                    display: 'block', width: '100%', textAlign: 'left',
-                    padding: '10px 12px', border: 'none', borderRadius: 12,
-                    background: addr === location ? 'rgba(156,66,51,0.05)' : 'transparent',
-                    cursor: 'pointer', fontSize: 13, color: C.brown,
-                    fontFamily: 'Plus Jakarta Sans, sans-serif',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(156,66,51,0.05)'}
-                  onMouse退出={e => { if (addr !== location) e.currentTarget.style.background = 'transparent'; }}
-                >{addr}</button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <textarea placeholder="写下你想记住的一切..." value={content}
-          onChange={e => setContent(e.target.value)} rows={6}
-          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.8, minHeight: 140 }} />
-
-        {/* 照片 */}
-        <div>
-          <button type="button" onClick={() => fileRef.current.click()}
-            style={{
-              padding: '14px 24px', borderRadius: 16, background: C.card,
-              border: `1.5px dashed ${C.border}`, cursor: 'pointer', fontSize: 15,
-              color: C.text, fontFamily: 'Plus Jakarta Sans, sans-serif', width: '100%',
-              textAlign: 'left',
-            }}>
-            {files.length > 0 ? `📷  已选择 ${files.length} 张照片` : '📷  添加照片'}
+          <button onClick={() => navigate(-1)} style={roundButtonStyle}>‹</button>
+          <h1 style={{ margin: 0, textAlign: 'center', color: T.primary, fontFamily: T.fontTitle, fontSize: 25, lineHeight: '30px', fontWeight: 760 }}>
+            新记忆
+          </h1>
+          <button onClick={() => submitMemory('发布')} disabled={saving} style={publishButtonStyle}>
+            {saving ? '保存中' : '发布'}
           </button>
-          <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleFileChange} style={{ display: 'none' }} />
+        </header>
 
-          {files.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8, marginTop: 14 }}>
-              {files.map((f, i) => (
-                <div key={i} style={{ position: 'relative', borderRadius: 12, overflow: 'hidden' }}>
-                  <img src={URL.createObjectURL(f)} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }} />
-                  <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                    style={{
-                      position: 'absolute', top: 4, right: 4, width: 24, height: 24,
-                      borderRadius: '50%', background: 'rgba(0,0,0,0.45)', color: '#fff',
-                      border: 'none', fontSize: 13, cursor: 'pointer', lineHeight: '24px',
-                    }}>
-                    ✕
+        <main style={{ display: 'grid', gap: 12 }}>
+          <GlassCard style={{ padding: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8, alignItems: 'center' }}>
+              <button onClick={locate} type="button" style={pillButtonStyle(Boolean(coords))}>
+                <span>⌖</span>
+                <span>{gpsLoading ? '定位中...' : coords ? '准确定位已开启' : '准确定位'}</span>
+              </button>
+              <button onClick={toggleAuthor} type="button" style={{ ...smallGlassButtonStyle, maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</button>
+            </div>
+            <input
+              value={location}
+              onChange={event => { setLocation(event.target.value); setCoords(null) }}
+              placeholder="输入或自动获取位置"
+              style={inputStyle}
+            />
+            {pastLocations.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', overflowY: 'hidden', paddingTop: 2, maxWidth: '100%' }}>
+                {pastLocations.map(addr => (
+                  <button key={addr} type="button" onClick={() => { setLocation(addr); setCoords(null) }} style={historyChipStyle}>
+                    {addr}
                   </button>
-                </div>
+                ))}
+              </div>
+            )}
+          </GlassCard>
+
+          <GlassCard style={{ padding: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={labelStyle}>主题</span>
+              <button type="button" onClick={() => fileRef.current?.click()} style={smallGlassButtonStyle}>添加照片</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7 }}>
+              {themes.map(item => (
+                <button key={item} type="button" onClick={() => setTheme(item)} style={themeChipStyle(theme === item)}>
+                  {item}
+                </button>
               ))}
             </div>
-          )}
-        </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple onChange={pickFiles} style={{ display: 'none' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 12 }}>
+              <button type="button" onClick={() => fileRef.current?.click()} style={photoAddStyle}>＋</button>
+              {previews.slice(0, 7).map((url, index) => (
+                <button key={url} type="button" onClick={() => removeFile(index)} style={photoThumbStyle}>
+                  <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </button>
+              ))}
+            </div>
+          </GlassCard>
 
-        {/* Submit */}
-        <button type="submit" disabled={uploading}
-          style={{
-            marginTop: 12, padding: '16px', background: C.primary, color: '#fff',
-            border: 'none', borderRadius: 16, fontSize: 16, fontWeight: 600, cursor: 'pointer',
-            fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '0.06em',
-            boxShadow: '0 4px 20px rgba(156,66,51,0.20)',
-          }}>
-          {uploading ? '保存中...' : '写 下 来'}
-        </button>
-      </form>
+          <GlassCard style={{ padding: 14 }}>
+            <input
+              value={title}
+              onChange={event => setTitle(event.target.value)}
+              placeholder="标题"
+              style={{ ...inputStyle, height: 48, fontSize: 20, fontWeight: 800, fontFamily: T.fontTitle }}
+            />
+            <textarea
+              value={content}
+              onChange={event => setContent(event.target.value)}
+              placeholder="主文章 · 输入文字"
+              rows={7}
+              style={{ ...inputStyle, minHeight: 166, resize: 'vertical', lineHeight: '24px' }}
+            />
+          </GlassCard>
+
+          <GlassCard style={{ padding: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '42px 1fr 88px', gap: 10, alignItems: 'center' }}>
+              <button type="button" style={roundButtonStyle}>⌨</button>
+              <div style={{
+                height: 42,
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.38)',
+                border: '1px solid rgba(255,255,255,0.66)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '0 12px',
+                overflow: 'hidden',
+              }}>
+                {Array.from({ length: 18 }, (_, i) => (
+                  <span key={i} style={{
+                    width: 3,
+                    height: recording ? 10 + ((i * 7) % 22) : 6 + ((i * 5) % 12),
+                    borderRadius: 999,
+                    background: recording ? T.primary : 'rgba(143,52,40,0.36)',
+                    transition: 'height 160ms ease',
+                  }} />
+                ))}
+                <span style={{ marginLeft: 8, color: T.muted, fontSize: 12, fontWeight: 800 }}>
+                  {recording ? (speechText || '正在听...') : '语音输入'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onMouseDown={startVoice}
+                onMouseUp={stopVoice}
+                onMouseLeave={() => recording && stopVoice()}
+                onTouchStart={startVoice}
+                onTouchEnd={stopVoice}
+                style={micButtonStyle(recording)}
+              >
+                按住说话
+              </button>
+            </div>
+          </GlassCard>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 10 }}>
+            <button type="button" onClick={() => submitMemory('保存草稿')} disabled={saving} style={draftButtonStyle}>保存草稿</button>
+            <button type="button" onClick={() => submitMemory('发布')} disabled={saving} style={publishLargeButtonStyle}>{saving ? '保存中...' : '发布'}</button>
+          </div>
+        </main>
+      </div>
     </div>
   )
+}
+
+function GlassCard({ children, style }) {
+  return (
+    <section style={{
+      borderRadius: 26,
+      boxSizing: 'border-box',
+      width: '100%',
+      overflow: 'hidden',
+      border: `1px solid ${T.border}`,
+      background: 'linear-gradient(145deg, rgba(255,255,255,0.80), rgba(255,255,255,0.34) 54%, rgba(207,229,234,0.24)), rgba(255,255,255,0.52)',
+      backdropFilter: 'blur(28px) saturate(1.35)',
+      WebkitBackdropFilter: 'blur(28px) saturate(1.35)',
+      boxShadow: T.shadow,
+      ...style,
+    }}>
+      {children}
+    </section>
+  )
+}
+
+const labelStyle = {
+  color: T.primary,
+  fontSize: 14,
+  fontWeight: 900,
+}
+
+const inputStyle = {
+  width: '100%',
+  boxSizing: 'border-box',
+  marginTop: 10,
+  border: '1px solid rgba(255,255,255,0.68)',
+  borderRadius: 18,
+  outline: 'none',
+  background: 'rgba(255,255,255,0.44)',
+  color: T.ink,
+  padding: '12px 14px',
+  fontFamily: T.fontBody,
+  fontSize: 15,
+  fontWeight: 700,
+}
+
+const roundButtonStyle = {
+  width: 42,
+  height: 42,
+  borderRadius: '50%',
+  border: `1px solid ${T.border}`,
+  background: 'rgba(255,255,255,0.54)',
+  color: T.primary,
+  fontFamily: T.fontBody,
+  fontSize: 24,
+  fontWeight: 900,
+  display: 'grid',
+  placeItems: 'center',
+  cursor: 'pointer',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74)',
+}
+
+const publishButtonStyle = {
+  height: 38,
+  border: 'none',
+  borderRadius: 999,
+  background: T.primary,
+  color: '#fff',
+  fontFamily: T.fontBody,
+  fontSize: 13,
+  fontWeight: 900,
+  cursor: 'pointer',
+}
+
+const smallGlassButtonStyle = {
+  border: `1px solid ${T.border}`,
+  borderRadius: 999,
+  background: 'rgba(255,255,255,0.46)',
+  color: T.primary,
+  padding: '9px 12px',
+  fontFamily: T.fontBody,
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+}
+
+function pillButtonStyle(active) {
+  return {
+    border: `1px solid ${active ? 'rgba(143,52,40,0.28)' : T.border}`,
+    borderRadius: 999,
+    background: active ? 'rgba(143,52,40,0.10)' : 'rgba(255,255,255,0.46)',
+    color: active ? T.primary : T.ink,
+    minHeight: 42,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    fontFamily: T.fontBody,
+    fontSize: 13,
+    fontWeight: 900,
+    cursor: 'pointer',
+  }
+}
+
+const historyChipStyle = {
+  border: '1px solid rgba(255,255,255,0.60)',
+  borderRadius: 999,
+  background: 'rgba(255,255,255,0.34)',
+  color: T.muted,
+  padding: '7px 10px',
+  fontFamily: T.fontBody,
+  fontSize: 11,
+  fontWeight: 800,
+  whiteSpace: 'nowrap',
+  maxWidth: 178,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  flexShrink: 0,
+}
+
+function themeChipStyle(active) {
+  return {
+    minHeight: 38,
+    border: `1px solid ${active ? 'rgba(143,52,40,0.30)' : T.border}`,
+    borderRadius: 999,
+    background: active ? 'rgba(143,52,40,0.12)' : 'rgba(255,255,255,0.40)',
+    color: active ? T.primary : T.muted,
+    fontFamily: T.fontBody,
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: 'pointer',
+  }
+}
+
+const photoAddStyle = {
+  aspectRatio: '1',
+  border: `1px dashed ${T.border}`,
+  borderRadius: 18,
+  background: 'rgba(255,255,255,0.36)',
+  color: T.primary,
+  fontSize: 26,
+  fontWeight: 800,
+  cursor: 'pointer',
+}
+
+const photoThumbStyle = {
+  aspectRatio: '1',
+  border: `1px solid ${T.border}`,
+  borderRadius: 18,
+  overflow: 'hidden',
+  padding: 0,
+  background: 'rgba(255,255,255,0.42)',
+  cursor: 'pointer',
+}
+
+function micButtonStyle(active) {
+  return {
+    minHeight: 42,
+    border: 'none',
+    borderRadius: 999,
+    background: active ? 'linear-gradient(135deg, #8f3428, #c95f4f)' : 'rgba(143,52,40,0.92)',
+    color: '#fff',
+    fontFamily: T.fontBody,
+    fontSize: 12,
+    fontWeight: 900,
+    cursor: 'pointer',
+    boxShadow: active ? '0 14px 28px rgba(143,52,40,0.28)' : '0 10px 22px rgba(143,52,40,0.18)',
+  }
+}
+
+const draftButtonStyle = {
+  height: 50,
+  borderRadius: 18,
+  border: `1px solid ${T.border}`,
+  background: 'rgba(255,255,255,0.50)',
+  color: T.primary,
+  fontFamily: T.fontBody,
+  fontSize: 14,
+  fontWeight: 900,
+  cursor: 'pointer',
+}
+
+const publishLargeButtonStyle = {
+  height: 50,
+  borderRadius: 18,
+  border: '1px solid rgba(255,255,255,0.70)',
+  background: 'linear-gradient(135deg, #8f3428, #c95f4f)',
+  color: '#fff',
+  fontFamily: T.fontBody,
+  fontSize: 15,
+  fontWeight: 900,
+  cursor: 'pointer',
+  boxShadow: '0 16px 34px rgba(143,52,40,0.24)',
 }
