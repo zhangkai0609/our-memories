@@ -272,17 +272,18 @@ export default function Home() {
           top: 12,
           left: 14,
           right: 14,
-          height: 138,
-          borderRadius: 34,
+          height: 126,
+          borderRadius: '0 0 34px 34px',
           background: `
-            radial-gradient(circle at 18% 18%, rgba(255,255,255,0.94), transparent 24%),
-            radial-gradient(circle at 84% 26%, rgba(194,222,229,0.54), transparent 32%),
-            linear-gradient(135deg, rgba(255,255,255,0.62), rgba(219,235,239,0.40) 48%, rgba(255,221,214,0.34))
+            radial-gradient(circle at 18% 18%, rgba(255,255,255,0.86), transparent 24%),
+            radial-gradient(circle at 84% 24%, rgba(127,169,181,0.66), transparent 34%),
+            linear-gradient(135deg, rgba(213,231,236,0.72), rgba(143,178,188,0.54) 52%, rgba(195,217,222,0.48))
           `,
-          border: '1px solid rgba(255,255,255,0.62)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72), 0 22px 50px rgba(94,73,68,0.08)',
-          backdropFilter: 'blur(22px) saturate(1.25)',
-          WebkitBackdropFilter: 'blur(22px) saturate(1.25)',
+          border: '1px solid rgba(255,255,255,0.58)',
+          borderTop: 'none',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.66), 0 18px 44px rgba(76,104,112,0.16)',
+          backdropFilter: 'blur(26px) saturate(1.32)',
+          WebkitBackdropFilter: 'blur(26px) saturate(1.32)',
           pointerEvents: 'none',
         }} />
         <div style={{
@@ -369,18 +370,7 @@ export default function Home() {
         </div>
 
         <main style={{ display: 'grid', gap: 10, paddingTop: 0, position: 'relative', zIndex: 1 }}>
-          <GlassPanel style={{
-            borderRadius: 38,
-            padding: '14px 16px',
-            background: `
-              linear-gradient(145deg, rgba(238,244,245,0.68), rgba(189,207,211,0.42) 52%, rgba(255,226,220,0.22)),
-              rgba(205,218,220,0.44)
-            `,
-            border: '1px solid rgba(255,255,255,0.76)',
-            backdropFilter: 'blur(30px) saturate(1.32)',
-            WebkitBackdropFilter: 'blur(30px) saturate(1.32)',
-            boxShadow: '0 20px 54px rgba(76,96,102,0.18), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -18px 34px rgba(132,157,163,0.10)',
-          }}>
+          <GlassPanel style={{ borderRadius: 38, padding: '14px 16px', boxShadow: '0 18px 48px rgba(104,45,38,0.12)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
                 ['♡', stats.memoryDays || '--', '记忆天数'],
@@ -391,13 +381,13 @@ export default function Home() {
                   minWidth: 0,
                   textAlign: 'center',
                   padding: '2px 8px',
-                  borderLeft: index ? '1px solid rgba(255,255,255,0.56)' : 'none',
+                  borderLeft: index ? '1px solid rgba(143,52,40,0.12)' : 'none',
                 }}>
                   <div style={{ color: T.primary, fontSize: 18, lineHeight: '20px', marginBottom: 3 }}>{icon}</div>
                   <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 34, lineHeight: '34px', fontWeight: 760 }}>
                     {loading && label === '照片' ? '--' : value}
                   </div>
-                  <div style={{ color: '#6f5752', fontSize: 13, lineHeight: '18px', fontWeight: 850 }}>{label}</div>
+                  <div style={{ color: T.muted, fontSize: 13, lineHeight: '18px', fontWeight: 800 }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -582,11 +572,14 @@ export default function Home() {
         gap: 8,
         padding: 5,
         borderRadius: 999,
-        border: `1px solid ${T.border}`,
-        background: 'rgba(255,255,255,0.48)',
-        backdropFilter: 'blur(28px) saturate(1.45)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.45)',
-        boxShadow: '0 18px 48px rgba(104,45,38,0.18), inset 0 1px 0 rgba(255,255,255,0.70)',
+        border: '1px solid rgba(255,255,255,0.62)',
+        background: `
+          linear-gradient(135deg, rgba(226,239,242,0.76), rgba(153,184,193,0.58) 52%, rgba(214,229,233,0.58)),
+          rgba(178,205,213,0.54)
+        `,
+        backdropFilter: 'blur(30px) saturate(1.42)',
+        WebkitBackdropFilter: 'blur(30px) saturate(1.42)',
+        boxShadow: '0 18px 48px rgba(76,104,112,0.24), inset 0 1px 0 rgba(255,255,255,0.74)',
       }}>
         {navItems.map(item => {
           const active = item.id === 'home'
