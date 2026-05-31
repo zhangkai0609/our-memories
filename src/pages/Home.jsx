@@ -136,7 +136,7 @@ export default function Home() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileEditing, setProfileEditing] = useState(false)
   const [confirmExit, setConfirmExit] = useState(false)
-  const [theme, setTheme] = useState(() => localStorage.getItem('home_theme') || 'pearl')
+  const [theme, setTheme] = useState(() => localStorage.getItem('home_theme') || 'dream')
   const [profileDraft, setProfileDraft] = useState(() => ({
     myName: localStorage.getItem('my_name') || '小周同学',
     partnerName: localStorage.getItem('partner_name') || '另一半',
@@ -144,7 +144,7 @@ export default function Home() {
     partnerAvatar: localStorage.getItem('partner_avatar') || '',
   }))
 
-  const currentTheme = themes[theme] || themes.pearl
+  const currentTheme = themes[theme] || themes.dream
   const myName = profileDraft.myName || '小周同学'
   const partnerName = profileDraft.partnerName || '另一半'
   const myAvatar = profileDraft.myAvatar
