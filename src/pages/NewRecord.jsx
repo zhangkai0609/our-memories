@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { packMemoryContent } from '../lib/audioMemory'
 import { bumpVersion } from '../lib/cache'
 import { supabase } from '../lib/supabase'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
@@ -87,8 +88,9 @@ async function compressImage(file) {
 export default function NewRecord() {
   const navigate = useNavigate()
   const fileRef = useRef(null)
-  const recognitionRef = useRef(null)
-  const speechTextRef = useRef('')
+  const recorderRef = useRef(null)
+  const streamRef = useRef(null)
+  const audioChunksRef = useRef([])
   const previewRef = useRef([])
   const myName = localStorage.getItem('my_name') || '小周同学'
   const partnerName = localStorage.getItem('partner_name') || '另一半'
@@ -109,7 +111,7 @@ export default function NewRecord() {
   const [gpsLoading, setGpsLoading] = useState(false)
   const [gpsMessage, setGpsMessage] = useState('')
   const [recording, setRecording] = useState(false)
-  const [speechText, setSpeechText] = useState('')
+  const [audioUrl, setAudioUrl] = useState(draft.audioUrl || '')
   const [saving, setSaving] = useState(false)
   const homeTheme = localStorage.getItem('home_theme') || 'dream'
   const pageBackground = homeThemes[homeTheme] || homeThemes.dream
@@ -134,8 +136,8 @@ export default function NewRecord() {
   }, [fetchPastLocations])
 
   useEffect(() => {
-    localStorage.setItem(draftKey, JSON.stringify({ title, content, location, coords, theme }))
-  }, [title, content, location, coords, theme])
+    localStorage.setItem(draftKey, JSON.stringify({ title, content, location, coords, theme, audioUrl }))
+  }, [title, content, location, coords, theme, audioUrl])
 
   function toggleAuthor() {
     const next = author === myName ? partnerName : myName
@@ -191,65 +193,59 @@ export default function NewRecord() {
     })
   }
 
-  function getSpeechApi() {
-    return window.SpeechRecognition || window.webkitSpeechRecognition
+  function getRecorderOptions() {
+    if (!window.MediaRecorder) return null
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac']
+    const mimeType = candidates.find(type => MediaRecorder.isTypeSupported?.(type))
+    return mimeType ? { mimeType } : {}
   }
 
-  const appendSpeechText = useCallback(() => {
-    const text = speechTextRef.current.trim()
-    if (!text) return
-    setContent(prev => `${prev}${prev ? '\n' : ''}${text}`)
-    speechTextRef.current = ''
-    setSpeechText('')
-  }, [])
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onerror = reject
+      reader.onload = () => resolve(reader.result)
+      reader.readAsDataURL(blob)
+    })
+  }
 
-  function startVoice() {
+  async function startVoice() {
     if (recording) return
-    const SpeechRecognition = getSpeechApi()
-    if (!SpeechRecognition) {
-      alert('当前浏览器暂不支持语音输入，可以先使用文字输入')
+    const options = getRecorderOptions()
+    if (!options) {
+      alert('当前浏览器暂不支持录音，可以先使用文字输入')
       return
     }
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'zh-CN'
-    recognition.interimResults = true
-    recognition.continuous = false
-    recognition.maxAlternatives = 1
-    recognition.onresult = event => {
-      let text = ''
-      for (let i = 0; i < event.results.length; i += 1) {
-        text += event.results[i][0].transcript
-      }
-      speechTextRef.current = text
-      setSpeechText(text)
-    }
-    recognition.onerror = () => {
-      setRecording(false)
-      recognitionRef.current = null
-    }
-    recognition.onend = () => {
-      appendSpeechText()
-      setRecording(false)
-      recognitionRef.current = null
-    }
-    recognitionRef.current = recognition
-    speechTextRef.current = ''
-    setSpeechText('')
-    setRecording(true)
     try {
-      recognition.start()
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream, options)
+      streamRef.current = stream
+      recorderRef.current = recorder
+      audioChunksRef.current = []
+      recorder.ondataavailable = event => {
+        if (event.data?.size) audioChunksRef.current.push(event.data)
+      }
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        if (blob.size) setAudioUrl(await blobToDataUrl(blob))
+        streamRef.current?.getTracks().forEach(track => track.stop())
+        streamRef.current = null
+        recorderRef.current = null
+        audioChunksRef.current = []
+        setRecording(false)
+      }
+      recorder.start()
+      setAudioUrl('')
+      setRecording(true)
     } catch {
       setRecording(false)
-      recognitionRef.current = null
+      alert('没有拿到麦克风权限，请在浏览器或手机系统里允许麦克风权限')
     }
   }
 
   function stopVoice() {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      return
-    }
-    appendSpeechText()
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop()
+    else streamRef.current?.getTracks().forEach(track => track.stop())
     setRecording(false)
   }
 
@@ -262,8 +258,8 @@ export default function NewRecord() {
   }
 
   async function submitMemory(status = '发布') {
-    if (!title.trim() && !content.trim()) {
-      alert('先写一点标题或正文吧')
+    if (!title.trim() && !content.trim() && !audioUrl) {
+      alert('先写一点标题、正文或录音吧')
       return
     }
     setSaving(true)
@@ -280,7 +276,7 @@ export default function NewRecord() {
     const roomCode = localStorage.getItem('room_code')
     const recordData = {
       title: title.trim() || `${theme}记忆`,
-      content: content.trim(),
+      content: packMemoryContent(content, audioUrl),
       location: location.trim() || null,
       image_urls: imageUrls,
       author,
@@ -421,7 +417,7 @@ export default function NewRecord() {
               <MicIcon active={recording} />
             </button>
             <span style={voiceHintStyle(recording)}>
-              {recording ? (speechText ? '取消录音' : '正在录音') : '语音'}
+              {recording ? '点击完成' : audioUrl ? '已录音' : '录音'}
             </span>
           </div>
 

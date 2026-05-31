@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached } from '../lib/cache'
 
@@ -49,10 +50,12 @@ function formatDate(dateLike) {
 }
 
 function normalizeRecord(memory) {
+  const parsed = unpackMemoryContent(memory.content || '')
   return {
     id: String(memory.id),
     title: memory.title || '未命名记忆',
-    content: memory.content || '这一天也值得被好好收藏。',
+    content: parsed.text || '这一天也值得被好好收藏。',
+    audioUrl: parsed.audioUrl,
     author: memory.author || null,
     location: memory.location || '',
     date: formatDate(memory.created_at),
@@ -537,6 +540,9 @@ function MemoryPost({ record, author, social, draft, onDraft, onLike, onComment,
           }}>
             {record.content}
           </p>
+          {record.audioUrl && (
+            <VoicePlayButton audioUrl={record.audioUrl} />
+          )}
         </div>
 
         {mainImage && (
@@ -596,6 +602,21 @@ function MemoryPost({ record, author, social, draft, onDraft, onLike, onComment,
         </div>
       </div>
     </article>
+  )
+}
+
+function VoicePlayButton({ audioUrl }) {
+  return (
+    <div style={{
+      marginTop: 8,
+      borderRadius: 999,
+      border: '1px solid rgba(255,255,255,0.72)',
+      background: 'linear-gradient(145deg, rgba(255,255,255,0.72), rgba(207,229,234,0.28))',
+      boxShadow: '0 8px 18px rgba(102,55,45,0.10), inset 0 1px 0 rgba(255,255,255,0.82)',
+      padding: '4px 8px',
+    }}>
+      <audio controls src={audioUrl} style={{ width: '100%', height: 28 }} />
+    </div>
   )
 }
 

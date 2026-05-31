@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
@@ -548,7 +549,7 @@ export default function Home() {
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                     }}>
-                      {memory.content || formatDate(memory.created_at)}
+                      {unpackMemoryContent(memory.content || '').text || formatDate(memory.created_at)}
                     </p>
                   )}
                 </article>
