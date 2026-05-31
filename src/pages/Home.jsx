@@ -369,7 +369,18 @@ export default function Home() {
         </div>
 
         <main style={{ display: 'grid', gap: 10, paddingTop: 0, position: 'relative', zIndex: 1 }}>
-          <GlassPanel style={{ borderRadius: 38, padding: '14px 16px', boxShadow: '0 18px 48px rgba(104,45,38,0.12)' }}>
+          <GlassPanel style={{
+            borderRadius: 38,
+            padding: '14px 16px',
+            background: `
+              linear-gradient(145deg, rgba(238,244,245,0.68), rgba(189,207,211,0.42) 52%, rgba(255,226,220,0.22)),
+              rgba(205,218,220,0.44)
+            `,
+            border: '1px solid rgba(255,255,255,0.76)',
+            backdropFilter: 'blur(30px) saturate(1.32)',
+            WebkitBackdropFilter: 'blur(30px) saturate(1.32)',
+            boxShadow: '0 20px 54px rgba(76,96,102,0.18), inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -18px 34px rgba(132,157,163,0.10)',
+          }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
                 ['♡', stats.memoryDays || '--', '记忆天数'],
@@ -380,13 +391,13 @@ export default function Home() {
                   minWidth: 0,
                   textAlign: 'center',
                   padding: '2px 8px',
-                  borderLeft: index ? '1px solid rgba(143,52,40,0.12)' : 'none',
+                  borderLeft: index ? '1px solid rgba(255,255,255,0.56)' : 'none',
                 }}>
                   <div style={{ color: T.primary, fontSize: 18, lineHeight: '20px', marginBottom: 3 }}>{icon}</div>
                   <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 34, lineHeight: '34px', fontWeight: 760 }}>
                     {loading && label === '照片' ? '--' : value}
                   </div>
-                  <div style={{ color: T.muted, fontSize: 13, lineHeight: '18px', fontWeight: 800 }}>{label}</div>
+                  <div style={{ color: '#6f5752', fontSize: 13, lineHeight: '18px', fontWeight: 850 }}>{label}</div>
                 </div>
               ))}
             </div>
