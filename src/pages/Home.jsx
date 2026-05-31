@@ -20,8 +20,8 @@ const T = {
   borderWarm: 'rgba(214,154,145,0.36)',
   shadow: '0 24px 70px rgba(104,45,38,0.16)',
   softShadow: '0 14px 38px rgba(104,45,38,0.10)',
-  fontTitle: '"EB Garamond", "Noto Serif SC", serif',
-  fontBody: '"Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif',
+  fontTitle: '"Noto Serif SC", "LXGW WenKai", "Songti SC", serif',
+  fontBody: '"Noto Serif SC", "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif',
 }
 
 const themes = {
@@ -269,19 +269,18 @@ export default function Home() {
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <div style={{
           position: 'absolute',
-          top: 12,
+          top: 14,
           left: 14,
           right: 14,
-          height: 126,
-          borderRadius: '0 0 34px 34px',
+          height: 122,
+          borderRadius: 34,
           background: `
-            radial-gradient(circle at 18% 18%, rgba(255,255,255,0.86), transparent 24%),
-            radial-gradient(circle at 84% 24%, rgba(127,169,181,0.66), transparent 34%),
-            linear-gradient(135deg, rgba(213,231,236,0.72), rgba(143,178,188,0.54) 52%, rgba(195,217,222,0.48))
+            radial-gradient(circle at 18% 18%, rgba(255,255,255,0.88), transparent 24%),
+            radial-gradient(circle at 84% 24%, rgba(185,213,220,0.46), transparent 34%),
+            linear-gradient(135deg, rgba(235,246,248,0.70), rgba(204,226,232,0.42) 52%, rgba(232,243,246,0.48))
           `,
-          border: '1px solid rgba(255,255,255,0.58)',
-          borderTop: 'none',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.66), 0 18px 44px rgba(76,104,112,0.16)',
+          border: '1px solid rgba(255,255,255,0.64)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72), 0 16px 38px rgba(92,122,130,0.10)',
           backdropFilter: 'blur(26px) saturate(1.32)',
           WebkitBackdropFilter: 'blur(26px) saturate(1.32)',
           pointerEvents: 'none',
@@ -308,13 +307,13 @@ export default function Home() {
             <h2 style={{
               margin: 0,
               color: T.primary,
-              fontFamily: '"Noto Serif SC", "LXGW WenKai", "Songti SC", serif',
+              fontFamily: T.fontTitle,
               fontSize: 23,
               lineHeight: '34px',
               fontWeight: 760,
               letterSpacing: 0,
               textAlign: 'center',
-              textShadow: '0 1px 0 rgba(255,255,255,0.78), 0 10px 24px rgba(143,52,40,0.10)',
+              textShadow: '0 1px 0 rgba(255,255,255,0.86), 0 0 12px rgba(255,255,255,0.78), 0 0 22px rgba(184,217,224,0.46), 0 10px 24px rgba(143,52,40,0.08)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
