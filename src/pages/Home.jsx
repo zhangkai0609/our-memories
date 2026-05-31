@@ -246,17 +246,56 @@ export default function Home() {
 
       <div style={{ width: '100%', maxWidth: 430, margin: '0 auto', padding: '0 14px', position: 'relative', zIndex: 1 }}>
         <div style={{
-          height: 50,
-          display: 'flex',
+          height: 58,
+          display: 'grid',
+          gridTemplateColumns: '44px minmax(0, 1fr) 44px',
           alignItems: 'center',
-          justifyContent: 'flex-end',
           position: 'sticky',
           top: 0,
           zIndex: 20,
           margin: '0 -14px',
-          padding: '0 14px 0',
+          padding: '0 14px',
           pointerEvents: 'none',
         }}>
+          <span />
+          <div style={{
+            position: 'relative',
+            overflow: 'hidden',
+            justifySelf: 'center',
+            maxWidth: '100%',
+            minWidth: 0,
+            padding: '0 8px',
+          }}>
+            <h2 style={{
+              margin: 0,
+              color: T.primary,
+              fontFamily: '"Noto Serif SC", "LXGW WenKai", "Songti SC", serif',
+              fontSize: 23,
+              lineHeight: '38px',
+              fontWeight: 700,
+              letterSpacing: 0,
+              textAlign: 'center',
+              textShadow: '0 1px 0 rgba(255,255,255,0.78), 0 10px 24px rgba(143,52,40,0.10)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {myName}和{partnerName}的小屋
+            </h2>
+            <span style={{
+              position: 'absolute',
+              top: 6,
+              bottom: 6,
+              left: '-58%',
+              width: '46%',
+              borderRadius: 999,
+              background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.78), rgba(199,230,236,0.46), transparent)',
+              filter: 'blur(8px)',
+              transform: 'skewX(-16deg)',
+              animation: 'titleLightFlow 4.8s ease-in-out infinite',
+              pointerEvents: 'none',
+            }} />
+          </div>
           <button
             onClick={() => {
               setProfileOpen(true)
@@ -284,48 +323,7 @@ export default function Home() {
           </button>
         </div>
 
-        <main style={{ display: 'grid', gap: 14, paddingTop: 2 }}>
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            borderRadius: 26,
-            padding: '5px 56px 7px 4px',
-            minHeight: 42,
-            display: 'flex',
-            alignItems: 'center',
-          }}>
-            <h2 style={{
-              margin: 0,
-              width: '100%',
-              color: T.primary,
-              fontFamily: T.fontTitle,
-              fontSize: 27,
-              lineHeight: '34px',
-              fontWeight: 760,
-              fontStyle: 'italic',
-              letterSpacing: 0,
-              textShadow: '0 1px 0 rgba(255,255,255,0.70), 0 10px 24px rgba(143,52,40,0.10)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}>
-              {myName}和{partnerName}的小屋
-            </h2>
-            <span style={{
-              position: 'absolute',
-              top: 1,
-              bottom: 1,
-              left: '-44%',
-              width: '38%',
-              borderRadius: 999,
-              background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.72), rgba(199,230,236,0.44), transparent)',
-              filter: 'blur(8px)',
-              transform: 'skewX(-16deg)',
-              animation: 'titleLightFlow 4.8s ease-in-out infinite',
-              pointerEvents: 'none',
-            }} />
-          </div>
-
+        <main style={{ display: 'grid', gap: 14, paddingTop: 4 }}>
           <GlassPanel style={{ borderRadius: 30, padding: '18px 16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[

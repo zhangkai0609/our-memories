@@ -86,7 +86,7 @@ export default function Gallery() {
   const [loadError, setLoadError] = useState(false)
   const [page, setPage] = useState(1)
   const touchStartRef = useRef({ x: 0, y: 0 })
-  const [pageMotion, setPageMotion] = useState({ offset: 0, blur: false, active: false })
+  const [pageMotion, setPageMotion] = useState({ offset: 0, blur: false, active: false, progress: 0, direction: 0, turning: false })
   const [drafts, setDrafts] = useState({})
   const [social, setSocial] = useState(() => readJson('memory_social_v1', {}))
 
@@ -188,7 +188,7 @@ export default function Gallery() {
     const touch = event.touches?.[0]
     if (!touch) return
     touchStartRef.current = { x: touch.clientX, y: touch.clientY }
-    setPageMotion({ offset: 0, blur: false, active: true })
+    setPageMotion({ offset: 0, blur: false, active: true, progress: 0, direction: 0, turning: false })
   }
 
   function handleTouchMove(event) {
@@ -198,24 +198,32 @@ export default function Gallery() {
     const dy = touch.clientY - touchStartRef.current.y
     if (Math.abs(dx) < Math.abs(dy)) return
     const limited = Math.max(-64, Math.min(64, dx))
-    setPageMotion({ offset: limited, blur: Math.abs(limited) > 18, active: true })
+    setPageMotion({
+      offset: limited,
+      blur: Math.abs(limited) > 18,
+      active: true,
+      progress: Math.min(0.86, Math.abs(dx) / 150),
+      direction: dx < 0 ? -1 : 1,
+      turning: false,
+    })
   }
 
   function handleTouchEnd(event) {
     const touch = event.changedTouches?.[0]
     if (!touch) {
-      setPageMotion({ offset: 0, blur: false, active: false })
+      setPageMotion({ offset: 0, blur: false, active: false, progress: 0, direction: 0, turning: false })
       return
     }
     const dx = touch.clientX - touchStartRef.current.x
     const next = dx < -72 ? page + 1 : dx > 72 ? page - 1 : page
     const canTurn = next !== page && next >= 1 && next <= pageCount
     if (canTurn) {
-      setPageMotion({ offset: dx < 0 ? -38 : 38, blur: true, active: false })
-      changePage(next)
-      window.setTimeout(() => setPageMotion({ offset: 0, blur: false, active: false }), 150)
+      const direction = dx < 0 ? -1 : 1
+      setPageMotion({ offset: direction * 28, blur: true, active: false, progress: 1, direction, turning: true })
+      window.setTimeout(() => changePage(next), 150)
+      window.setTimeout(() => setPageMotion({ offset: 0, blur: false, active: false, progress: 0, direction: 0, turning: false }), 300)
     } else {
-      setPageMotion({ offset: 0, blur: false, active: false })
+      setPageMotion({ offset: 0, blur: false, active: false, progress: 0, direction: 0, turning: false })
     }
   }
 
@@ -274,7 +282,18 @@ export default function Gallery() {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          style={{ borderRadius: 28, marginTop: 2, padding: 10, position: 'relative', overflow: 'hidden', touchAction: 'pan-y' }}
+          style={{
+            borderRadius: 28,
+            marginTop: 2,
+            padding: 10,
+            position: 'relative',
+            overflow: 'hidden',
+            touchAction: 'pan-y',
+            height: 'min(76dvh, 660px)',
+            minHeight: 620,
+            boxSizing: 'border-box',
+            perspective: 1100,
+          }}
         >
           <div style={{
             position: 'absolute',
@@ -286,7 +305,7 @@ export default function Gallery() {
 
           <div style={{
             position: 'relative',
-            minHeight: 640,
+            height: '100%',
             borderRadius: 22,
             backgroundColor: 'rgba(255,250,242,0.88)',
             backgroundImage: 'linear-gradient(rgba(143,52,40,0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(143,52,40,0.045) 1px, transparent 1px)',
@@ -300,6 +319,32 @@ export default function Gallery() {
             transition: pageMotion.active ? 'filter 120ms ease' : 'transform 260ms cubic-bezier(.2,.78,.22,1), filter 260ms ease',
             willChange: 'transform, filter',
           }}>
+            {(pageMotion.active || pageMotion.turning) && pageMotion.direction !== 0 && (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: pageMotion.direction < 0 ? '50%' : 0,
+                width: '50%',
+                zIndex: 8,
+                borderRadius: pageMotion.direction < 0 ? '0 22px 22px 0' : '22px 0 0 22px',
+                background: `
+                  linear-gradient(${pageMotion.direction < 0 ? 100 : 80}deg, rgba(255,250,242,0.96), rgba(255,255,255,0.70) 48%, rgba(210,174,160,0.22)),
+                  linear-gradient(rgba(143,52,40,0.045) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(143,52,40,0.035) 1px, transparent 1px)
+                `,
+                backgroundSize: 'auto, 18px 18px, 18px 18px',
+                boxShadow: pageMotion.direction < 0
+                  ? '-18px 0 34px rgba(80,42,34,0.18), inset 1px 0 0 rgba(255,255,255,0.72)'
+                  : '18px 0 34px rgba(80,42,34,0.18), inset -1px 0 0 rgba(255,255,255,0.72)',
+                transformOrigin: pageMotion.direction < 0 ? 'left center' : 'right center',
+                transform: `rotateY(${pageMotion.direction < 0 ? -pageMotion.progress * 138 : pageMotion.progress * 138}deg)`,
+                transition: pageMotion.turning ? 'transform 300ms cubic-bezier(.2,.75,.18,1), filter 300ms ease' : 'none',
+                filter: `blur(${pageMotion.progress * 1.2}px)`,
+                backfaceVisibility: 'hidden',
+                pointerEvents: 'none',
+              }} />
+            )}
             <div style={{ position: 'absolute', left: 8, top: 20, bottom: 20, display: 'grid', gap: 14, alignContent: 'space-around' }}>
               {Array.from({ length: 10 }, (_, i) => (
                 <span key={i} style={{
