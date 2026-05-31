@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached } from '../lib/cache'
@@ -61,7 +61,7 @@ function normalizeRecord(memory) {
   }
 }
 
-function GlassShell({ children, style }) {
+function GlassShell({ children, style, ...props }) {
   return (
     <div style={{
       border: `1px solid ${T.border}`,
@@ -70,7 +70,7 @@ function GlassShell({ children, style }) {
       WebkitBackdropFilter: 'blur(22px) saturate(1.35)',
       boxShadow: T.shadow,
       ...style,
-    }}>
+    }} {...props}>
       {children}
     </div>
   )
@@ -85,6 +85,8 @@ export default function Gallery() {
   const [loadedOnce, setLoadedOnce] = useState(() => getCachedRecords().length > 0)
   const [loadError, setLoadError] = useState(false)
   const [page, setPage] = useState(1)
+  const touchStartRef = useRef({ x: 0, y: 0 })
+  const [pageMotion, setPageMotion] = useState({ offset: 0, blur: false, active: false })
   const [drafts, setDrafts] = useState({})
   const [social, setSocial] = useState(() => readJson('memory_social_v1', {}))
 
@@ -182,6 +184,41 @@ export default function Gallery() {
     setPage(Math.min(pageCount, Math.max(1, next)))
   }
 
+  function handleTouchStart(event) {
+    const touch = event.touches?.[0]
+    if (!touch) return
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+    setPageMotion({ offset: 0, blur: false, active: true })
+  }
+
+  function handleTouchMove(event) {
+    const touch = event.touches?.[0]
+    if (!touch) return
+    const dx = touch.clientX - touchStartRef.current.x
+    const dy = touch.clientY - touchStartRef.current.y
+    if (Math.abs(dx) < Math.abs(dy)) return
+    const limited = Math.max(-64, Math.min(64, dx))
+    setPageMotion({ offset: limited, blur: Math.abs(limited) > 18, active: true })
+  }
+
+  function handleTouchEnd(event) {
+    const touch = event.changedTouches?.[0]
+    if (!touch) {
+      setPageMotion({ offset: 0, blur: false, active: false })
+      return
+    }
+    const dx = touch.clientX - touchStartRef.current.x
+    const next = dx < -72 ? page + 1 : dx > 72 ? page - 1 : page
+    const canTurn = next !== page && next >= 1 && next <= pageCount
+    if (canTurn) {
+      setPageMotion({ offset: dx < 0 ? -38 : 38, blur: true, active: false })
+      changePage(next)
+      window.setTimeout(() => setPageMotion({ offset: 0, blur: false, active: false }), 150)
+    } else {
+      setPageMotion({ offset: 0, blur: false, active: false })
+    }
+  }
+
   return (
     <div style={{
       minHeight: '100dvh',
@@ -233,7 +270,12 @@ export default function Gallery() {
           <button onClick={() => navigate('/new')} style={{ ...iconButtonStyle, color: '#fff', background: 'rgba(156,66,51,0.92)' }}>＋</button>
         </div>
 
-        <GlassShell style={{ borderRadius: 28, marginTop: 2, padding: 10, position: 'relative', overflow: 'hidden' }}>
+        <GlassShell
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ borderRadius: 28, marginTop: 2, padding: 10, position: 'relative', overflow: 'hidden', touchAction: 'pan-y' }}
+        >
           <div style={{
             position: 'absolute',
             inset: -50,
@@ -253,6 +295,10 @@ export default function Gallery() {
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.78)',
             padding: '16px 12px 16px 26px',
             overflow: 'hidden',
+            transform: `translateX(${pageMotion.offset}px) scale(${pageMotion.blur ? 0.992 : 1})`,
+            filter: pageMotion.blur ? 'blur(1.6px)' : 'blur(0)',
+            transition: pageMotion.active ? 'filter 120ms ease' : 'transform 260ms cubic-bezier(.2,.78,.22,1), filter 260ms ease',
+            willChange: 'transform, filter',
           }}>
             <div style={{ position: 'absolute', left: 8, top: 20, bottom: 20, display: 'grid', gap: 14, alignContent: 'space-around' }}>
               {Array.from({ length: 10 }, (_, i) => (

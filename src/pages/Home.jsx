@@ -285,6 +285,47 @@ export default function Home() {
         </div>
 
         <main style={{ display: 'grid', gap: 14, paddingTop: 2 }}>
+          <div style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 26,
+            padding: '5px 56px 7px 4px',
+            minHeight: 42,
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <h2 style={{
+              margin: 0,
+              width: '100%',
+              color: T.primary,
+              fontFamily: T.fontTitle,
+              fontSize: 27,
+              lineHeight: '34px',
+              fontWeight: 760,
+              fontStyle: 'italic',
+              letterSpacing: 0,
+              textShadow: '0 1px 0 rgba(255,255,255,0.70), 0 10px 24px rgba(143,52,40,0.10)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {myName}和{partnerName}的小屋
+            </h2>
+            <span style={{
+              position: 'absolute',
+              top: 1,
+              bottom: 1,
+              left: '-44%',
+              width: '38%',
+              borderRadius: 999,
+              background: 'linear-gradient(100deg, transparent, rgba(255,255,255,0.72), rgba(199,230,236,0.44), transparent)',
+              filter: 'blur(8px)',
+              transform: 'skewX(-16deg)',
+              animation: 'titleLightFlow 4.8s ease-in-out infinite',
+              pointerEvents: 'none',
+            }} />
+          </div>
+
           <GlassPanel style={{ borderRadius: 30, padding: '18px 16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
@@ -697,6 +738,12 @@ export default function Home() {
         @keyframes liquidFlow {
           from { transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1); }
           to { transform: translate3d(4%, 3%, 0) rotate(14deg) scale(1.06); }
+        }
+        @keyframes titleLightFlow {
+          0% { transform: translateX(0) skewX(-16deg); opacity: 0; }
+          18% { opacity: 0.95; }
+          58% { opacity: 0.95; }
+          100% { transform: translateX(390%) skewX(-16deg); opacity: 0; }
         }
         button { -webkit-tap-highlight-color: transparent; }
         button:active { transform: scale(0.98); }
