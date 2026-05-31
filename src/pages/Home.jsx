@@ -361,7 +361,7 @@ export default function Home() {
                   width: '100%',
                   minHeight: 112,
                   display: 'grid',
-                  gridTemplateColumns: '1fr 132px',
+                  gridTemplateColumns: '1fr 90px',
                   alignItems: 'center',
                   border: 'none',
                   background: 'transparent',
@@ -406,28 +406,28 @@ export default function Home() {
                     position: 'absolute',
                     right: 18,
                     bottom: 10,
-                    width: 54,
-                    height: 54,
+                    width: 38,
+                    height: 38,
                     borderRadius: '48% 48% 44% 44%',
                     background: 'rgba(255,255,255,0.62)',
                     border: '1px solid rgba(255,255,255,0.78)',
                   }} />
                   <span style={{
                     position: 'absolute',
-                    right: 24,
-                    bottom: 52,
-                    width: 14,
-                    height: 18,
+                    right: 18,
+                    bottom: 38,
+                    width: 10,
+                    height: 14,
                     borderRadius: '70% 30% 60% 40%',
                     background: 'rgba(255,255,255,0.72)',
                     transform: 'rotate(-18deg)',
                   }} />
                   <span style={{
                     position: 'absolute',
-                    right: 55,
-                    bottom: 50,
-                    width: 14,
-                    height: 18,
+                    right: 40,
+                    bottom: 36,
+                    width: 10,
+                    height: 14,
                     borderRadius: '30% 70% 40% 60%',
                     background: 'rgba(255,255,255,0.72)',
                     transform: 'rotate(18deg)',
@@ -439,8 +439,8 @@ export default function Home() {
 
           <section>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '2px 2px 8px' }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8, fontFamily: T.fontTitle, fontSize: 24, lineHeight: '28px', color: T.ink, fontWeight: 760 }}>
-                <span style={{ width: 4, height: 22, borderRadius: 999, background: T.primary }} />
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontFamily: T.fontTitle, fontSize: 18, lineHeight: '22px', color: T.primarySoft, fontWeight: 700 }}>
+                <span style={{ width: 3, height: 16, borderRadius: 999, background: T.primarySoft }} />
                 最近记忆
               </h3>
               <button onClick={() => navigate('/gallery')} style={{
@@ -455,7 +455,7 @@ export default function Home() {
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.18fr 0.92fr', gridTemplateRows: '1fr 1fr', gap: 12, height: 318, paddingBottom: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.18fr 0.92fr', gridTemplateRows: '1fr 1fr', gap: 10, height: 280, paddingBottom: 8 }}>
               {[recentMemories[0], recentMemories[1], recentMemories[2]].filter(Boolean).map((memory, index) => (
                 <article
                   key={memory.id}
