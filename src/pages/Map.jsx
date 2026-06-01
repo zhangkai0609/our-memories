@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import { getCached, setCached } from '../lib/cache'
+import { unpackMemoryContent } from '../lib/audioMemory'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 
@@ -24,8 +26,8 @@ const navItems = [
 
 /* ═══ 用户头像标记（memoized 避免每帧重建） ═══ */
 const iconCache = {}
-function getOrCreateIcon(avatarUrl, name) {
-  const key = avatarUrl || name || 'default'
+function getOrCreateIcon(avatarUrl, name, active = false) {
+  const key = `${avatarUrl || name || 'default'}_${active ? 'active' : 'idle'}`
   if (iconCache[key]) return iconCache[key]
   const initial = (name || '?')[0]
   const imgHtml = avatarUrl
@@ -33,11 +35,33 @@ function getOrCreateIcon(avatarUrl, name) {
     : `<span style="font-size:16px;font-weight:700;color:#8f3428">${initial}</span>`
   const icon = new L.DivIcon({
     className: '',
-    html: `<div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;border:3px solid #8f3428;box-shadow:0 4px 16px rgba(143,52,40,0.30);overflow:hidden">${imgHtml}</div>`,
-    iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -24],
+    html: `<div style="width:${active ? 50 : 42}px;height:${active ? 50 : 42}px;border-radius:50%;background:rgba(255,255,255,0.86);display:flex;align-items:center;justify-content:center;border:${active ? 4 : 3}px solid #8f3428;box-shadow:0 10px 26px rgba(143,52,40,0.32),0 0 0 9px rgba(143,52,40,0.10);overflow:hidden;backdrop-filter:blur(10px)">${imgHtml}</div>`,
+    iconSize: [active ? 50 : 42, active ? 50 : 42], iconAnchor: [active ? 25 : 21, active ? 25 : 21], popupAnchor: [0, -28],
   })
   iconCache[key] = icon
   return icon
+}
+
+function normalizeCoordinates(coords) {
+  if (!coords) return null
+  if (typeof coords === 'string') {
+    try { return normalizeCoordinates(JSON.parse(coords)) } catch { return null }
+  }
+  const lat = Number(coords.lat ?? coords.latitude)
+  const lng = Number(coords.lng ?? coords.lon ?? coords.longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  return { lat, lng }
+}
+
+function normalizeMemory(memory) {
+  const parsed = unpackMemoryContent(memory.content || '')
+  return {
+    ...memory,
+    content: parsed.text,
+    audioUrl: parsed.audioUrl,
+    coordinates: normalizeCoordinates(memory.coordinates),
+    image_urls: Array.isArray(memory.image_urls) ? memory.image_urls : [],
+  }
 }
 
 /* ═══ Geocode 缓存（localStorage 持久化，含失败缓存） ═══ */
@@ -56,12 +80,16 @@ function readGeoCache(query) {
       return null
     }
     return entry.lat === null ? null : entry
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 function writeGeoCache(query, result) {
   try {
     localStorage.setItem(geoCacheKey(query), JSON.stringify({ ...result, ts: Date.now() }))
-  } catch {}
+  } catch {
+    // localStorage can be unavailable in private browsing.
+  }
 }
 
 /* ═══ Nominatim geocode（2次重试 + 缓存） ═══ */
@@ -81,7 +109,9 @@ async function geocodeOnce(query) {
       writeGeoCache(query, r)
       return r
     }
-  } catch {}
+  } catch {
+    // Network geocoding can fail; the location stays in the pending list.
+  }
   // 短地址重试
   const parts = query.split(/[,，·\s]+/).filter(Boolean)
   if (parts.length > 1) {
@@ -96,7 +126,9 @@ async function geocodeOnce(query) {
           writeGeoCache(query, r)
           return r
         }
-      } catch {}
+      } catch {
+        // Keep the original location in the pending list.
+      }
     }
   }
   // 缓存失败结果
@@ -116,19 +148,38 @@ function MapResizeHandler({ panelOpen }) {
     const ro = new ResizeObserver(() => { map.invalidateSize() })
     if (container) ro.observe(container)
     return () => { clearTimeout(t); ro.disconnect() }
-  }, [])
+  }, [map])
   useEffect(() => {
     if (prevOpen.current !== panelOpen) {
       prevOpen.current = panelOpen
       setTimeout(() => map.invalidateSize(), 350) // 等面板动画结束
     }
-  }, [panelOpen])
+  }, [map, panelOpen])
+  return null
+}
+
+function FitMarkers({ markers, selectedMarker }) {
+  const map = useMap()
+  useEffect(() => {
+    if (selectedMarker?.lat != null) {
+      map.flyTo([selectedMarker.lat, selectedMarker.lng], Math.max(map.getZoom(), 13), { duration: 0.65 })
+      return
+    }
+    if (markers.length === 1) {
+      map.setView([markers[0].lat, markers[0].lng], 12)
+      return
+    }
+    if (markers.length > 1) {
+      const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng]))
+      map.fitBounds(bounds, { paddingTopLeft: [44, 96], paddingBottomRight: [44, 190], maxZoom: 12 })
+    }
+  }, [map, markers, selectedMarker])
   return null
 }
 
 /* ═══ TileLayer with fallback ═══ */
 function SafeTileLayer() {
-  const handleError = useCallback((e) => {
+  const handleError = useCallback(() => {
     // Carto 瓦片失败时静默处理（浏览器会自动重试）
   }, [])
   return (
@@ -143,6 +194,126 @@ function SafeTileLayer() {
   )
 }
 
+function SelectedPlaceCard({ marker, onClose }) {
+  const first = marker.memories?.[0] || {}
+  const photo = first.image_urls?.[0]
+  return (
+    <section style={{
+      position: 'absolute',
+      left: 14,
+      right: 14,
+      bottom: 'calc(108px + env(safe-area-inset-bottom))',
+      zIndex: 6300,
+      borderRadius: 28,
+      border: `1.5px solid ${T.border}`,
+      background: 'linear-gradient(145deg, rgba(255,255,255,0.82), rgba(255,255,255,0.40) 54%, rgba(207,229,234,0.28))',
+      backdropFilter: 'blur(30px) saturate(1.45)',
+      WebkitBackdropFilter: 'blur(30px) saturate(1.45)',
+      boxShadow: '0 24px 58px rgba(64,80,86,0.22), inset 0 1px 0 rgba(255,255,255,0.86)',
+      padding: 12,
+      overflow: 'hidden',
+    }}>
+      <div style={{ display: 'grid', gridTemplateColumns: photo ? '82px 1fr 28px' : '1fr 28px', gap: 10, alignItems: 'start' }}>
+        {photo && (
+          <img src={photo} alt="" style={{ width: 82, height: 82, borderRadius: 18, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.72)' }} />
+        )}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: T.primary, boxShadow: '0 0 0 5px rgba(143,52,40,0.10)' }} />
+            <span style={{ color: T.sage, fontSize: 11, fontWeight: 900 }}>已标注在地图上</span>
+          </div>
+          <h2 style={{ margin: 0, color: T.primary, fontFamily: T.fontTitle, fontSize: 22, lineHeight: '25px', fontWeight: 760 }}>
+            {first.title || '这里的回忆'}
+          </h2>
+          <p style={{ margin: '4px 0 0', color: T.muted, fontSize: 11, lineHeight: '16px', fontWeight: 750, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            ⌖ {marker.location}
+          </p>
+          {first.content && (
+            <p style={{ margin: '6px 0 0', color: T.ink, fontSize: 12, lineHeight: '18px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {first.content}
+            </p>
+          )}
+        </div>
+        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: `1px solid ${T.border}`, background: 'rgba(255,255,255,0.48)', color: T.muted, cursor: 'pointer', fontSize: 16 }}>×</button>
+      </div>
+      <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingTop: 9 }}>
+        {(marker.memories || []).map(memory => (
+          <div key={memory.id} style={{
+            flex: '0 0 auto',
+            maxWidth: 156,
+            borderRadius: 999,
+            border: '1px solid rgba(255,255,255,0.68)',
+            background: 'rgba(255,255,255,0.42)',
+            color: T.muted,
+            padding: '6px 10px',
+            fontSize: 10,
+            fontWeight: 850,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {memory.audioUrl ? '▶ ' : ''}{memory.title || '一条记忆'}
+          </div>
+        ))}
+      </div>
+      {first.audioUrl && (
+        <div style={{ marginTop: 8, borderRadius: 999, overflow: 'hidden', background: 'rgba(255,255,255,0.44)', border: `1px solid ${T.border}` }}>
+          <audio controls src={first.audioUrl} style={{ width: '100%', height: 32 }} />
+        </div>
+      )}
+    </section>
+  )
+}
+
+const glassIconButtonStyle = {
+  width: 42,
+  height: 42,
+  borderRadius: '50%',
+  border: `1px solid ${T.border}`,
+  background: 'rgba(255,255,255,0.58)',
+  color: T.primary,
+  fontFamily: T.fontBody,
+  fontSize: 24,
+  fontWeight: 900,
+  display: 'grid',
+  placeItems: 'center',
+  cursor: 'pointer',
+  boxShadow: T.softShadow,
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+}
+
+const glassSmallButtonStyle = {
+  border: `1px solid ${T.border}`,
+  borderRadius: 999,
+  background: 'rgba(255,255,255,0.64)',
+  color: T.primary,
+  padding: '9px 12px',
+  fontFamily: T.fontBody,
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: 'pointer',
+  boxShadow: T.softShadow,
+  backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
+}
+
+const statPillStyle = {
+  minHeight: 46,
+  borderRadius: 18,
+  border: `1px solid ${T.border}`,
+  background: 'linear-gradient(145deg, rgba(255,255,255,0.74), rgba(207,229,234,0.30))',
+  backdropFilter: 'blur(22px) saturate(1.35)',
+  WebkitBackdropFilter: 'blur(22px) saturate(1.35)',
+  boxShadow: T.softShadow,
+  display: 'grid',
+  placeItems: 'center',
+  alignContent: 'center',
+  color: T.primary,
+  fontSize: 10,
+  fontWeight: 900,
+}
+
 /* ═══ 主组件 ═══ */
 export default function MapPage() {
   const navigate = useNavigate()
@@ -153,122 +324,150 @@ export default function MapPage() {
   const [markers, setMarkers] = useState([])
   const [unknownLocs, setUnknownLocs] = useState([])
   const [panelOpen, setPanelOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [geocoding, setGeocoding] = useState(0)
   const [selectedMarker, setSelectedMarker] = useState(null)
   const cancelRef = useRef(false)
-  const batchRef = useRef([])
-  const batchTimerRef = useRef(null)
-
-  // 初始化加载
-  useEffect(() => {
-    cancelRef.current = false
-    loadData()
-    return () => { cancelRef.current = true; clearTimeout(batchTimerRef.current) }
-  }, [])
 
   async function loadData() {
     const roomCode = localStorage.getItem('room_code')
     if (!roomCode) return
 
     try {
+      const cached = (getCached('memories') || []).map(normalizeMemory).filter(m => m.location)
+      if (cached.length) groupMemories(cached)
       const { data } = await supabase.from('memories')
-        .select('id,title,content,location,author,coordinates,created_at')
+        .select('id,title,content,location,author,coordinates,created_at,image_urls,room_code')
         .eq('room_code', roomCode)
         .not('location', 'is', null)
         .order('created_at', { ascending: false })
 
-      if (cancelRef.current || !data?.length) return
-
-      // 按地点分组
-      const locMap = new Map()
-      data.forEach(m => {
-        const loc = m.location.trim()
-        if (!loc) return
-        if (!locMap.has(loc)) locMap.set(loc, [])
-        locMap.get(loc).push(m)
-      })
-
-      // 有坐标 → 立即显示
-      const withCoord = []
-      const withoutCoord = []
-      locMap.forEach((mems, loc) => {
-        const m = mems.find(x => x.coordinates?.lat)
-        if (m) withCoord.push({ location: loc, lat: m.coordinates.lat, lng: m.coordinates.lng, memories: mems })
-        else withoutCoord.push({ location: loc, memories: mems })
-      })
-
-      setMarkers(withCoord)
-      setUnknownLocs(withoutCoord)
-
-      // 后台 geocode（低优先级、分批、可取消）
-      if (withoutCoord.length > 0) {
-        setGeocoding(withoutCoord.length)
-        const queue = [...withoutCoord]
-        const resolved = []
-
-        for (let i = 0; i < queue.length; i++) {
-          if (cancelRef.current) break
-          const item = queue[i]
-          const coord = await geocodeOnce(item.location)
-          if (cancelRef.current) break
-
-          if (coord) {
-            resolved.push({ ...item, lat: coord.lat, lng: coord.lng })
-          }
-
-          // 每 3 个或最后一批才更新一次 state
-          if (resolved.length >= 3 || i === queue.length - 1) {
-            if (resolved.length > 0) {
-              setMarkers(prev => [...prev, ...resolved])
-              resolved.length = 0
-            }
-            setGeocoding(queue.length - i - 1)
-            setUnknownLocs(prev => prev.slice(resolved.length + 1))
-          }
-
-          // 限速 400ms
-          if (i < queue.length - 1) await new Promise(r => setTimeout(r, 400))
-        }
+      if (cancelRef.current) return
+      const next = (data || []).map(normalizeMemory).filter(m => m.location)
+      if (next.length) {
+        groupMemories(next)
+        setCached('memories', data || [])
+      } else if (!cached.length) {
+        setMarkers([])
+        setUnknownLocs([])
       }
-    } catch { /* silent */ }
+      setLoading(false)
+    } catch {
+      setLoading(false)
+    }
   }
+
+  function groupMemories(memories) {
+    const locMap = new Map()
+    memories.forEach(m => {
+      const loc = (m.location || '').trim()
+      if (!loc) return
+      if (!locMap.has(loc)) locMap.set(loc, [])
+      locMap.get(loc).push(m)
+    })
+
+    const withCoord = []
+    const withoutCoord = []
+    locMap.forEach((mems, loc) => {
+      const m = mems.find(x => x.coordinates?.lat != null)
+      if (m) withCoord.push({ location: loc, lat: m.coordinates.lat, lng: m.coordinates.lng, memories: mems })
+      else withoutCoord.push({ location: loc, memories: mems })
+    })
+
+    setMarkers(withCoord)
+    setUnknownLocs(withoutCoord)
+    if (withCoord[0]) setSelectedMarker(prev => prev || withCoord[0])
+    if (withoutCoord.length) geocodeLocations(withoutCoord)
+  }
+
+  async function geocodeLocations(items) {
+    setGeocoding(items.length)
+    for (let i = 0; i < items.length; i += 1) {
+      if (cancelRef.current) break
+      const item = items[i]
+      const coord = await geocodeOnce(item.location)
+      if (cancelRef.current) break
+
+      if (coord?.lat != null) {
+        const resolved = { ...item, lat: coord.lat, lng: coord.lng }
+        setMarkers(prev => prev.some(m => m.location === resolved.location) ? prev : [...prev, resolved])
+        setUnknownLocs(prev => prev.filter(m => m.location !== resolved.location))
+      }
+      setGeocoding(items.length - i - 1)
+      if (i < items.length - 1) await new Promise(r => setTimeout(r, 450))
+    }
+  }
+
+  // 初始化加载
+  useEffect(() => {
+    cancelRef.current = false
+    Promise.resolve().then(loadData)
+    return () => { cancelRef.current = true }
+    // loadData reads localStorage and is only needed for this page mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Memoized 值
   const validMarkers = useMemo(() => markers.filter(m => m.lat != null), [markers])
+  const stats = useMemo(() => ({
+    places: validMarkers.length,
+    memories: validMarkers.reduce((sum, item) => sum + (item.memories?.length || 0), 0) + unknownLocs.reduce((sum, item) => sum + (item.memories?.length || 0), 0),
+    pending: unknownLocs.length,
+  }), [validMarkers, unknownLocs])
 
   function getIcon(marker) {
     const author = marker.memories?.[0]?.author || ''
     const avatar = author === myName ? myAvatar : partnerAvatar
-    return getOrCreateIcon(avatar, author)
+    return getOrCreateIcon(avatar, author, selectedMarker?.location === marker.location)
   }
 
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody }}>
-      {/* ═══ Header ═══ */}
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: T.bg, fontFamily: T.fontBody, position: 'relative', overflow: 'hidden' }}>
       <div style={{
-        position: 'fixed', top: 'calc(12px + env(safe-area-inset-top))', right: 14,
-        background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none',
-        padding: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
-        borderBottom: 'none', zIndex: 9000, flexShrink: 0, pointerEvents: 'none',
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        background: 'radial-gradient(circle at 18% 8%, rgba(255,255,255,0.78), transparent 30%), radial-gradient(circle at 92% 20%, rgba(185,215,223,0.42), transparent 32%), linear-gradient(180deg, rgba(244,250,250,0.46), rgba(255,242,238,0.32))',
+      }} />
+
+      <header style={{
+        position: 'fixed',
+        top: 'calc(12px + env(safe-area-inset-top))',
+        left: 14,
+        right: 14,
+        zIndex: 9000,
+        display: 'grid',
+        gridTemplateColumns: '44px 1fr 44px',
+        alignItems: 'center',
+        gap: 8,
+        pointerEvents: 'none',
       }}>
-        <div style={{ display: 'none', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: T.primary, cursor: 'pointer', fontSize: 16, fontFamily: T.fontBody }}>←</button>
-          <h1 style={{ fontFamily: T.fontTitle, fontSize: 20, color: T.ink, fontWeight: 600, margin: 0 }}>足迹地图</h1>
+        <button onClick={() => navigate('/')} style={{ ...glassIconButtonStyle, pointerEvents: 'auto' }}>‹</button>
+        <div style={{
+          justifySelf: 'center',
+          border: `1px solid ${T.border}`,
+          background: 'rgba(255,255,255,0.58)',
+          backdropFilter: 'blur(24px) saturate(1.35)',
+          WebkitBackdropFilter: 'blur(24px) saturate(1.35)',
+          borderRadius: 999,
+          padding: '8px 16px',
+          boxShadow: T.softShadow,
+          textAlign: 'center',
+          pointerEvents: 'auto',
+        }}>
+          <h1 style={{ fontFamily: T.fontTitle, fontSize: 20, lineHeight: '22px', color: T.primary, fontWeight: 760, margin: 0 }}>足迹地图</h1>
+          <p style={{ margin: '1px 0 0', color: T.muted, fontSize: 10, fontWeight: 800 }}>{stats.memories} 个回忆 · {stats.places} 个地点</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {geocoding > 0 && <span style={{ fontSize: 11, color: T.muted }}>解析中...</span>}
-          <button onClick={() => setPanelOpen(!panelOpen)}
-            style={{ background: T.primary, color: '#fff', border: '1px solid rgba(255,255,255,0.72)', borderRadius: 999, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: T.fontBody, boxShadow: '0 10px 24px rgba(143,52,40,0.24)', backdropFilter: 'blur(16px)' }}>
-            {panelOpen ? '收起' : `${validMarkers.length + unknownLocs.length} 个足迹`}
-          </button>
-        </div>
-      </div>
+        <button onClick={() => navigate('/new')} style={{ ...glassIconButtonStyle, pointerEvents: 'auto', color: '#fff', background: T.primary }}>＋</button>
+      </header>
 
       {/* ═══ 地图（无动态 key，避免重挂载） ═══ */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        <MapContainer center={[35, 105]} zoom={5} style={{ width: '100%', height: '100%' }} zoomControl={true}>
+      <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+        <MapContainer center={[35, 105]} zoom={5} style={{ width: '100%', height: '100%' }} zoomControl={false}>
           <SafeTileLayer />
           <MapResizeHandler panelOpen={panelOpen} />
+          <FitMarkers markers={validMarkers} selectedMarker={selectedMarker} />
 
           {validMarkers.map((g, i) => (
             <Marker key={g.location || i} position={[g.lat, g.lng]} icon={getIcon(g)}
@@ -283,7 +482,7 @@ export default function MapPage() {
                     <div key={m.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 6 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 13, fontWeight: 600, color: T.ink, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title || '无标题'}</p>
-                        <p style={{ fontSize: 11, color: T.muted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{(m.content || '').slice(0, 60)}</p>
+                        <p style={{ fontSize: 11, color: T.muted, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{(m.content || '有一段回忆留在这里').slice(0, 60)}</p>
                       </div>
                     </div>
                   ))}
@@ -293,16 +492,68 @@ export default function MapPage() {
           ))}
         </MapContainer>
 
+        <div style={{
+          position: 'absolute',
+          left: 14,
+          right: 14,
+          top: 'calc(88px + env(safe-area-inset-top))',
+          zIndex: 6200,
+          display: 'grid',
+          gridTemplateColumns: '1fr auto',
+          gap: 8,
+          alignItems: 'center',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, pointerEvents: 'auto' }}>
+            {[
+              ['地点', stats.places],
+              ['记忆', stats.memories],
+              ['待定位', stats.pending],
+            ].map(([label, value]) => (
+              <div key={label} style={statPillStyle}>
+                <b>{value}</b>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setPanelOpen(!panelOpen)}
+            style={{ ...glassSmallButtonStyle, pointerEvents: 'auto' }}>
+            {panelOpen ? '收起' : '列表'}
+          </button>
+        </div>
+
+        {loading && (
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            top: '48%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 25,
+            borderRadius: 999,
+            padding: '10px 16px',
+            color: T.primary,
+            fontSize: 12,
+            fontWeight: 900,
+            background: 'rgba(255,255,255,0.66)',
+            border: `1px solid ${T.border}`,
+            backdropFilter: 'blur(20px)',
+          }}>正在读取足迹...</div>
+        )}
+
+        {selectedMarker && (
+          <SelectedPlaceCard marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+        )}
+
         {/* ═══ 顶部浮动足迹面板 ═══ */}
         <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-          maxHeight: panelOpen ? '50%' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease',
+          position: 'absolute', top: 0, left: 0, right: 0, zIndex: 7000,
+          maxHeight: panelOpen ? '62%' : '0', overflow: 'hidden', transition: 'max-height 0.35s ease',
         }}>
-          <div style={{ background: 'rgba(255,250,248,0.96)', backdropFilter: 'blur(14px)', borderBottom: `1px solid ${T.borderWarm}`, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, boxShadow: T.softShadow, maxHeight: '50vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 16px 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ background: 'rgba(255,250,248,0.78)', backdropFilter: 'blur(26px) saturate(1.35)', WebkitBackdropFilter: 'blur(26px) saturate(1.35)', borderBottom: `1px solid ${T.border}`, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, boxShadow: T.softShadow, maxHeight: '62vh', display: 'flex', flexDirection: 'column', paddingTop: 'calc(82px + env(safe-area-inset-top))' }}>
+            <div style={{ padding: '10px 16px 6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div>
                 <h2 style={{ fontFamily: T.fontTitle, fontSize: 17, color: T.ink, margin: 0 }}>足迹列表</h2>
-                <p style={{ fontSize: 11, color: T.muted, margin: '2px 0 0' }}>{validMarkers.length} 定位 · {unknownLocs.length} 待解析</p>
+                <p style={{ fontSize: 11, color: T.muted, margin: '2px 0 0' }}>{validMarkers.length} 已标注 · {unknownLocs.length} 待定位 {geocoding > 0 ? `· 解析中 ${geocoding}` : ''}</p>
               </div>
               <button onClick={() => setPanelOpen(false)} style={{ background: 'rgba(143,52,40,0.08)', border: 'none', borderRadius: 10, padding: '4px 12px', cursor: 'pointer', fontSize: 11, color: T.muted, fontFamily: T.fontBody }}>收起</button>
             </div>
@@ -312,11 +563,11 @@ export default function MapPage() {
               ) : (
                 <>
                   {validMarkers.map((g, i) => (
-                    <div key={i} onClick={() => { setSelectedMarker(g); setPanelOpen(false) }}
+                    <div key={g.location || i} onClick={() => { setSelectedMarker(g); setPanelOpen(false) }}
                       style={{ padding: '10px 12px', borderRadius: 14, cursor: 'pointer', marginBottom: 6, background: selectedMarker?.lat === g.lat ? T.primarySoft : 'rgba(255,255,255,0.7)', border: `1px solid ${selectedMarker?.lat === g.lat ? T.borderWarm : 'rgba(0,0,0,0.04)'}`, transition: 'all 0.2s' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h4 style={{ fontFamily: T.fontTitle, fontSize: 14, color: T.ink, margin: 0 }}>{(g.location || '').slice(0, 22)}</h4>
-                        <span style={{ fontSize: 11, color: T.primary, fontWeight: 600 }}>{g.memories?.length || 0}条</span>
+                        <span style={{ fontSize: 11, color: T.primary, fontWeight: 800 }}>已标注 · {g.memories?.length || 0}条</span>
                       </div>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
                         {(g.memories || []).slice(0, 3).map(m => (
@@ -326,8 +577,8 @@ export default function MapPage() {
                     </div>
                   ))}
                   {unknownLocs.map((g, i) => (
-                    <div key={`unk-${i}`} style={{ padding: '8px 12px', borderRadius: 12, marginBottom: 4, opacity: 0.5, border: '1px dashed rgba(0,0,0,0.08)', background: 'rgba(255,255,255,0.3)' }}>
-                      <span style={{ fontSize: 12, color: T.muted }}>📍 {(g.location || '').slice(0, 26)}</span>
+                    <div key={`unk-${g.location || i}`} style={{ padding: '8px 12px', borderRadius: 12, marginBottom: 4, opacity: 0.72, border: '1px dashed rgba(143,52,40,0.18)', background: 'rgba(255,255,255,0.40)' }}>
+                      <span style={{ fontSize: 12, color: T.muted }}>⌖ {(g.location || '').slice(0, 26)}</span>
                       <span style={{ fontSize: 10, color: T.muted, marginLeft: 8 }}>待解析 · {g.memories?.length || 0}条</span>
                     </div>
                   ))}
