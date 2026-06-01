@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { exitRoom as clearActiveRoom, loadRoomProfile, saveRoomProfile } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 
 const T = {
@@ -43,30 +44,34 @@ export default function MyPage() {
   const [showEdit,setShowEdit]=useState(false)
   const [show退出小屋,setShow退出小屋]=useState(false)
   const [loggingOut,setLoggingOut]=useState(false)
-  const [myName,setMyName]=useState(localStorage.getItem('my_name')||'')
-  const [partnerName,setPartnerName]=useState(localStorage.getItem('partner_name')||'')
-  const [myAvatar,setMyAvatar]=useState(localStorage.getItem('my_avatar')||null)
-  const [partnerAvatar,setPartnerAvatar]=useState(localStorage.getItem('partner_avatar')||null)
+  const profile=loadRoomProfile(localStorage.getItem('room_code'))
+  const [myName,setMyName]=useState(profile.myName||'')
+  const [partnerName,setPartnerName]=useState(profile.partnerName||'')
+  const [myAvatar,setMyAvatar]=useState(profile.myAvatar||null)
+  const [partnerAvatar,setPartnerAvatar]=useState(profile.partnerAvatar||null)
   const [myPet,setMyPet]=useState(localStorage.getItem('my_pet')||null)
   const [partnerPet,setPartnerPet]=useState(localStorage.getItem('partner_pet')||null)
   const meRef=useRef(null);const partnerRef=useRef(null);const myPetRef=useRef(null);const partnerPetRef=useRef(null)
 
-  useEffect(()=>{fetchStats()},[])
-
   async function fetchStats(){
     try{const rc=localStorage.getItem('room_code');if(!rc)return
       const {count}=await supabase.from('memories').select('id',{count:'exact'}).eq('room_code',rc)
-      if(count!=null)setStats(s=>({...s,diary:count}))}catch{}
+      if(count!=null)setStats(s=>({...s,diary:count}))}catch{
+      // Keep the visual fallback stats if the count request fails.
+    }
   }
+
+  useEffect(()=>{Promise.resolve().then(fetchStats)},[])
 
   function rd(e,cb){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f)}
   function saveProfile(){
     if(myName)localStorage.setItem('my_name',myName);if(partnerName)localStorage.setItem('partner_name',partnerName)
     if(myAvatar)localStorage.setItem('my_avatar',myAvatar);if(partnerAvatar)localStorage.setItem('partner_avatar',partnerAvatar)
     if(myPet)localStorage.setItem('my_pet',myPet);if(partnerPet)localStorage.setItem('partner_pet',partnerPet)
+    saveRoomProfile({myName,partnerName,myAvatar,partnerAvatar})
     setShowEdit(false);window.location.reload()
   }
-  function handle退出小屋(){setLoggingOut(true);localStorage.removeItem('room_code');window.location.reload()}
+  function handle退出小屋(){setLoggingOut(true);clearActiveRoom();window.location.reload()}
 
   const statItems=[{icon:'📔',val:stats.diary||142,label:'日记'},{icon:'📷',val:stats.photos,label:'照片'},{icon:'🗺',val:stats.footprints,label:'足迹'},{icon:'💝',val:stats.years,label:'年'}]
 

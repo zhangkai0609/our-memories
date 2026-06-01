@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
 import { packMemoryContent } from '../lib/audioMemory'
 import { bumpVersion } from '../lib/cache'
+import { loadRoomProfile, setRoomValue } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
 import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
@@ -93,8 +94,10 @@ export default function NewRecord() {
   const streamRef = useRef(null)
   const audioChunksRef = useRef([])
   const previewRef = useRef([])
-  const myName = localStorage.getItem('my_name') || '小周同学'
-  const partnerName = localStorage.getItem('partner_name') || '另一半'
+  const roomCode = localStorage.getItem('room_code')
+  const profile = loadRoomProfile(roomCode)
+  const myName = profile.myName || '小周同学'
+  const partnerName = profile.partnerName || '另一半'
 
   const draft = useMemo(() => {
     try { return JSON.parse(localStorage.getItem(draftKey) || '{}') } catch { return {} }
@@ -105,7 +108,7 @@ export default function NewRecord() {
   const [location, setLocation] = useState(draft.location || '')
   const [coords, setCoords] = useState(draft.coords || null)
   const [theme, setTheme] = useState(draft.theme || '日常')
-  const [author, setAuthor] = useState(localStorage.getItem('current_author') || myName)
+  const [author, setAuthor] = useState(profile.currentAuthor || myName)
   const [files, setFiles] = useState([])
   const [previews, setPreviews] = useState([])
   const [pastLocations, setPastLocations] = useState([])
@@ -114,7 +117,7 @@ export default function NewRecord() {
   const [recording, setRecording] = useState(false)
   const [audioUrl, setAudioUrl] = useState(draft.audioUrl || '')
   const [saving, setSaving] = useState(false)
-  const homeTheme = localStorage.getItem('home_theme') || 'dream'
+  const homeTheme = profile.homeTheme || 'dream'
   const pageBackground = homeThemes[homeTheme] || homeThemes.dream
 
   const fetchPastLocations = useCallback(async () => {
@@ -144,6 +147,7 @@ export default function NewRecord() {
     const next = author === myName ? partnerName : myName
     setAuthor(next)
     localStorage.setItem('current_author', next)
+    setRoomValue('current_author', next, roomCode)
   }
 
   async function locate() {
@@ -274,7 +278,6 @@ export default function NewRecord() {
       }
     }
 
-    const roomCode = localStorage.getItem('room_code')
     const recordData = {
       title: title.trim() || `${theme}记忆`,
       content: packMemoryContent(content, audioUrl),

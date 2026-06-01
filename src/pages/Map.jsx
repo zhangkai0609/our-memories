@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import AppIcon from '../components/AppIcon'
 import { getCached, setCached } from '../lib/cache'
 import { unpackMemoryContent } from '../lib/audioMemory'
+import { loadRoomProfile } from '../lib/roomProfile'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 
@@ -318,9 +319,11 @@ const statPillStyle = {
 /* ═══ 主组件 ═══ */
 export default function MapPage() {
   const navigate = useNavigate()
-  const myName = localStorage.getItem('my_name') || ''
-  const myAvatar = localStorage.getItem('my_avatar') || null
-  const partnerAvatar = localStorage.getItem('partner_avatar') || null
+  const roomCode = localStorage.getItem('room_code')
+  const profile = loadRoomProfile(roomCode)
+  const myName = profile.myName || ''
+  const myAvatar = profile.myAvatar || null
+  const partnerAvatar = profile.partnerAvatar || null
 
   const [markers, setMarkers] = useState([])
   const [unknownLocs, setUnknownLocs] = useState([])
@@ -331,7 +334,6 @@ export default function MapPage() {
   const cancelRef = useRef(false)
 
   async function loadData() {
-    const roomCode = localStorage.getItem('room_code')
     if (!roomCode) return
 
     try {
@@ -595,20 +597,20 @@ export default function MapPage() {
         position: 'fixed', left: '50%', bottom: 'calc(34px + env(safe-area-inset-bottom))',
         transform: 'translateX(-50%)', width: 'min(calc(100% - 44px), 356px)', height: 58,
         zIndex: 9999, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: 5,
-        borderRadius: 999, border: `1px solid ${T.border}`,
-        background: 'rgba(255,255,255,0.48)', backdropFilter: 'blur(28px) saturate(1.45)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.45)',
-        boxShadow: '0 18px 48px rgba(104,45,38,0.18), inset 0 1px 0 rgba(255,255,255,0.70)',
+        borderRadius: 999, border: '1px solid rgba(255,255,255,0.24)',
+        background: 'linear-gradient(135deg, rgba(72,72,72,0.84), rgba(38,38,38,0.74) 56%, rgba(92,92,92,0.58)), rgba(48,48,48,0.72)', backdropFilter: 'blur(32px) saturate(1.36)',
+        WebkitBackdropFilter: 'blur(32px) saturate(1.36)',
+        boxShadow: '0 20px 52px rgba(28,28,28,0.28), inset 0 1px 0 rgba(255,255,255,0.26)',
       }}>
         {navItems.map(item => {
           const active = item.id === 'map'
           return (
             <button key={item.id} onClick={() => navigate(item.to)} style={{
-              border: 'none', borderRadius: 999, background: 'transparent', color: active ? T.primary : T.muted,
+              border: 'none', borderRadius: 999, background: 'transparent', color: active ? T.primary : 'rgba(255,255,255,0.76)',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
               justifyContent: 'center', gap: 2, fontFamily: T.fontBody, fontSize: 12, fontWeight: 800,
             }}>
-              <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22 }}>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22, background: active ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.08)', boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.34), 0 8px 18px rgba(0,0,0,0.16)' : 'none' }}>
                 <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
               </span>
               <span>{item.label}</span>

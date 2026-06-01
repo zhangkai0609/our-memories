@@ -8,11 +8,17 @@ function roomKey() {
   return localStorage.getItem('room_code') || '_global'
 }
 
+function memoryKey(key) {
+  return `${roomKey()}_${key}`
+}
+
 function readLS(key) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null } catch { return null }
 }
 function writeLS(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)) } catch {}
+  try { localStorage.setItem(key, JSON.stringify(val)) } catch {
+    // localStorage can be unavailable in private browsing.
+  }
 }
 
 /** 获取缓存版本号 — 每次新建/修改记忆后 +1 */
@@ -29,12 +35,13 @@ export function bumpVersion() {
 
 /** 读取缓存数据 */
 export function getCached(key) {
+  const mk = memoryKey(key)
   // 1. 内存缓存 (最快)
-  if (memCache.has(key)) return memCache.get(key)
+  if (memCache.has(mk)) return memCache.get(mk)
   // 2. localStorage
   const lsData = readLS(`cache_${roomKey()}_${key}`)
   if (lsData) {
-    memCache.set(key, lsData)
+    memCache.set(mk, lsData)
     return lsData
   }
   return null
@@ -42,7 +49,7 @@ export function getCached(key) {
 
 /** 写入缓存 (同时写内存 + localStorage) */
 export function setCached(key, data) {
-  memCache.set(key, data)
+  memCache.set(memoryKey(key), data)
   writeLS(`cache_${roomKey()}_${key}`, data)
 }
 

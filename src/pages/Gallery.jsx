@@ -4,6 +4,7 @@ import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached } from '../lib/cache'
+import { loadRoomProfile } from '../lib/roomProfile'
 
 const T = {
   bg: '#fff3f1',
@@ -131,10 +132,11 @@ export default function Gallery() {
     localStorage.setItem('memory_social_v1', JSON.stringify(social))
   }, [social])
 
-  const myName = localStorage.getItem('my_name') || '小周同学'
-  const partnerName = localStorage.getItem('partner_name') || '另一半'
-  const myAvatar = localStorage.getItem('my_avatar')
-  const partnerAvatar = localStorage.getItem('partner_avatar')
+  const profile = loadRoomProfile(roomCode)
+  const myName = profile.myName || '小周同学'
+  const partnerName = profile.partnerName || '另一半'
+  const myAvatar = profile.myAvatar
+  const partnerAvatar = profile.partnerAvatar
   const pageCount = Math.max(1, Math.ceil(records.length / 2))
   const visibleRecords = useMemo(() => records.slice((page - 1) * 2, page * 2), [records, page])
 
@@ -421,11 +423,11 @@ export default function Gallery() {
         gap: 8,
         padding: 5,
         borderRadius: 999,
-        border: `1px solid ${T.border}`,
-        background: 'rgba(255,255,255,0.50)',
-        backdropFilter: 'blur(28px) saturate(1.45)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.45)',
-        boxShadow: '0 18px 48px rgba(104,45,38,0.18), inset 0 1px 0 rgba(255,255,255,0.72)',
+        border: '1px solid rgba(255,255,255,0.24)',
+        background: 'linear-gradient(135deg, rgba(72,72,72,0.84), rgba(38,38,38,0.74) 56%, rgba(92,92,92,0.58)), rgba(48,48,48,0.72)',
+        backdropFilter: 'blur(32px) saturate(1.36)',
+        WebkitBackdropFilter: 'blur(32px) saturate(1.36)',
+        boxShadow: '0 20px 52px rgba(28,28,28,0.28), inset 0 1px 0 rgba(255,255,255,0.26)',
       }}>
         {navItems.map(item => {
           const active = item.id === 'memory'
@@ -434,7 +436,7 @@ export default function Gallery() {
               border: 'none',
               borderRadius: 999,
               background: 'transparent',
-              color: active ? T.primary : T.muted,
+              color: active ? T.primary : 'rgba(255,255,255,0.76)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -454,8 +456,8 @@ export default function Gallery() {
                 placeItems: 'center',
                 fontSize: 22,
                 lineHeight: '22px',
-                background: active ? 'rgba(156,66,51,0.10)' : 'rgba(255,255,255,0.18)',
-                boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.56)' : 'none',
+                background: active ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.08)',
+                boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.34), 0 8px 18px rgba(0,0,0,0.16)' : 'none',
               }}>
                 <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
               </span>

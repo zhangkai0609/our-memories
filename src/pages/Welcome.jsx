@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
+import { enterRoom, getRoomPassword, saveRoomProfile, setRoomPassword } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 
 const T = {
@@ -25,6 +26,7 @@ const modes = [
 export default function Welcome() {
   const [step, setStep] = useState('code')
   const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
   const [mode, setMode] = useState('couple')
   const [myName, setMyName] = useState('')
   const [partnerName, setPartnerName] = useState('')
@@ -51,24 +53,38 @@ export default function Welcome() {
     setLoading(true)
     setMessage('')
     try {
+      const savedPassword = getRoomPassword(roomCode)
       const { data } = await supabase.from('memories').select('id').eq('room_code', roomCode).limit(1)
+      const roomExists = Boolean(savedPassword || data?.length)
       if (action === 'login') {
-        if (!data?.length) {
+        if (!roomExists) {
           localStorage.removeItem('room_code')
           setMessage('还没有找到这个小屋，可以先注册它')
           return
         }
-        localStorage.setItem('room_code', roomCode)
-        if (!localStorage.getItem('my_name')) {
-          localStorage.setItem('my_name', '小周同学')
-          localStorage.setItem('partner_name', '另一半')
-          localStorage.setItem('room_mode', 'couple')
+        if (!password) {
+          setMessage('请输入小屋密码')
+          return
         }
+        if (savedPassword && password !== savedPassword) {
+          setMessage('小屋密码不正确')
+          return
+        }
+        enterRoom(roomCode)
         navigate('/')
         return
       }
 
-      localStorage.setItem('room_code', roomCode)
+      if (!password || password.length < 4) {
+        setMessage('请设置至少 4 位小屋密码')
+        return
+      }
+      if (roomExists && savedPassword && password !== savedPassword) {
+        setMessage('这个小屋已经存在，请输入正确密码登录')
+        return
+      }
+      setRoomPassword(roomCode, password)
+      enterRoom(roomCode)
       setStep('mode')
     } finally {
       setLoading(false)
@@ -94,6 +110,7 @@ export default function Welcome() {
     localStorage.setItem('room_mode', mode)
     if (myAvatar) localStorage.setItem('my_avatar', myAvatar)
     if (partnerAvatar) localStorage.setItem('partner_avatar', partnerAvatar)
+    saveRoomProfile({ myName: myName || '小周同学', partnerName: partnerName || '另一半', myAvatar, partnerAvatar, roomMode: mode })
     navigate('/')
   }
 
@@ -114,6 +131,14 @@ export default function Welcome() {
                 value={code}
                 onChange={event => setCode(event.target.value)}
                 placeholder="输入小屋代号"
+                style={inputStyle}
+              />
+              <label style={labelStyle}>小屋密码</label>
+              <input
+                value={password}
+                onChange={event => setPassword(event.target.value)}
+                placeholder="输入小屋密码"
+                type="password"
                 style={inputStyle}
               />
               <button type="submit" disabled={loading} style={primaryButtonStyle}>

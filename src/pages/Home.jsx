@@ -4,6 +4,7 @@ import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
+import { exitRoom as clearActiveRoom, loadRoomProfile, saveRoomProfile, setRoomValue } from '../lib/roomProfile'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
 import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
 import bgImg3 from '../assets/微信图片_20260530235835_96883_4.png'
@@ -132,18 +133,19 @@ function GlassPanel({ children, style }) {
 export default function Home() {
   const navigate = useNavigate()
   const roomCode = localStorage.getItem('room_code')
+  const roomProfile = useMemo(() => loadRoomProfile(roomCode), [roomCode])
   const [memories, setMemories] = useState([])
   const [loading, setLoading] = useState(false)
   const [now] = useState(() => Date.now())
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileEditing, setProfileEditing] = useState(false)
   const [confirmExit, setConfirmExit] = useState(false)
-  const [theme, setTheme] = useState(() => localStorage.getItem('home_theme') || 'dream')
+  const [theme, setTheme] = useState(() => roomProfile.homeTheme || 'dream')
   const [profileDraft, setProfileDraft] = useState(() => ({
-    myName: localStorage.getItem('my_name') || '小周同学',
-    partnerName: localStorage.getItem('partner_name') || '另一半',
-    myAvatar: localStorage.getItem('my_avatar') || '',
-    partnerAvatar: localStorage.getItem('partner_avatar') || '',
+    myName: roomProfile.myName || '小周同学',
+    partnerName: roomProfile.partnerName || '另一半',
+    myAvatar: roomProfile.myAvatar || '',
+    partnerAvatar: roomProfile.partnerAvatar || '',
   }))
 
   const currentTheme = themes[theme] || themes.dream
@@ -185,6 +187,7 @@ export default function Home() {
   function selectTheme(nextTheme) {
     setTheme(nextTheme)
     localStorage.setItem('home_theme', nextTheme)
+    setRoomValue('home_theme', nextTheme, roomCode)
   }
 
   function saveProfile() {
@@ -192,6 +195,7 @@ export default function Home() {
     localStorage.setItem('partner_name', partnerName)
     if (myAvatar) localStorage.setItem('my_avatar', myAvatar)
     if (partnerAvatar) localStorage.setItem('partner_avatar', partnerAvatar)
+    saveRoomProfile({ myName, partnerName, myAvatar, partnerAvatar, homeTheme: theme }, roomCode)
     setProfileEditing(false)
   }
 
@@ -212,7 +216,7 @@ export default function Home() {
   }
 
   function exitRoom() {
-    localStorage.removeItem('room_code')
+    clearActiveRoom()
     window.location.reload()
   }
 
@@ -388,7 +392,7 @@ export default function Home() {
                     <AppIcon name={icon} size={20} strokeWidth={1.8} />
                   </div>
                   <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 34, lineHeight: '34px', fontWeight: 760 }}>
-                    {loading && label === '照片' ? '--' : value}
+                    {value}
                   </div>
                   <div style={{ color: T.muted, fontSize: 13, lineHeight: '18px', fontWeight: 800 }}>{label}</div>
                 </div>
@@ -447,6 +451,7 @@ export default function Home() {
                 }}>
                   <video
                     src={`${import.meta.env.BASE_URL}assets/today-pink-cat.mp4`}
+                    poster={`${import.meta.env.BASE_URL}assets/opensvg-cute-cat.webp`}
                     autoPlay
                     muted
                     loop
@@ -588,14 +593,11 @@ export default function Home() {
         gap: 8,
         padding: 5,
         borderRadius: 999,
-        border: '1px solid rgba(255,255,255,0.62)',
-        background: `
-          linear-gradient(135deg, rgba(226,239,242,0.76), rgba(153,184,193,0.58) 52%, rgba(214,229,233,0.58)),
-          rgba(178,205,213,0.54)
-        `,
-        backdropFilter: 'blur(30px) saturate(1.42)',
-        WebkitBackdropFilter: 'blur(30px) saturate(1.42)',
-        boxShadow: '0 18px 48px rgba(76,104,112,0.24), inset 0 1px 0 rgba(255,255,255,0.74)',
+        border: '1px solid rgba(255,255,255,0.24)',
+        background: 'linear-gradient(135deg, rgba(72,72,72,0.84), rgba(38,38,38,0.74) 56%, rgba(92,92,92,0.58)), rgba(48,48,48,0.72)',
+        backdropFilter: 'blur(32px) saturate(1.36)',
+        WebkitBackdropFilter: 'blur(32px) saturate(1.36)',
+        boxShadow: '0 20px 52px rgba(28,28,28,0.28), inset 0 1px 0 rgba(255,255,255,0.26)',
       }}>
         {navItems.map(item => {
           const active = item.id === 'home'
@@ -607,7 +609,7 @@ export default function Home() {
                 border: 'none',
                 borderRadius: 999,
                 background: 'transparent',
-                color: active ? T.primary : T.muted,
+                color: active ? T.primary : 'rgba(255,255,255,0.76)',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
@@ -628,8 +630,8 @@ export default function Home() {
                 placeItems: 'center',
                 fontSize: 22,
                 lineHeight: '22px',
-                background: active ? 'rgba(156,66,51,0.10)' : 'rgba(255,255,255,0.18)',
-                boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.56)' : 'none',
+                background: active ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.08)',
+                boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.34), 0 8px 18px rgba(0,0,0,0.16)' : 'none',
               }}>
                 <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
               </span>
