@@ -436,32 +436,45 @@ export default function Home() {
                     Every day with you<br />is my favorite.
                   </span>
                 </span>
-                {/* ═══ react-kawaii 毛绒猫咪 ═══ */}
                 <span style={{
                   position: 'relative',
-                  width: 90,
-                  height: 90,
-                  borderRadius: 22,
-                  background: 'radial-gradient(circle at 62% 34%, rgba(255,255,255,0.90), transparent 22%), linear-gradient(135deg, rgba(218,236,240,0.72), rgba(255,222,215,0.45))',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.74), 0 14px 30px rgba(104,45,38,0.08)',
+                  width: 96,
+                  height: 96,
+                  borderRadius: 24,
+                  background: 'radial-gradient(circle at 54% 42%, rgba(255,255,255,0.92), transparent 28%), linear-gradient(135deg, rgba(218,236,240,0.62), rgba(255,222,215,0.36))',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.78), 0 14px 30px rgba(104,45,38,0.08)',
                   overflow: 'hidden',
                 }}>
-                  <img
-                    src={`${import.meta.env.BASE_URL}assets/opensvg-cute-cat.webp`}
-                    alt=""
+                  <video
+                    src={`${import.meta.env.BASE_URL}assets/today-pink-cat.mp4`}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
                     style={{
                       position: 'absolute',
-                      right: -12,
-                      top: -18,
-                      width: 118,
-                      height: 118,
+                      left: '50%',
+                      top: '50%',
+                      width: 170,
+                      height: 96,
                       objectFit: 'cover',
-                      objectPosition: 'center top',
-                      opacity: 0.82,
-                      filter: 'drop-shadow(0 12px 18px rgba(84,45,40,0.14))',
+                      objectPosition: 'center center',
+                      transform: 'translate(-50%, -50%) scale(1.18)',
+                      opacity: 0.94,
+                      filter: 'saturate(1.06) contrast(1.02) drop-shadow(0 13px 16px rgba(84,45,40,0.18))',
                       mixBlendMode: 'multiply',
+                      maskImage: 'radial-gradient(ellipse at center, #000 52%, rgba(0,0,0,0.88) 68%, transparent 83%)',
+                      WebkitMaskImage: 'radial-gradient(ellipse at center, #000 52%, rgba(0,0,0,0.88) 68%, transparent 83%)',
                     }}
                   />
+                  <span style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    borderRadius: 24,
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.68), inset 0 -18px 28px rgba(255,255,255,0.16)',
+                  }} />
                 </span>
               </button>
             </GlassPanel>
