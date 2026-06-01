@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AppIcon from '../components/AppIcon'
 import { supabase } from '../lib/supabase'
 
 const T = {
@@ -102,7 +103,7 @@ export default function Welcome() {
         {step === 'code' && (
           <main style={loginCardStyle}>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={markStyle}>♡</div>
+              <div style={markStyle}><AppIcon name="heart" size={28} /></div>
               <h1 style={titleStyle}>我们的记忆</h1>
               <p style={subtitleStyle}>进入属于你们的小屋</p>
             </div>
@@ -152,11 +153,11 @@ export default function Welcome() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr', gap: 10, alignItems: 'center' }}>
               <ProfilePicker refObj={meRef} avatar={myAvatar} name={myName} placeholder="你的名字" onFile={event => handleFile(event, setMyAvatar)} onName={setMyName} />
-              <span style={{ color: T.primary, fontSize: 22, textAlign: 'center' }}>♡</span>
+              <span style={{ color: T.primary, display: 'grid', placeItems: 'center' }}><AppIcon name="heart" size={22} /></span>
               <ProfilePicker refObj={partnerRef} avatar={partnerAvatar} name={partnerName} placeholder="ta的名字" onFile={event => handleFile(event, setPartnerAvatar)} onName={setPartnerName} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '54px 1fr', gap: 10, marginTop: 24 }}>
-              <button onClick={() => setStep('mode')} style={roundButtonStyle}>‹</button>
+              <button onClick={() => setStep('mode')} style={roundButtonStyle}><AppIcon name="back" size={22} /></button>
               <button onClick={handleFinish} style={primaryButtonStyle}>完成设置</button>
             </div>
           </main>
@@ -171,7 +172,7 @@ function ProfilePicker({ refObj, avatar, name, placeholder, onFile, onName }) {
   return (
     <div style={{ display: 'grid', justifyItems: 'center', gap: 10 }}>
       <button onClick={() => refObj.current?.click()} style={avatarButtonStyle}>
-        {avatar ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '＋'}
+        {avatar ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <AppIcon name="plus" size={25} />}
       </button>
       <input ref={refObj} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
       <input value={name} onChange={event => onName(event.target.value)} placeholder={placeholder} style={nameInputStyle} />

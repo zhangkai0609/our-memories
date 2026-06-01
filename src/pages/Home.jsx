@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
@@ -80,9 +81,9 @@ const themes = {
 }
 
 const navItems = [
-  { id: 'home', label: '家', icon: '♡', to: '/' },
-  { id: 'memory', label: '记忆', icon: '◆', to: '/gallery' },
-  { id: 'map', label: '地图', icon: '⌖', to: '/map' },
+  { id: 'home', label: '家', icon: 'home', to: '/' },
+  { id: 'memory', label: '记忆', icon: 'memory', to: '/gallery' },
+  { id: 'map', label: '地图', icon: 'map', to: '/map' },
 ]
 
 function formatDate(dateLike) {
@@ -323,7 +324,7 @@ export default function Home() {
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 3 }}>
               <span style={{ width: 38, height: 1, background: 'linear-gradient(90deg, transparent, rgba(143,52,40,0.60))' }} />
-              <span style={{ color: T.primary, fontSize: 12, lineHeight: '12px' }}>♥</span>
+              <span style={{ color: T.primary }}><AppIcon name="heart" size={14} /></span>
               <span style={{ width: 38, height: 1, background: 'linear-gradient(90deg, rgba(143,52,40,0.60), transparent)' }} />
             </div>
             <span style={{
@@ -373,9 +374,9 @@ export default function Home() {
           <GlassPanel style={{ borderRadius: 38, padding: '14px 16px', boxShadow: '0 18px 48px rgba(104,45,38,0.12)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', alignItems: 'center' }}>
               {[
-                ['♡', stats.memoryDays || '--', '记忆天数'],
-                ['◆', stats.photoCount, '照片'],
-                ['⌖', stats.locationCount, '足迹'],
+                ['calendar', stats.memoryDays || '--', '记忆天数'],
+                ['photo', stats.photoCount, '照片'],
+                ['footprints', stats.locationCount, '足迹'],
               ].map(([icon, value, label], index) => (
                 <div key={label} style={{
                   minWidth: 0,
@@ -383,7 +384,9 @@ export default function Home() {
                   padding: '2px 8px',
                   borderLeft: index ? '1px solid rgba(143,52,40,0.12)' : 'none',
                 }}>
-                  <div style={{ color: T.primary, fontSize: 18, lineHeight: '20px', marginBottom: 3 }}>{icon}</div>
+                  <div style={{ color: T.primary, marginBottom: 4, display: 'grid', placeItems: 'center' }}>
+                    <AppIcon name={icon} size={20} strokeWidth={1.8} />
+                  </div>
                   <div style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 34, lineHeight: '34px', fontWeight: 760 }}>
                     {loading && label === '照片' ? '--' : value}
                   </div>
@@ -614,7 +617,9 @@ export default function Home() {
                 lineHeight: '22px',
                 background: active ? 'rgba(156,66,51,0.10)' : 'rgba(255,255,255,0.18)',
                 boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.56)' : 'none',
-              }}>{item.icon}</span>
+              }}>
+                <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
+              </span>
               <span>{item.label}</span>
             </button>
           )

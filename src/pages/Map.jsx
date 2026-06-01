@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { supabase } from '../lib/supabase'
+import AppIcon from '../components/AppIcon'
 import { getCached, setCached } from '../lib/cache'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { useNavigate } from 'react-router-dom'
@@ -19,9 +20,9 @@ const T = {
 
 /* ═══ 底部导航 ═══ */
 const navItems = [
-  { id: 'home', label: '家', icon: '⌂', to: '/' },
-  { id: 'memory', label: '记忆', icon: '◫', to: '/gallery' },
-  { id: 'map', label: '地图', icon: '⌖', to: '/map' },
+  { id: 'home', label: '家', icon: 'home', to: '/' },
+  { id: 'memory', label: '记忆', icon: 'memory', to: '/gallery' },
+  { id: 'map', label: '地图', icon: 'map', to: '/map' },
 ]
 
 /* ═══ 用户头像标记（memoized 避免每帧重建） ═══ */
@@ -226,7 +227,7 @@ function SelectedPlaceCard({ marker, onClose }) {
             {first.title || '这里的回忆'}
           </h2>
           <p style={{ margin: '4px 0 0', color: T.muted, fontSize: 11, lineHeight: '16px', fontWeight: 750, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            ⌖ {marker.location}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><AppIcon name="map" size={13} /> {marker.location}</span>
           </p>
           {first.content && (
             <p style={{ margin: '6px 0 0', color: T.ink, fontSize: 12, lineHeight: '18px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -234,7 +235,7 @@ function SelectedPlaceCard({ marker, onClose }) {
             </p>
           )}
         </div>
-        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: `1px solid ${T.border}`, background: 'rgba(255,255,255,0.48)', color: T.muted, cursor: 'pointer', fontSize: 16 }}>×</button>
+        <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', border: `1px solid ${T.border}`, background: 'rgba(255,255,255,0.48)', color: T.muted, cursor: 'pointer', display: 'grid', placeItems: 'center' }}><AppIcon name="close" size={15} /></button>
       </div>
       <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingTop: 9 }}>
         {(marker.memories || []).map(memory => (
@@ -252,7 +253,7 @@ function SelectedPlaceCard({ marker, onClose }) {
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}>
-            {memory.audioUrl ? '▶ ' : ''}{memory.title || '一条记忆'}
+            {memory.audioUrl ? <AppIcon name="mic" size={12} style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: 3 }} /> : null}{memory.title || '一条记忆'}
           </div>
         ))}
       </div>
@@ -443,7 +444,7 @@ export default function MapPage() {
         gap: 8,
         pointerEvents: 'none',
       }}>
-        <button onClick={() => navigate('/')} style={{ ...glassIconButtonStyle, pointerEvents: 'auto' }}>‹</button>
+        <button onClick={() => navigate('/')} style={{ ...glassIconButtonStyle, pointerEvents: 'auto' }}><AppIcon name="back" size={22} /></button>
         <div style={{
           justifySelf: 'center',
           border: `1px solid ${T.border}`,
@@ -459,7 +460,7 @@ export default function MapPage() {
           <h1 style={{ fontFamily: T.fontTitle, fontSize: 20, lineHeight: '22px', color: T.primary, fontWeight: 760, margin: 0 }}>足迹地图</h1>
           <p style={{ margin: '1px 0 0', color: T.muted, fontSize: 10, fontWeight: 800 }}>{stats.memories} 个回忆 · {stats.places} 个地点</p>
         </div>
-        <button onClick={() => navigate('/new')} style={{ ...glassIconButtonStyle, pointerEvents: 'auto', color: '#fff', background: T.primary }}>＋</button>
+        <button onClick={() => navigate('/new')} style={{ ...glassIconButtonStyle, pointerEvents: 'auto', color: '#fff', background: T.primary }}><AppIcon name="plus" size={22} /></button>
       </header>
 
       {/* ═══ 地图（无动态 key，避免重挂载） ═══ */}
@@ -475,7 +476,7 @@ export default function MapPage() {
               <Popup maxWidth={240} minWidth={180}>
                 <div style={{ fontFamily: T.fontBody, padding: 4 }}>
                   <p style={{ fontFamily: T.fontTitle, fontSize: 16, color: T.ink, margin: '0 0 6px', fontWeight: 600 }}>
-                    📍 {(g.location || '').slice(0, 20)}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><AppIcon name="map" size={15} /> {(g.location || '').slice(0, 20)}</span>
                   </p>
                   <p style={{ fontSize: 12, color: T.muted, margin: '0 0 8px' }}>{g.memories?.length || 0} 条记忆</p>
                   {(g.memories || []).slice(0, 3).map(m => (
@@ -578,7 +579,7 @@ export default function MapPage() {
                   ))}
                   {unknownLocs.map((g, i) => (
                     <div key={`unk-${g.location || i}`} style={{ padding: '8px 12px', borderRadius: 12, marginBottom: 4, opacity: 0.72, border: '1px dashed rgba(143,52,40,0.18)', background: 'rgba(255,255,255,0.40)' }}>
-                      <span style={{ fontSize: 12, color: T.muted }}>⌖ {(g.location || '').slice(0, 26)}</span>
+                      <span style={{ fontSize: 12, color: T.muted, display: 'inline-flex', alignItems: 'center', gap: 4 }}><AppIcon name="map" size={13} /> {(g.location || '').slice(0, 26)}</span>
                       <span style={{ fontSize: 10, color: T.muted, marginLeft: 8 }}>待解析 · {g.memories?.length || 0}条</span>
                     </div>
                   ))}
@@ -607,7 +608,9 @@ export default function MapPage() {
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
               justifyContent: 'center', gap: 2, fontFamily: T.fontBody, fontSize: 12, fontWeight: 800,
             }}>
-              <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22 }}>{item.icon}</span>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22 }}>
+                <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
+              </span>
               <span>{item.label}</span>
             </button>
           )

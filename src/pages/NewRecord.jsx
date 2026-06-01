@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AppIcon from '../components/AppIcon'
 import { packMemoryContent } from '../lib/audioMemory'
 import { bumpVersion } from '../lib/cache'
 import { supabase } from '../lib/supabase'
@@ -328,7 +329,7 @@ export default function NewRecord() {
           alignItems: 'center',
           gap: 8,
         }}>
-          <button onClick={() => navigate(-1)} style={roundButtonStyle}>‹</button>
+          <button onClick={() => navigate(-1)} style={roundButtonStyle}><AppIcon name="back" size={22} /></button>
           <h1 style={{ margin: 0, textAlign: 'center', color: T.primary, fontFamily: T.fontTitle, fontSize: 25, lineHeight: '30px', fontWeight: 760 }}>
             新记忆
           </h1>
@@ -341,7 +342,7 @@ export default function NewRecord() {
           <GlassCard style={{ padding: 10 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8, alignItems: 'center' }}>
               <button onClick={locate} type="button" style={pillButtonStyle(Boolean(coords))}>
-                <span>⌖</span>
+                <AppIcon name="map" size={15} />
                 <span>{gpsLoading ? '获取中...' : coords ? '坐标已获取' : '获取坐标'}</span>
               </button>
               <button onClick={toggleAuthor} type="button" style={{ ...smallGlassButtonStyle, maxWidth: 94, overflow: 'hidden', textOverflow: 'ellipsis' }}>{author}</button>
@@ -371,7 +372,7 @@ export default function NewRecord() {
           <GlassCard style={{ padding: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={labelStyle}>主题</span>
-              <button type="button" onClick={() => fileRef.current?.click()} style={addPhotoButtonStyle}>添加照片</button>
+              <button type="button" onClick={() => fileRef.current?.click()} style={addPhotoButtonStyle}><AppIcon name="photo" size={14} /> 添加照片</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7 }}>
               {themes.map(item => (
@@ -382,7 +383,7 @@ export default function NewRecord() {
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple onChange={pickFiles} style={{ display: 'none' }} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7, marginTop: 8 }}>
-              <button type="button" onClick={() => fileRef.current?.click()} style={photoAddStyle}>＋</button>
+              <button type="button" onClick={() => fileRef.current?.click()} style={photoAddStyle}><AppIcon name="plus" size={24} /></button>
               {previews.slice(0, 7).map((url, index) => (
                 <button key={url} type="button" onClick={() => removeFile(index)} style={photoThumbStyle}>
                   <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -414,7 +415,7 @@ export default function NewRecord() {
               aria-label={recording ? '取消录音' : '开始录音'}
               style={micCircleStyle(recording)}
             >
-              <MicIcon active={recording} />
+              <AppIcon name="mic" size={25} active={recording} />
             </button>
             <span style={voiceHintStyle(recording)}>
               {recording ? '点击完成' : audioUrl ? '已录音' : '录音'}
@@ -447,51 +448,6 @@ function GlassCard({ children, style }) {
     }}>
       {children}
     </section>
-  )
-}
-
-function MicIcon({ active }) {
-  return (
-    <span style={{ position: 'relative', width: 18, height: 26, display: 'inline-block' }}>
-      <span style={{
-        position: 'absolute',
-        left: 5,
-        top: 0,
-        width: 8,
-        height: 15,
-        borderRadius: 999,
-        background: active ? '#fff' : T.primary,
-        boxShadow: active ? 'none' : 'inset 0 1px 0 rgba(255,255,255,0.40)',
-      }} />
-      <span style={{
-        position: 'absolute',
-        left: 2,
-        top: 8,
-        width: 14,
-        height: 10,
-        border: `2px solid ${active ? '#fff' : T.primary}`,
-        borderTop: 0,
-        borderRadius: '0 0 10px 10px',
-      }} />
-      <span style={{
-        position: 'absolute',
-        left: 8,
-        top: 18,
-        width: 2,
-        height: 6,
-        borderRadius: 999,
-        background: active ? '#fff' : T.primary,
-      }} />
-      <span style={{
-        position: 'absolute',
-        left: 4,
-        top: 24,
-        width: 10,
-        height: 2,
-        borderRadius: 999,
-        background: active ? '#fff' : T.primary,
-      }} />
-    </span>
   )
 }
 
@@ -569,6 +525,9 @@ const addPhotoButtonStyle = {
   cursor: 'pointer',
   whiteSpace: 'nowrap',
   boxShadow: '0 10px 22px rgba(143,52,40,0.12), inset 0 1px 0 rgba(255,255,255,0.82)',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 5,
 }
 
 function pillButtonStyle(active) {
@@ -631,6 +590,8 @@ const photoAddStyle = {
   fontSize: 26,
   fontWeight: 800,
   cursor: 'pointer',
+  display: 'grid',
+  placeItems: 'center',
 }
 
 const photoThumbStyle = {

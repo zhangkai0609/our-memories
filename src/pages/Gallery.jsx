@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached } from '../lib/cache'
@@ -23,9 +24,9 @@ const T = {
 }
 
 const navItems = [
-  { id: 'home', label: '家', icon: '⌂', to: '/' },
-  { id: 'memory', label: '记忆', icon: '◫', to: '/gallery' },
-  { id: 'map', label: '地图', icon: '⌖', to: '/map' },
+  { id: 'home', label: '家', icon: 'home', to: '/' },
+  { id: 'memory', label: '记忆', icon: 'memory', to: '/gallery' },
+  { id: 'map', label: '地图', icon: 'map', to: '/map' },
 ]
 
 function readJson(key, fallback) {
@@ -271,14 +272,14 @@ export default function Gallery() {
           width: 44,
           overflow: 'hidden',
         }}>
-          <button onClick={() => navigate('/')} style={iconButtonStyle}>‹</button>
+          <button onClick={() => navigate('/')} style={iconButtonStyle}><AppIcon name="back" size={22} /></button>
           <div style={{ textAlign: 'center', display: 'none' }}>
             <p style={{ margin: 0, color: T.muted, fontSize: 11, fontWeight: 800 }}>Notebook</p>
             <h1 style={{ margin: 0, color: T.primary, fontFamily: T.titleFont, fontSize: 27, lineHeight: '30px', fontWeight: 760, fontStyle: 'italic' }}>
               Memories
             </h1>
           </div>
-          <button onClick={() => navigate('/new')} style={{ ...iconButtonStyle, color: '#fff', background: 'rgba(156,66,51,0.92)' }}>＋</button>
+          <button onClick={() => navigate('/new')} style={{ ...iconButtonStyle, color: '#fff', background: 'rgba(156,66,51,0.92)' }}><AppIcon name="plus" size={22} /></button>
         </div>
 
         <GlassShell
@@ -400,9 +401,9 @@ export default function Gallery() {
 
         {records.length > 0 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 14 }}>
-            <button onClick={() => changePage(page - 1)} disabled={page === 1} style={pagerButtonStyle(page === 1)}>‹</button>
+            <button onClick={() => changePage(page - 1)} disabled={page === 1} style={pagerButtonStyle(page === 1)}><AppIcon name="back" size={20} /></button>
             <span style={{ color: T.muted, fontSize: 13, fontWeight: 800 }}>{page} / {pageCount}</span>
-            <button onClick={() => changePage(page + 1)} disabled={page === pageCount} style={pagerButtonStyle(page === pageCount)}>›</button>
+            <button onClick={() => changePage(page + 1)} disabled={page === pageCount} style={pagerButtonStyle(page === pageCount)}><AppIcon name="right" size={20} /></button>
           </div>
         )}
       </div>
@@ -455,7 +456,9 @@ export default function Gallery() {
                 lineHeight: '22px',
                 background: active ? 'rgba(156,66,51,0.10)' : 'rgba(255,255,255,0.18)',
                 boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.56)' : 'none',
-              }}>{item.icon}</span>
+              }}>
+                <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
+              </span>
               <span>{item.label}</span>
             </button>
           )
@@ -527,7 +530,7 @@ function MemoryPost({ record, author, social, draft, onDraft, onLike, onComment,
           <h2 style={{ margin: '0 0 5px', color: T.primary, fontFamily: T.titleFont, fontSize: 22, lineHeight: '25px', fontWeight: 760 }}>
             {record.title}
           </h2>
-          {record.location && <p style={{ margin: '0 0 6px', color: T.sage, fontSize: 11, fontWeight: 800 }}>⌖ {record.location}</p>}
+          {record.location && <p style={{ margin: '0 0 6px', color: T.sage, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}><AppIcon name="map" size={13} /> {record.location}</p>}
           <p style={{
             margin: 0,
             color: T.ink,
@@ -562,7 +565,7 @@ function MemoryPost({ record, author, social, draft, onDraft, onLike, onComment,
 
       <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
         <button onClick={onLike} style={socialButtonStyle(social.liked)}>
-          {social.liked ? '♥' : '♡'} {social.likes || 0}
+          <AppIcon name="heart" size={14} active={social.liked} /> {social.likes || 0}
         </button>
         <button onClick={onComment} style={socialButtonStyle(false)}>
           评论 {social.comments?.length || 0}
@@ -684,5 +687,8 @@ function socialButtonStyle(active) {
     fontSize: 11,
     fontWeight: 900,
     cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
   }
 }
