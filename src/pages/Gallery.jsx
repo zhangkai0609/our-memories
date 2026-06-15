@@ -4,7 +4,7 @@ import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached } from '../lib/cache'
-import { loadRoomProfile } from '../lib/roomProfile'
+import { canonicalRoom, fetchRoomRows, loadRoomProfile } from '../lib/roomProfile'
 
 const T = {
   bg: '#fff3f1',
@@ -83,7 +83,7 @@ function GlassShell({ children, style, ...props }) {
 
 export default function Gallery() {
   const navigate = useNavigate()
-  const roomCode = localStorage.getItem('room_code')
+  const roomCode = canonicalRoom(localStorage.getItem('room_code'))
   const getCachedRecords = useCallback(() => (getCached('memories') || []).map(normalizeRecord), [])
   const [records, setRecords] = useState(() => getCachedRecords())
   const [loading, setLoading] = useState(() => getCachedRecords().length === 0)
@@ -108,9 +108,13 @@ export default function Gallery() {
 
     try {
       setLoadError(false)
-      let query = supabase.from('memories').select('id,title,content,location,author,room_code,created_at,image_urls').order('created_at', { ascending: false }).limit(20)
-      if (roomCode) query = query.eq('room_code', roomCode)
-      const { data } = await withTimeout(query, cached.length ? 8000 : 18000)
+      const data = await withTimeout(
+        fetchRoomRows(
+          () => supabase.from('memories').select('id,title,content,location,author,room_code,created_at,image_urls').order('created_at', { ascending: false }).limit(20),
+          roomCode
+        ),
+        cached.length ? 8000 : 18000
+      )
       const nextRaw = data || []
       const next = nextRaw.map(normalizeRecord)
       setRecords(next)

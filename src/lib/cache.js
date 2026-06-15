@@ -1,3 +1,5 @@
+import { canonicalRoom, getRoomQueryCodes } from './roomProfile'
+
 /* ═══ 全局内存缓存 + localStorage 持久化 ═══
  * 页面切换不重新拉数据，只在新增/修改记忆后才刷新
  */
@@ -5,7 +7,7 @@
 const memCache = new Map() // 内存缓存 (页面切换保留)
 
 function roomKey() {
-  return localStorage.getItem('room_code') || '_global'
+  return canonicalRoom(localStorage.getItem('room_code')) || '_global'
 }
 
 function memoryKey(key) {
@@ -39,10 +41,13 @@ export function getCached(key) {
   // 1. 内存缓存 (最快)
   if (memCache.has(mk)) return memCache.get(mk)
   // 2. localStorage
-  const lsData = readLS(`cache_${roomKey()}_${key}`)
-  if (lsData) {
-    memCache.set(mk, lsData)
-    return lsData
+  const rooms = getRoomQueryCodes(roomKey())
+  for (const room of rooms) {
+    const lsData = readLS(`cache_${room}_${key}`)
+    if (lsData) {
+      memCache.set(mk, lsData)
+      return lsData
+    }
   }
   return null
 }

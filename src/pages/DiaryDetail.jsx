@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { canonicalRoom, fetchRoomRows } from '../lib/roomProfile'
 /* ===== 城市漫步冒险 - 日记详情页 ===== */
 
 const T = {
@@ -9,23 +10,26 @@ const T = {
   tapeBlue:'#a8c8e8', tapeGreen:'#b8d4b0',
 }
 
-export default function 日记Detail() {
+export default function DiaryDetail() {
   const navigate=useNavigate()
   const [entry,setEntry]=useState(null)
   const [loading,setLoading]=useState(true)
 
-  useEffect(()=>{fetchEntry()},[])
-
-  async function fetchEntry(){
-    // TODO: 从 Supabase 加载指定ID的日记
-    try{
-      const rc=localStorage.getItem('room_code')
-      if(rc){
-        const {data}=await supabase.from('memories').select('*').eq('room_code',rc).order('created_at',{ascending:false}).limit(1)
-        if(data&&data.length>0)setEntry(data[0])
-      }
-    }catch{}finally{setLoading(false)}
-  }
+  useEffect(()=>{
+    async function fetchEntry(){
+      // TODO: 从 Supabase 加载指定ID的日记
+      try{
+        const rc=canonicalRoom(localStorage.getItem('room_code'))
+        if(rc){
+          const data=await fetchRoomRows(()=>supabase.from('memories').select('*').order('created_at',{ascending:false}).limit(1),rc)
+          if(data&&data.length>0)setEntry(data[0])
+        }
+      }catch{
+        // Keep the mock notebook layout if the remote entry cannot be loaded.
+      }finally{setLoading(false)}
+    }
+    fetchEntry()
+  },[])
 
   // Mock data - city exploration
   const mockEntry = {

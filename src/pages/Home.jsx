@@ -4,7 +4,7 @@ import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
-import { exitRoom as clearActiveRoom, loadRoomProfile, saveRoomProfile, setRoomValue } from '../lib/roomProfile'
+import { canonicalRoom, exitRoom as clearActiveRoom, fetchRoomRows, loadRoomProfile, saveRoomProfile, setRoomValue } from '../lib/roomProfile'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
 import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
 import bgImg3 from '../assets/微信图片_20260530235835_96883_4.png'
@@ -132,7 +132,7 @@ function GlassPanel({ children, style }) {
 
 export default function Home() {
   const navigate = useNavigate()
-  const roomCode = localStorage.getItem('room_code')
+  const roomCode = canonicalRoom(localStorage.getItem('room_code'))
   const roomProfile = useMemo(() => loadRoomProfile(roomCode), [roomCode])
   const [memories, setMemories] = useState([])
   const [loading, setLoading] = useState(false)
@@ -162,11 +162,12 @@ export default function Home() {
     if (cached?.length) setMemories(cached)
 
     try {
-      const { data } = await supabase.from('memories')
-        .select('id,title,content,location,author,room_code,coordinates,created_at,image_urls')
-        .eq('room_code', roomCode)
-        .order('created_at', { ascending: false })
-      const next = data || []
+      const next = await fetchRoomRows(
+        () => supabase.from('memories')
+          .select('id,title,content,location,author,room_code,coordinates,created_at,image_urls')
+          .order('created_at', { ascending: false }),
+        roomCode
+      )
       if (next.length) {
         setMemories(next)
         setCached('memories', next)

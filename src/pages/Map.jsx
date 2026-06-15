@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import AppIcon from '../components/AppIcon'
 import { getCached, setCached } from '../lib/cache'
 import { unpackMemoryContent } from '../lib/audioMemory'
-import { loadRoomProfile } from '../lib/roomProfile'
+import { canonicalRoom, fetchRoomRows, loadRoomProfile } from '../lib/roomProfile'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 
@@ -319,7 +319,7 @@ const statPillStyle = {
 /* ═══ 主组件 ═══ */
 export default function MapPage() {
   const navigate = useNavigate()
-  const roomCode = localStorage.getItem('room_code')
+  const roomCode = canonicalRoom(localStorage.getItem('room_code'))
   const profile = loadRoomProfile(roomCode)
   const myName = profile.myName || ''
   const myAvatar = profile.myAvatar || null
@@ -339,11 +339,13 @@ export default function MapPage() {
     try {
       const cached = (getCached('memories') || []).map(normalizeMemory).filter(m => m.location)
       if (cached.length) groupMemories(cached)
-      const { data } = await supabase.from('memories')
-        .select('id,title,content,location,author,coordinates,created_at,image_urls,room_code')
-        .eq('room_code', roomCode)
-        .not('location', 'is', null)
-        .order('created_at', { ascending: false })
+      const data = await fetchRoomRows(
+        () => supabase.from('memories')
+          .select('id,title,content,location,author,coordinates,created_at,image_urls,room_code')
+          .not('location', 'is', null)
+          .order('created_at', { ascending: false }),
+        roomCode
+      )
 
       if (cancelRef.current) return
       const next = (data || []).map(normalizeMemory).filter(m => m.location)

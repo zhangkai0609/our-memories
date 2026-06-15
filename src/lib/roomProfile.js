@@ -12,16 +12,69 @@ function normalizeRoom(room) {
   return (room || '').trim().toLowerCase()
 }
 
+export function canonicalRoom(room) {
+  const normalized = normalizeRoom(room)
+  if (normalized === '0609117') return '06091117'
+  return normalized
+}
+
+export function getRoomQueryCodes(room) {
+  const canonical = canonicalRoom(room)
+  if (!canonical) return []
+  if (canonical === '06091117') return ['06091117', '0609117']
+  return [canonical]
+}
+
+export async function fetchRoomRows(makeQuery, room) {
+  const canonical = canonicalRoom(room)
+  if (!canonical) return []
+  const filters = getRoomQueryCodes(canonical).map(code => query => query.eq('room_code', code))
+  if (canonical === '06091117') filters.push(query => query.is('room_code', null))
+
+  const results = await Promise.allSettled(filters.map(filter => filter(makeQuery())))
+  const rows = []
+  const errors = []
+  results.forEach(result => {
+    if (result.status !== 'fulfilled') {
+      errors.push(result.reason)
+      return
+    }
+    if (result.value?.error) {
+      errors.push(result.value.error)
+      return
+    }
+    rows.push(...(result.value?.data || []))
+  })
+
+  if (!rows.length && errors.length) throw errors[0]
+
+  const seen = new Set()
+  return rows
+    .filter(row => {
+      const key = row?.id == null ? JSON.stringify(row) : String(row.id)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0))
+}
+
 export function getActiveRoom() {
-  return normalizeRoom(localStorage.getItem('room_code'))
+  return canonicalRoom(localStorage.getItem('room_code'))
 }
 
 export function roomScopedKey(key, room = getActiveRoom()) {
-  return `room_${normalizeRoom(room) || '_global'}_${key}`
+  return `room_${canonicalRoom(room) || '_global'}_${key}`
 }
 
 export function getRoomValue(key, fallback = '', room = getActiveRoom()) {
-  return localStorage.getItem(roomScopedKey(key, room)) ?? localStorage.getItem(key) ?? fallback
+  const canonical = canonicalRoom(room)
+  const aliases = getRoomQueryCodes(canonical)
+  for (const alias of aliases) {
+    const value = localStorage.getItem(`room_${alias}_${key}`)
+    if (value != null) return value
+  }
+  return localStorage.getItem(key) ?? fallback
 }
 
 export function setRoomValue(key, value, room = getActiveRoom()) {
@@ -57,7 +110,7 @@ export function saveRoomProfile(profile, room = getActiveRoom()) {
 }
 
 export function enterRoom(room) {
-  const normalized = normalizeRoom(room)
+  const normalized = canonicalRoom(room)
   localStorage.setItem('room_code', normalized)
   const profile = loadRoomProfile(normalized)
   localStorage.setItem('my_name', profile.myName)
@@ -78,13 +131,13 @@ export function exitRoom() {
 }
 
 export function getRoomPassword(room) {
-  const normalized = normalizeRoom(room)
-  if (normalized === '06091117' || normalized === '0609117') return localStorage.getItem(roomScopedKey('room_password', normalized)) || '06091117'
+  const normalized = canonicalRoom(room)
+  if (normalized === '06091117') return getRoomValue('room_password', '06091117', normalized)
   return localStorage.getItem(roomScopedKey('room_password', normalized)) || ''
 }
 
 export function setRoomPassword(room, password) {
-  const normalized = normalizeRoom(room)
+  const normalized = canonicalRoom(room)
   if (!normalized || !password) return
   localStorage.setItem(roomScopedKey('room_password', normalized), password)
 }

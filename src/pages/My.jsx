@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { exitRoom as clearActiveRoom, loadRoomProfile, saveRoomProfile } from '../lib/roomProfile'
+import { canonicalRoom, exitRoom as clearActiveRoom, fetchRoomRows, loadRoomProfile, saveRoomProfile } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 
 const T = {
@@ -44,7 +44,8 @@ export default function MyPage() {
   const [showEdit,setShowEdit]=useState(false)
   const [show退出小屋,setShow退出小屋]=useState(false)
   const [loggingOut,setLoggingOut]=useState(false)
-  const profile=loadRoomProfile(localStorage.getItem('room_code'))
+  const roomCode=canonicalRoom(localStorage.getItem('room_code'))
+  const profile=loadRoomProfile(roomCode)
   const [myName,setMyName]=useState(profile.myName||'')
   const [partnerName,setPartnerName]=useState(profile.partnerName||'')
   const [myAvatar,setMyAvatar]=useState(profile.myAvatar||null)
@@ -54,9 +55,9 @@ export default function MyPage() {
   const meRef=useRef(null);const partnerRef=useRef(null);const myPetRef=useRef(null);const partnerPetRef=useRef(null)
 
   async function fetchStats(){
-    try{const rc=localStorage.getItem('room_code');if(!rc)return
-      const {count}=await supabase.from('memories').select('id',{count:'exact'}).eq('room_code',rc)
-      if(count!=null)setStats(s=>({...s,diary:count}))}catch{
+    try{const rc=canonicalRoom(localStorage.getItem('room_code'));if(!rc)return
+      const rows=await fetchRoomRows(()=>supabase.from('memories').select('id,created_at'),rc)
+      setStats(s=>({...s,diary:rows.length}))}catch{
       // Keep the visual fallback stats if the count request fails.
     }
   }

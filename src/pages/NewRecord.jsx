@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
 import { packMemoryContent } from '../lib/audioMemory'
 import { bumpVersion } from '../lib/cache'
-import { loadRoomProfile, setRoomValue } from '../lib/roomProfile'
+import { canonicalRoom, fetchRoomRows, loadRoomProfile, setRoomValue } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
 import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
@@ -94,7 +94,7 @@ export default function NewRecord() {
   const streamRef = useRef(null)
   const audioChunksRef = useRef([])
   const previewRef = useRef([])
-  const roomCode = localStorage.getItem('room_code')
+  const roomCode = canonicalRoom(localStorage.getItem('room_code'))
   const profile = loadRoomProfile(roomCode)
   const myName = profile.myName || '小周同学'
   const partnerName = profile.partnerName || '另一半'
@@ -122,17 +122,20 @@ export default function NewRecord() {
 
   const fetchPastLocations = useCallback(async () => {
     try {
-      const { data } = await supabase.from('memories')
-        .select('location')
-        .not('location', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(20)
+      const data = await fetchRoomRows(
+        () => supabase.from('memories')
+          .select('location,created_at')
+          .not('location', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        roomCode
+      )
       const unique = [...new Set((data || []).map(m => (m.location || '').trim()).filter(Boolean))]
       setPastLocations(unique.slice(0, 5))
     } catch {
       setPastLocations([])
     }
-  }, [])
+  }, [roomCode])
 
   useEffect(() => {
     Promise.resolve().then(fetchPastLocations)

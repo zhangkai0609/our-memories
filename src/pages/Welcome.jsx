@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
-import { enterRoom, getRoomPassword, saveRoomProfile, setRoomPassword } from '../lib/roomProfile'
+import { canonicalRoom, enterRoom, fetchRoomRows, getRoomPassword, saveRoomProfile, setRoomPassword } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 
 const T = {
@@ -44,7 +44,7 @@ export default function Welcome() {
   }, [navigate])
 
   async function handleRoom(action) {
-    const roomCode = code.trim().toLowerCase()
+    const roomCode = canonicalRoom(code)
     if (!roomCode || roomCode.length < 2) {
       setMessage('请输入至少 2 位小屋代号')
       return
@@ -54,7 +54,7 @@ export default function Welcome() {
     setMessage('')
     try {
       const savedPassword = getRoomPassword(roomCode)
-      const { data } = await supabase.from('memories').select('id').eq('room_code', roomCode).limit(1)
+      const data = await fetchRoomRows(() => supabase.from('memories').select('id').limit(1), roomCode)
       const roomExists = Boolean(savedPassword || data?.length)
       if (action === 'login') {
         if (!roomExists) {
