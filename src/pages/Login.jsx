@@ -23,7 +23,7 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!/^1[3-9]\d{9}$/.test(phone.replace(/[\s\-]/g, ''))) {
+    if (!/^1[3-9]\d{9}$/.test(phone.replace(/[\s-]/g, ''))) {
       setMessage('请输入正确的手机号'); return
     }
     setLoading(true)
@@ -49,7 +49,7 @@ export default function Login() {
         if (!spaceId) { setMessage('空间初始化失败，请重试'); return }
         navigate('/')
       }
-    } catch (err) {
+    } catch {
       setMessage('网络连接失败，请检查网络后重试')
     } finally {
       setLoading(false)

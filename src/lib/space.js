@@ -8,11 +8,11 @@ export async function getSpaceId() {
 
 /** 检查手机号是否为某个 Space 的伴侣手机号，返回该 space_id 或 null */
 export async function findPartnerSpace(phone) {
-  const cleaned = phone.replace(/[\s\-\(\)\+＋]/g, '')
+  const cleaned = phone.replace(/[\s\-()+＋]/g, '')
   // 尝试精确匹配和有 +86 前缀的匹配
   const candidates = [cleaned, `+86${cleaned}`, `86${cleaned}`]
   for (const c of candidates) {
-    const { data, error } = await supabase.from('spaces').select('id').or(`partner_phone.eq.${c}`).maybeSingle()
+    const { data } = await supabase.from('spaces').select('id').or(`partner_phone.eq.${c}`).maybeSingle()
     if (data) return data.id
   }
   return null
@@ -22,7 +22,7 @@ export async function findPartnerSpace(phone) {
  *  登录时调用：如果用户还没有 space_id，则为 ta 创建（或查找伴侣邀请）
  *  如果 spaces 表不存在，则使用 user_id 作为 fallback space_id */
 export async function getOrCreateSpace(phone) {
-  const cleaned = phone.replace(/[\s\-\(\)\+＋]/g, '')
+  const cleaned = phone.replace(/[\s\-()+＋]/g, '')
 
   // 1. 先检查是否有伴侣已经邀请了这个手机号
   try {
@@ -62,7 +62,7 @@ export async function getOrCreateSpace(phone) {
 
 /** 关联伴侣手机号：将伴侣手机号写入当前用户的 Space */
 export async function linkPartner(partnerPhone) {
-  const cleaned = partnerPhone.replace(/[\s\-\(\)\+＋]/g, '')
+  const cleaned = partnerPhone.replace(/[\s\-()+＋]/g, '')
   const spaceId = await getSpaceId()
   if (!spaceId) return { success: false, error: '找不到你的空间' }
 

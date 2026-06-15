@@ -1,0 +1,9 @@
+{
+  "appId": "com.zhangkai.ourmemories",
+  "appName": "我们的记忆",
+  "webDir": "docs",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

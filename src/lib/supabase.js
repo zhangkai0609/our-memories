@@ -7,6 +7,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 /** 将手机号转为虚拟邮箱，用于 Supabase 登录 */
 export function phoneToEmail(phone) {
-  const cleaned = phone.replace(/[\s\-\(\)\+＋]/g, '')
+  const cleaned = phone.replace(/[\s\-()+＋]/g, '')
   return `p_${cleaned}@om.mail`
 }
