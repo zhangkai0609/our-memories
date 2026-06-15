@@ -9,6 +9,9 @@
     "build:app": "vite build --mode capacitor",
     "cap:sync": "npm run build:app && npx cap sync android",
     "cap:open": "npx cap open android",
+    "r2:create": "npx wrangler r2 bucket create our-memories-assets",
+    "worker:dev": "npx wrangler dev --config workers/asset-upload/wrangler.jsonc",
+    "worker:deploy": "npx wrangler deploy --config workers/asset-upload/wrangler.jsonc",
     "lint": "eslint .",
     "preview": "vite preview"
   },

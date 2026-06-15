@@ -1,4 +1,4 @@
-const AUDIO_RE = /\n*\[\[memory-audio:(data:audio\/[^\]]+)\]\]\s*$/
+const AUDIO_RE = /\n*\[\[memory-audio:([^\]]+)\]\]\s*$/
 
 export function packMemoryContent(content, audioUrl) {
   const text = (content || '').trim()

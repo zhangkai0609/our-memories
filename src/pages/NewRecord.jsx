@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
 import { packMemoryContent } from '../lib/audioMemory'
+import { dataUrlToBlob, uploadAsset } from '../lib/assetUpload'
 import { bumpVersion } from '../lib/cache'
 import { canonicalRoom, fetchRoomRows, loadRoomProfile, setRoomValue } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
@@ -79,7 +80,10 @@ async function compressImage(file) {
         canvas.width = width
         canvas.height = height
         canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-        resolve(canvas.toDataURL('image/jpeg', 0.72))
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob)
+          else reject(new Error('image compression failed'))
+        }, 'image/jpeg', 0.72)
       }
       img.src = reader.result
     }
@@ -275,15 +279,37 @@ export default function NewRecord() {
     const imageUrls = []
     for (const file of files) {
       try {
-        imageUrls.push(await compressImage(file))
+        const compressed = await compressImage(file)
+        const uploaded = await uploadAsset({
+          blob: compressed,
+          fileName: file.name?.replace(/\.[^.]+$/, '.jpg') || 'memory.jpg',
+          roomCode,
+          kind: 'image',
+        })
+        imageUrls.push(uploaded || await blobToDataUrl(compressed))
       } catch {
         alert(`照片读取失败：${file.name}`)
       }
     }
 
+    let nextAudioUrl = audioUrl
+    if (audioUrl?.startsWith('data:')) {
+      try {
+        const audioBlob = dataUrlToBlob(audioUrl)
+        nextAudioUrl = await uploadAsset({
+          blob: audioBlob,
+          fileName: `voice-${Date.now()}.${audioBlob.type.includes('mp4') ? 'm4a' : 'webm'}`,
+          roomCode,
+          kind: 'audio',
+        }) || audioUrl
+      } catch {
+        alert('录音上传失败，将暂时按本地数据保存')
+      }
+    }
+
     const recordData = {
       title: title.trim() || `${theme}记忆`,
-      content: packMemoryContent(content, audioUrl),
+      content: packMemoryContent(content, nextAudioUrl),
       location: location.trim() || null,
       image_urls: imageUrls,
       author,
