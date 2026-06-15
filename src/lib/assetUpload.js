@@ -35,10 +35,15 @@ export async function uploadAsset({ blob, fileName, roomCode, kind }) {
   form.append('roomCode', roomCode || 'unknown')
   form.append('kind', kind || 'asset')
 
-  const response = await fetch(uploadEndpoint, {
-    method: 'POST',
-    body: form,
-  })
+  let response
+  try {
+    response = await fetch(uploadEndpoint, {
+      method: 'POST',
+      body: form,
+    })
+  } catch {
+    return null
+  }
 
   if (!response.ok) {
     const message = await response.text().catch(() => '')
@@ -49,4 +54,3 @@ export async function uploadAsset({ blob, fileName, roomCode, kind }) {
   if (!data?.url) throw new Error('资源上传失败：没有返回 URL')
   return data.url
 }
-

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
 import { packMemoryContent } from '../lib/audioMemory'
 import { dataUrlToBlob, uploadAsset } from '../lib/assetUpload'
-import { bumpVersion } from '../lib/cache'
+import { bumpVersion, getCached, setCached } from '../lib/cache'
 import { canonicalRoom, fetchRoomRows, loadRoomProfile, setRoomValue } from '../lib/roomProfile'
 import { supabase } from '../lib/supabase'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
@@ -25,6 +25,19 @@ const T = {
 
 const themes = ['日常', '约会', '旅行', '纪念日']
 const draftKey = 'new_memory_draft_v2'
+
+function saveMemoryLocally(recordData) {
+  const now = new Date().toISOString()
+  const localRecord = {
+    ...recordData,
+    id: `local-${Date.now()}`,
+    created_at: now,
+    room_code: canonicalRoom(recordData.room_code),
+  }
+  const cached = getCached('memories') || []
+  setCached('memories', [localRecord, ...cached])
+  return localRecord
+}
 
 const homeThemes = {
   pearl: `
@@ -318,17 +331,27 @@ export default function NewRecord() {
     }
     if (coords) recordData.coordinates = coords
 
-    let { error } = await supabase.from('memories').insert(recordData)
-    if (error && (recordData.coordinates || recordData.tags)) {
-      delete recordData.coordinates
-      delete recordData.tags
-      const retry = await supabase.from('memories').insert(recordData)
-      error = retry.error
+    let error
+    try {
+      const result = await supabase.from('memories').insert(recordData)
+      error = result.error
+      if (error && (recordData.coordinates || recordData.tags)) {
+        delete recordData.coordinates
+        delete recordData.tags
+        const retry = await supabase.from('memories').insert(recordData)
+        error = retry.error
+      }
+    } catch (networkError) {
+      error = networkError
     }
 
     setSaving(false)
     if (error) {
-      alert(`保存失败：${error.message}`)
+      saveMemoryLocally(recordData)
+      localStorage.removeItem(draftKey)
+      bumpVersion()
+      alert('网络保存失败，已先保存到本机小屋缓存。等 Supabase 或网络恢复后，我们再做云端同步。')
+      navigate('/')
       return
     }
     localStorage.removeItem(draftKey)
