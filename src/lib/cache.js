@@ -23,6 +23,52 @@ function writeLS(key, val) {
   }
 }
 
+function normalizeMemoryCacheItem(item) {
+  if (!item || typeof item !== 'object') return null
+  const imageUrls = Array.isArray(item.image_urls) ? item.image_urls : Array.isArray(item.images) ? item.images : []
+  return {
+    ...item,
+    id: item.id || `legacy-${item.title || 'memory'}-${item.created_at || item.date || Math.random()}`,
+    title: item.title || '未命名记忆',
+    content: item.content || '',
+    image_urls: imageUrls,
+    created_at: item.created_at || item.date || new Date().toISOString(),
+    room_code: canonicalRoom(item.room_code) || '06091117',
+  }
+}
+
+function mergeMemoryRows(groups) {
+  const seen = new Set()
+  return groups
+    .flat()
+    .map(normalizeMemoryCacheItem)
+    .filter(Boolean)
+    .filter(item => {
+      const key = String(item.id)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+}
+
+function readLegacyMainRoomMemories() {
+  if (roomKey() !== '06091117') return null
+  const groups = []
+  const keys = Object.keys(localStorage)
+  keys.forEach(storageKey => {
+    if (
+      /^cache_.*_memories$/.test(storageKey) ||
+      /^gallery_cache_v1_/.test(storageKey)
+    ) {
+      const value = readLS(storageKey)
+      if (Array.isArray(value) && value.length) groups.push(value)
+    }
+  })
+  const merged = mergeMemoryRows(groups)
+  return merged.length ? merged : null
+}
+
 /** 获取缓存版本号 — 每次新建/修改记忆后 +1 */
 export function getVersion() {
   return readLS(`cache_version_${roomKey()}`) || 0
@@ -47,6 +93,14 @@ export function getCached(key) {
     if (lsData) {
       memCache.set(mk, lsData)
       return lsData
+    }
+  }
+  if (key === 'memories') {
+    const legacy = readLegacyMainRoomMemories()
+    if (legacy?.length) {
+      memCache.set(mk, legacy)
+      writeLS(`cache_${roomKey()}_${key}`, legacy)
+      return legacy
     }
   }
   return null
