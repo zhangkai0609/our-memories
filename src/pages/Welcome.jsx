@@ -54,7 +54,10 @@ export default function Welcome() {
     setMessage('')
     try {
       const savedPassword = getRoomPassword(roomCode)
-      const data = await fetchRoomRows(() => supabase.from('memories').select('id').limit(1), roomCode)
+      let data = []
+      if (!savedPassword) {
+        data = await fetchRoomRows(() => supabase.from('memories').select('id').limit(1), roomCode)
+      }
       const roomExists = Boolean(savedPassword || data?.length)
       if (action === 'login') {
         if (!roomExists) {
@@ -62,13 +65,10 @@ export default function Welcome() {
           setMessage('还没有找到这个小屋，可以先注册它')
           return
         }
-        if (!password) {
-          setMessage('请输入小屋密码')
-          return
-        }
-        if (savedPassword && password !== savedPassword) {
-          setMessage('小屋密码不正确')
-          return
+        // 已有密码的房间需要验证
+        if (savedPassword) {
+          if (!password) { setMessage('请输入小屋密码'); return }
+          if (password !== savedPassword) { setMessage('小屋密码不正确'); return }
         }
         enterRoom(roomCode)
         navigate('/')

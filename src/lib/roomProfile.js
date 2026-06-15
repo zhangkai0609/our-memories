@@ -133,7 +133,7 @@ export function exitRoom() {
 export function getRoomPassword(room) {
   const normalized = canonicalRoom(room)
   if (normalized === '06091117') return getRoomValue('room_password', '06091117', normalized)
-  return localStorage.getItem(roomScopedKey('room_password', normalized)) || ''
+  return getRoomValue('room_password', '', normalized) || ''
 }
 
 export function setRoomPassword(room, password) {
