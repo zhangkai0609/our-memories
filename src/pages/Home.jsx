@@ -4,6 +4,7 @@ import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { clearCache, getCached, setCached } from '../lib/cache'
+import { bindLegacyMemoriesToMainRoom } from '../lib/roomData'
 import { canonicalRoom, exitRoom as clearActiveRoom, fetchRoomRows, loadRoomProfile, saveRoomProfile, setRoomValue } from '../lib/roomProfile'
 import bgImg1 from '../assets/微信图片_20260530235833_96881_4.jpg'
 import bgImg2 from '../assets/微信图片_20260530235834_96882_4.png'
@@ -162,6 +163,7 @@ export default function Home() {
     if (cached?.length) setMemories(cached)
 
     try {
+      await bindLegacyMemoriesToMainRoom(roomCode)
       const next = await fetchRoomRows(
         () => supabase.from('memories')
           .select('id,title,content,location,author,room_code,coordinates,created_at,image_urls')
@@ -419,24 +421,11 @@ export default function Home() {
                   fontFamily: T.fontBody,
                 }}
               >
-                <span style={{ display: 'grid', gap: 4, justifyItems: 'start', textAlign: 'left' }}>
-                  <span style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: '50%',
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: T.primary,
-                    background: 'rgba(255,255,255,0.58)',
-                    border: `1px solid ${T.border}`,
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(104,45,38,0.10)',
-                    fontSize: 17,
-                  }}>
-                    ▣
-                  </span>
+                <span style={{ display: 'grid', gap: 6, justifyItems: 'start', alignContent: 'center', textAlign: 'left' }}>
                   <span style={{ color: T.primary, fontFamily: T.fontTitle, fontSize: 28, lineHeight: '30px', fontWeight: 760 }}>
                     Today
                   </span>
+                  <span style={{ width: 44, height: 2, borderRadius: 999, background: 'linear-gradient(90deg, rgba(143,52,40,0.62), rgba(143,52,40,0.08))' }} />
                   <span style={{ color: T.ink, fontFamily: T.fontTitle, fontSize: 18, lineHeight: '22px', fontWeight: 600 }}>
                     Every day with you<br />is my favorite.
                   </span>
@@ -631,8 +620,8 @@ export default function Home() {
                 placeItems: 'center',
                 fontSize: 22,
                 lineHeight: '22px',
-                background: active ? 'rgba(255,255,255,0.46)' : 'rgba(255,255,255,0.16)',
-                boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.70), 0 10px 20px rgba(104,45,38,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.30)',
+                background: 'transparent',
+                boxShadow: 'none',
               }}>
                 <AppIcon name={item.icon} size={30} active={active} strokeWidth={1.75} />
               </span>

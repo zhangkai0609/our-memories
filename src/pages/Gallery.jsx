@@ -4,6 +4,7 @@ import AppIcon from '../components/AppIcon'
 import { unpackMemoryContent } from '../lib/audioMemory'
 import { supabase } from '../lib/supabase'
 import { getCached, setCached } from '../lib/cache'
+import { bindLegacyMemoriesToMainRoom } from '../lib/roomData'
 import { canonicalRoom, fetchRoomRows, loadRoomProfile } from '../lib/roomProfile'
 
 const T = {
@@ -108,6 +109,7 @@ export default function Gallery() {
 
     try {
       setLoadError(false)
+      await bindLegacyMemoriesToMainRoom(roomCode)
       const data = await withTimeout(
         fetchRoomRows(
           () => supabase.from('memories').select('id,title,content,location,author,room_code,created_at,image_urls').order('created_at', { ascending: false }).limit(20),
@@ -460,8 +462,8 @@ export default function Gallery() {
                 placeItems: 'center',
                 fontSize: 22,
                 lineHeight: '22px',
-                background: active ? 'rgba(255,255,255,0.46)' : 'rgba(255,255,255,0.16)',
-                boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.70), 0 10px 20px rgba(104,45,38,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.30)',
+                background: 'transparent',
+                boxShadow: 'none',
               }}>
                 <AppIcon name={item.icon} size={30} active={active} strokeWidth={1.75} />
               </span>

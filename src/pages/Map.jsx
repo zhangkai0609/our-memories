@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import AppIcon from '../components/AppIcon'
 import { getCached, setCached } from '../lib/cache'
 import { unpackMemoryContent } from '../lib/audioMemory'
+import { bindLegacyMemoriesToMainRoom } from '../lib/roomData'
 import { canonicalRoom, fetchRoomRows, loadRoomProfile } from '../lib/roomProfile'
 import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
@@ -339,6 +340,7 @@ export default function MapPage() {
     try {
       const cached = (getCached('memories') || []).map(normalizeMemory).filter(m => m.location)
       if (cached.length) groupMemories(cached)
+      await bindLegacyMemoriesToMainRoom(roomCode)
       const data = await fetchRoomRows(
         () => supabase.from('memories')
           .select('id,title,content,location,author,coordinates,created_at,image_urls,room_code')
@@ -612,7 +614,7 @@ export default function MapPage() {
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
               justifyContent: 'center', gap: 0, fontFamily: T.fontBody, fontSize: 12, fontWeight: 800,
             }}>
-              <span style={{ width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22, background: active ? 'rgba(255,255,255,0.46)' : 'rgba(255,255,255,0.16)', boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.70), 0 10px 20px rgba(104,45,38,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.30)' }}>
+              <span style={{ width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22, background: 'transparent', boxShadow: 'none' }}>
                 <AppIcon name={item.icon} size={30} active={active} strokeWidth={1.75} />
               </span>
             </button>

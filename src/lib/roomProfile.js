@@ -4,7 +4,7 @@ const PROFILE_DEFAULTS = {
   myAvatar: '',
   partnerAvatar: '',
   roomMode: 'couple',
-  homeTheme: 'dream',
+  homeTheme: 'pearl',
   currentAuthor: '',
 }
 
@@ -29,7 +29,10 @@ export async function fetchRoomRows(makeQuery, room) {
   const canonical = canonicalRoom(room)
   if (!canonical) return []
   const filters = getRoomQueryCodes(canonical).map(code => query => query.eq('room_code', code))
-  if (canonical === '06091117') filters.push(query => query.is('room_code', null))
+  if (canonical === '06091117') {
+    filters.push(query => query.is('room_code', null))
+    filters.push(query => query.eq('room_code', ''))
+  }
 
   const results = await Promise.allSettled(filters.map(filter => filter(makeQuery())))
   const rows = []
@@ -67,13 +70,15 @@ export function roomScopedKey(key, room = getActiveRoom()) {
   return `room_${canonicalRoom(room) || '_global'}_${key}`
 }
 
-export function getRoomValue(key, fallback = '', room = getActiveRoom()) {
+export function getRoomValue(key, fallback = '', room = getActiveRoom(), options = {}) {
+  const { fallbackToGlobal = true } = options
   const canonical = canonicalRoom(room)
   const aliases = getRoomQueryCodes(canonical)
   for (const alias of aliases) {
     const value = localStorage.getItem(`room_${alias}_${key}`)
     if (value != null) return value
   }
+  if (!fallbackToGlobal) return fallback
   return localStorage.getItem(key) ?? fallback
 }
 
@@ -89,7 +94,7 @@ export function loadRoomProfile(room = getActiveRoom()) {
     myAvatar: getRoomValue('my_avatar', PROFILE_DEFAULTS.myAvatar, room),
     partnerAvatar: getRoomValue('partner_avatar', PROFILE_DEFAULTS.partnerAvatar, room),
     roomMode: getRoomValue('room_mode', PROFILE_DEFAULTS.roomMode, room),
-    homeTheme: getRoomValue('home_theme', PROFILE_DEFAULTS.homeTheme, room),
+    homeTheme: getRoomValue('home_theme', PROFILE_DEFAULTS.homeTheme, room, { fallbackToGlobal: false }),
     currentAuthor: getRoomValue('current_author', '', room),
   }
 }
