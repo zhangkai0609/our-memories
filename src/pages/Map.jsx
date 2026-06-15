@@ -597,23 +597,22 @@ export default function MapPage() {
         position: 'fixed', left: '50%', bottom: 'calc(34px + env(safe-area-inset-bottom))',
         transform: 'translateX(-50%)', width: 'min(calc(100% - 44px), 356px)', height: 58,
         zIndex: 9999, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: 5,
-        borderRadius: 999, border: '1px solid rgba(255,255,255,0.24)',
-        background: 'linear-gradient(135deg, rgba(72,72,72,0.84), rgba(38,38,38,0.74) 56%, rgba(92,92,92,0.58)), rgba(48,48,48,0.72)', backdropFilter: 'blur(32px) saturate(1.36)',
-        WebkitBackdropFilter: 'blur(32px) saturate(1.36)',
-        boxShadow: '0 20px 52px rgba(28,28,28,0.28), inset 0 1px 0 rgba(255,255,255,0.26)',
+        borderRadius: 999, border: '1px solid rgba(255,255,255,0.46)',
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.42), rgba(255,255,255,0.16) 54%, rgba(185,215,223,0.24)), rgba(255,255,255,0.18)', backdropFilter: 'blur(34px) saturate(1.48)',
+        WebkitBackdropFilter: 'blur(34px) saturate(1.48)',
+        boxShadow: '0 18px 46px rgba(64,80,86,0.18), inset 0 1px 0 rgba(255,255,255,0.66), inset 0 -1px 0 rgba(255,255,255,0.16)',
       }}>
         {navItems.map(item => {
           const active = item.id === 'map'
           return (
             <button key={item.id} onClick={() => navigate(item.to)} style={{
-              border: 'none', borderRadius: 999, background: 'transparent', color: active ? T.primary : 'rgba(255,255,255,0.76)',
+              border: 'none', borderRadius: 999, background: 'transparent', color: active ? T.primary : 'rgba(65,58,56,0.76)',
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
-              justifyContent: 'center', gap: 2, fontFamily: T.fontBody, fontSize: 12, fontWeight: 800,
+              justifyContent: 'center', gap: 0, fontFamily: T.fontBody, fontSize: 12, fontWeight: 800,
             }}>
-              <span style={{ width: 30, height: 30, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22, background: active ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.08)', boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.34), 0 8px 18px rgba(0,0,0,0.16)' : 'none' }}>
-                <AppIcon name={item.icon} size={24} active={active} strokeWidth={1.85} />
+              <span style={{ width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 22, background: active ? 'rgba(255,255,255,0.46)' : 'rgba(255,255,255,0.16)', boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.70), 0 10px 20px rgba(104,45,38,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.30)' }}>
+                <AppIcon name={item.icon} size={30} active={active} strokeWidth={1.75} />
               </span>
-              <span>{item.label}</span>
             </button>
           )
         })}
